@@ -45,19 +45,23 @@ Asumiendo que ya configuraste todos los prerrequisitos y que vas a utilizar Dock
 ```shell
 # Instala, configura y levanta las bases de datos.
 # El flag -d (daemon) hace que la ejecución continue incluso luego de reiniciar la máquina.
+# 1. Levantar el contenedor limpio
 docker-compose up -d
 
-# Copia las variables de entorno necesarias para acceder a las bases de datos.
-# Son dos archivos distintos, uno para development y otro para los tests automaticos.
+# 2. Copiar los archivos de entorno
 cp .env.example .env.development
 cp .env.example .env.test
 
-# Instala las dependencias Node del proyecto.
+# 3. Instalar dependencias
 npm install
 
-# Ejecuta las migraciones iniciales para las bases de dev y test.
+# 4. Crear la base de test
+docker exec -it comi-rapi-backend-db-1 psql -U unahur_desapp -d unahur_desapp_dev -c "CREATE DATABASE unahur_desapp_test OWNER unahur_desapp;"
+
+# 5. Ejecutar migraciones en dev y test
 npm run db:init
 NODE_ENV=test npm run db:init
+
 ```
 
 De manera opcional, también podés cargar unos datos de prueba, llamados _seeders_, que vienen incluidos. A medida que el desarrollo continue, se podrían seguir agregando más datos que ayuden en las pruebas manuales. Para cargar los _seeders_, ejecutar el siguiente comando:
