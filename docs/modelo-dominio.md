@@ -235,8 +235,11 @@ Relación: `Opcion.grupoId → OpcionGrupo.id`
 
 | Atributo | Tipo / Notas |
 |---|---|
+| `id` | PK |
 | `productoId` | FK → `Producto.id` |
 | `grupoId` | FK → `OpcionGrupo.id` |
+
+Restricción: `UNIQUE(productoId, grupoId)` — la combinación producto + grupo debe ser única.
 
 Relaciones:
 
@@ -412,8 +415,11 @@ No implementar todavía: cupones, envío gratis, descuentos por monto, reglas po
 
 | Atributo | Tipo / Notas |
 |---|---|
+| `id` | PK |
 | `promocionId` | FK → `Promocion.id` |
 | `productoId` | FK → `Producto.id` |
+
+Restricción: `UNIQUE(promocionId, productoId)` — la combinación promoción + producto debe ser única.
 
 Relaciones:
 
@@ -430,9 +436,12 @@ Los combos, al ser productos, también pueden ser alcanzados por una promoción.
 
 | Atributo | Tipo / Notas |
 |---|---|
+| `id` | PK |
 | `pedidoId` | FK → `Pedido.id` |
 | `promocionId` | FK → `Promocion.id` |
 | `descuentoAplicado` | snapshot |
+
+Restricción: `UNIQUE(pedidoId, promocionId)` — la combinación pedido + promoción debe ser única.
 
 Relaciones:
 
@@ -500,7 +509,6 @@ Pedido N:N Promocion
 | Producto (componente) | ComboComponente | 1:N | `ComboComponente.productoId` |
 | Sucursal | Stock | 1:N | `Stock.sucursalId` |
 | Producto | Stock | 1:N | `Stock.productoId` |
-| Usuario | Pedido | 1:N | `Pedido.usuarioId` |
 | Sucursal | Pedido | 1:N | `Pedido.sucursalId` |
 | EstadoPedido | Pedido | 1:N | `Pedido.estadoId` |
 | Pedido | PedidoItem | 1:N | `PedidoItem.pedidoId` |
@@ -553,6 +561,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - Precio del combo es propio en `Producto.precio`, no suma de componentes.
 - Personalización con `OpcionGrupo` + `Opcion` + `ProductoOpcionGrupo`.
 - Stock por sucursal y producto con clave compuesta.
+- ProductoOpcionGrupo, PromocionProducto y PedidoPromocion (asociativas N:M) usan id propio + UNIQUE sobre el par de FKs, no clave compuesta (a diferencia de Stock, que sí la usa por acceder siempre por el par sucursal+producto).
 - Estado actual en `Pedido.estadoId` y trazabilidad en `PedidoEstadoHistorial`.
 - Carrito no persistido.
 - Promociones con tipos concretos iniciales (`DESCUENTO_PORCENTUAL`, `DOS_POR_UNO`).
