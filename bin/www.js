@@ -25,12 +25,27 @@ if (!port) {
   throw '¡¡Hay que setear el port de la aplicación Express!!';
 }
 
-// Run sequelize before listen
-db.sequelize.authenticate().then(() => {
+// Run sequelize before listen, but don't crash if the DB is unavailable:
+// the server must boot anyway so the API responds (e.g. /api/health).
+function startServer() {
   app.listen(port, () => {
     console.log(`¡Aplicación iniciada! ====> 🌎 http://localhost:${port}`);
   });
-});
+}
+
+db.sequelize
+  .authenticate()
+  .then(() => {
+    console.log('Conexión a la base de datos establecida.');
+    startServer();
+  })
+  .catch((error) => {
+    console.warn(
+      `No se pudo conectar a la base de datos (${error.message}). ` +
+        'El servidor arranca igual, pero las rutas que usan datos van a fallar.'
+    );
+    startServer();
+  });
 
 server.on('error', onError);
 server.on('listening', onListening);
