@@ -11,8 +11,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # Carpeta de datos: se crea limpia la primera vez
-      - ./docker/postgres/data:/var/lib/postgresql/data
+      # Volumen nombrado: permite que `docker compose down -v` borre los datos.
+      - postgres_data:/var/lib/postgresql/data
       # Scripts de inicialización opcionales
       - ./docker/postgres/init:/docker-entrypoint-initdb.d/
     healthcheck:
@@ -20,4 +20,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+volumes:
+  postgres_data:
 
