@@ -14,93 +14,95 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 
 ### 2.1 Usuario
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `nombre` | `STRING` | |
-| `apellido` | `STRING` | |
-| `email` | `STRING` | UNIQUE |
-| `password` | `STRING` | hash (posterior) |
-| `telefono` | `STRING` | |
-| `rol` | `ENUM('CLIENTE', 'ADMINISTRADOR')` | |
-| `activo` | `BOOLEAN` | |
-| `createdAt` | `DATE` | |
-| `updatedAt` | `DATE` | |
+| Atributo          | Tipo de dato                       | Notas            |
+| ----------------- | ---------------------------------- | ---------------- |
+| `id`              | `INTEGER`                          | PK               |
+| `nombre`          | `STRING`                           |                  |
+| `apellido`        | `STRING`                           |                  |
+| `email`           | `STRING`                           | UNIQUE           |
+| `password`        | `STRING`                           | hash (posterior) |
+| `telefono`        | `STRING`                           |                  |
+| `rol`             | `ENUM('CLIENTE', 'ADMINISTRADOR')` |                  |
+| `activo`          | `BOOLEAN`                          |                  |
+| `fechaNacimiento` | `DATEONLY`                         | Opcional         |
+| `createdAt`       | `DATE`                             |                  |
+| `updatedAt`       | `DATE`                             |                  |
 
 - PK: `id`
 - UNIQUE: `email`
+- `edad` es un atributo derivado/calculado a partir de `fechaNacimiento`; **no** se persiste en la base de datos.
 
 ### 2.2 Direccion
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `usuarioId` | `INTEGER` | FK → `Usuario.id` |
-| `calle` | `STRING` | |
-| `altura` | `INTEGER` | |
-| `ciudad` | `STRING` | |
-| `codigoPostal` | `STRING` | |
-| `referencia` | `TEXT` | Opcional |
-| `latitud` | `DECIMAL(10,7)` | Opcional |
-| `longitud` | `DECIMAL(10,7)` | Opcional |
-| `alias` | `STRING` | Opcional |
-| `activa` | `BOOLEAN` | |
+| Atributo       | Tipo de dato    | Notas             |
+| -------------- | --------------- | ----------------- |
+| `id`           | `INTEGER`       | PK                |
+| `usuarioId`    | `INTEGER`       | FK → `Usuario.id` |
+| `calle`        | `STRING`        |                   |
+| `altura`       | `INTEGER`       |                   |
+| `ciudad`       | `STRING`        |                   |
+| `codigoPostal` | `STRING`        |                   |
+| `referencia`   | `TEXT`          | Opcional          |
+| `latitud`      | `DECIMAL(10,7)` | Opcional          |
+| `longitud`     | `DECIMAL(10,7)` | Opcional          |
+| `alias`        | `STRING`        | Opcional          |
+| `activa`       | `BOOLEAN`       |                   |
 
 - PK: `id`
 - FK: `usuarioId → Usuario.id`
 
 ### 2.3 Sucursal
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `nombre` | `STRING` | |
-| `direccion` | `STRING` | |
-| `latitud` | `DECIMAL(10,7)` | |
-| `longitud` | `DECIMAL(10,7)` | |
-| `telefono` | `STRING` | |
-| `horarios` | `STRING` | información propia de la sucursal |
-| `activa` | `BOOLEAN` | |
+| Atributo    | Tipo de dato    | Notas                             |
+| ----------- | --------------- | --------------------------------- |
+| `id`        | `INTEGER`       | PK                                |
+| `nombre`    | `STRING`        |                                   |
+| `direccion` | `STRING`        |                                   |
+| `latitud`   | `DECIMAL(10,7)` |                                   |
+| `longitud`  | `DECIMAL(10,7)` |                                   |
+| `telefono`  | `STRING`        |                                   |
+| `horarios`  | `STRING`        | información propia de la sucursal |
+| `activa`    | `BOOLEAN`       |                                   |
 
 - PK: `id`
 - Sin FKs. `horarios` no es una entidad independiente.
 
 ### 2.4 Categoria
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `nombre` | `STRING` | UNIQUE |
-| `descripcion` | `TEXT` | |
-| `activa` | `BOOLEAN` | |
+| Atributo      | Tipo de dato | Notas  |
+| ------------- | ------------ | ------ |
+| `id`          | `INTEGER`    | PK     |
+| `nombre`      | `STRING`     | UNIQUE |
+| `descripcion` | `TEXT`       |        |
+| `activa`      | `BOOLEAN`    |        |
 
 - PK: `id`
 - UNIQUE: `nombre`
 
 ### 2.5 Producto
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `categoriaId` | `INTEGER` | FK → `Categoria.id` |
-| `nombre` | `STRING` | |
-| `descripcion` | `TEXT` | |
-| `precio` | `DECIMAL(10,2)` | precio vigente |
-| `imagen` | `STRING` | |
-| `activo` | `BOOLEAN` | |
-| `tipo` | `ENUM('PRODUCTO', 'COMBO')` | |
+| Atributo      | Tipo de dato                | Notas               |
+| ------------- | --------------------------- | ------------------- |
+| `id`          | `INTEGER`                   | PK                  |
+| `categoriaId` | `INTEGER`                   | FK → `Categoria.id` |
+| `nombre`      | `STRING`                    |                     |
+| `descripcion` | `TEXT`                      |                     |
+| `precio`      | `DECIMAL(10,2)`             | precio vigente      |
+| `imagen`      | `STRING`                    |                     |
+| `activo`      | `BOOLEAN`                   |                     |
+| `tipo`        | `ENUM('PRODUCTO', 'COMBO')` |                     |
 
 - PK: `id`
 - FK: `categoriaId → Categoria.id`
 
 ### 2.6 ComboComponente
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `comboId` | `INTEGER` | FK → `Producto.id` |
-| `productoId` | `INTEGER` | FK → `Producto.id` |
-| `cantidad` | `INTEGER` | |
+| Atributo     | Tipo de dato | Notas              |
+| ------------ | ------------ | ------------------ |
+| `id`         | `INTEGER`    | PK                 |
+| `comboId`    | `INTEGER`    | FK → `Producto.id` |
+| `productoId` | `INTEGER`    | FK → `Producto.id` |
+| `cantidad`   | `INTEGER`    |                    |
 
 - PK: `id`
 - FK: `comboId → Producto.id` (producto tipo `COMBO`)
@@ -108,28 +110,28 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 
 ### 2.7 OpcionGrupo
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `nombre` | `STRING` | |
-| `tipoSeleccion` | `ENUM('UNICA', 'MULTIPLE')` | |
-| `minimo` | `INTEGER` | |
-| `maximo` | `INTEGER` | |
-| `obligatorio` | `BOOLEAN` | |
-| `activo` | `BOOLEAN` | |
+| Atributo        | Tipo de dato                | Notas |
+| --------------- | --------------------------- | ----- |
+| `id`            | `INTEGER`                   | PK    |
+| `nombre`        | `STRING`                    |       |
+| `tipoSeleccion` | `ENUM('UNICA', 'MULTIPLE')` |       |
+| `minimo`        | `INTEGER`                   |       |
+| `maximo`        | `INTEGER`                   |       |
+| `obligatorio`   | `BOOLEAN`                   |       |
+| `activo`        | `BOOLEAN`                   |       |
 
 - PK: `id`
 
 ### 2.8 Opcion
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `grupoId` | `INTEGER` | FK → `OpcionGrupo.id` |
-| `nombre` | `STRING` | |
-| `precioAdicional` | `DECIMAL(10,2)` | |
-| `activo` | `BOOLEAN` | |
-| `productoReferenciaId` | `INTEGER` | FK opcional → `Producto.id` |
+| Atributo               | Tipo de dato    | Notas                       |
+| ---------------------- | --------------- | --------------------------- |
+| `id`                   | `INTEGER`       | PK                          |
+| `grupoId`              | `INTEGER`       | FK → `OpcionGrupo.id`       |
+| `nombre`               | `STRING`        |                             |
+| `precioAdicional`      | `DECIMAL(10,2)` |                             |
+| `activo`               | `BOOLEAN`       |                             |
+| `productoReferenciaId` | `INTEGER`       | FK opcional → `Producto.id` |
 
 - PK: `id`
 - FK: `grupoId → OpcionGrupo.id`
@@ -137,11 +139,11 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 
 ### 2.9 ProductoOpcionGrupo
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `productoId` | `INTEGER` | FK → `Producto.id` |
-| `grupoId` | `INTEGER` | FK → `OpcionGrupo.id` |
+| Atributo     | Tipo de dato | Notas                 |
+| ------------ | ------------ | --------------------- |
+| `id`         | `INTEGER`    | PK                    |
+| `productoId` | `INTEGER`    | FK → `Producto.id`    |
+| `grupoId`    | `INTEGER`    | FK → `OpcionGrupo.id` |
 
 - PK: `id`
 - FK: `productoId → Producto.id`
@@ -150,12 +152,12 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 
 ### 2.10 Stock
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `sucursalId` | `INTEGER` | PK (parte), FK → `Sucursal.id` |
-| `productoId` | `INTEGER` | PK (parte), FK → `Producto.id` |
-| `cantidad` | `INTEGER` | |
-| `disponible` | `BOOLEAN` | |
+| Atributo     | Tipo de dato | Notas                          |
+| ------------ | ------------ | ------------------------------ |
+| `sucursalId` | `INTEGER`    | PK (parte), FK → `Sucursal.id` |
+| `productoId` | `INTEGER`    | PK (parte), FK → `Producto.id` |
+| `cantidad`   | `INTEGER`    |                                |
+| `disponible` | `BOOLEAN`    |                                |
 
 - PK (compuesta): `(sucursalId, productoId)` — la combinación sucursal + producto debe ser única.
 - FK: `sucursalId → Sucursal.id`
@@ -163,29 +165,29 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 
 ### 2.11 Pedido
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `usuarioId` | `INTEGER` | FK → `Usuario.id` |
-| `sucursalId` | `INTEGER` | FK → `Sucursal.id` |
-| `fechaHora` | `DATE` | |
-| `estadoId` | `INTEGER` | FK → `EstadoPedido.id` |
-| `costoEnvio` | `DECIMAL(10,2)` | |
-| `total` | `DECIMAL(10,2)` | |
-| `medioPago` | `ENUM('MERCADO_PAGO', 'TARJETA')` | |
-| `observacion` | `TEXT` | |
+| Atributo      | Tipo de dato                      | Notas                  |
+| ------------- | --------------------------------- | ---------------------- |
+| `id`          | `INTEGER`                         | PK                     |
+| `usuarioId`   | `INTEGER`                         | FK → `Usuario.id`      |
+| `sucursalId`  | `INTEGER`                         | FK → `Sucursal.id`     |
+| `fechaHora`   | `DATE`                            |                        |
+| `estadoId`    | `INTEGER`                         | FK → `EstadoPedido.id` |
+| `costoEnvio`  | `DECIMAL(10,2)`                   |                        |
+| `total`       | `DECIMAL(10,2)`                   |                        |
+| `medioPago`   | `ENUM('MERCADO_PAGO', 'TARJETA')` |                        |
+| `observacion` | `TEXT`                            |                        |
 
 Snapshot de dirección (fuente histórica de la dirección de entrega):
 
-| Atributo snapshot | Tipo de dato | Notas |
-|---|---|---|
-| `calle` | `STRING` | |
-| `altura` | `INTEGER` | |
-| `ciudad` | `STRING` | |
-| `codigoPostal` | `STRING` | |
-| `referencia` | `TEXT` | |
-| `latitud` | `DECIMAL(10,7)` | |
-| `longitud` | `DECIMAL(10,7)` | |
+| Atributo snapshot | Tipo de dato    | Notas |
+| ----------------- | --------------- | ----- |
+| `calle`           | `STRING`        |       |
+| `altura`          | `INTEGER`       |       |
+| `ciudad`          | `STRING`        |       |
+| `codigoPostal`    | `STRING`        |       |
+| `referencia`      | `TEXT`          |       |
+| `latitud`         | `DECIMAL(10,7)` |       |
+| `longitud`        | `DECIMAL(10,7)` |       |
 
 - PK: `id`
 - FK: `usuarioId → Usuario.id`
@@ -194,16 +196,16 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 
 ### 2.12 PedidoItem
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `pedidoId` | `INTEGER` | FK → `Pedido.id` |
-| `productoId` | `INTEGER` | FK → `Producto.id` |
-| `nombreProducto` | `STRING` | snapshot |
-| `precioUnitario` | `DECIMAL(10,2)` | snapshot |
-| `cantidad` | `INTEGER` | |
-| `subtotal` | `DECIMAL(10,2)` | |
-| `observacion` | `TEXT` | |
+| Atributo         | Tipo de dato    | Notas              |
+| ---------------- | --------------- | ------------------ |
+| `id`             | `INTEGER`       | PK                 |
+| `pedidoId`       | `INTEGER`       | FK → `Pedido.id`   |
+| `productoId`     | `INTEGER`       | FK → `Producto.id` |
+| `nombreProducto` | `STRING`        | snapshot           |
+| `precioUnitario` | `DECIMAL(10,2)` | snapshot           |
+| `cantidad`       | `INTEGER`       |                    |
+| `subtotal`       | `DECIMAL(10,2)` |                    |
+| `observacion`    | `TEXT`          |                    |
 
 - PK: `id`
 - FK: `pedidoId → Pedido.id`
@@ -211,14 +213,14 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 
 ### 2.13 PedidoItemOpcion
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `pedidoItemId` | `INTEGER` | FK → `PedidoItem.id` |
-| `opcionId` | `INTEGER` | FK → `Opcion.id` |
-| `nombre` | `STRING` | snapshot |
-| `precioAdicional` | `DECIMAL(10,2)` | snapshot |
-| `cantidad` | `INTEGER` | |
+| Atributo          | Tipo de dato    | Notas                |
+| ----------------- | --------------- | -------------------- |
+| `id`              | `INTEGER`       | PK                   |
+| `pedidoItemId`    | `INTEGER`       | FK → `PedidoItem.id` |
+| `opcionId`        | `INTEGER`       | FK → `Opcion.id`     |
+| `nombre`          | `STRING`        | snapshot             |
+| `precioAdicional` | `DECIMAL(10,2)` | snapshot             |
+| `cantidad`        | `INTEGER`       |                      |
 
 - PK: `id`
 - FK: `pedidoItemId → PedidoItem.id`
@@ -226,28 +228,28 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 
 ### 2.14 EstadoPedido
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `nombre` | `STRING` | |
-| `orden` | `INTEGER` | |
-| `esInicial` | `BOOLEAN` | |
-| `esFinal` | `BOOLEAN` | |
-| `activo` | `BOOLEAN` | |
+| Atributo    | Tipo de dato | Notas |
+| ----------- | ------------ | ----- |
+| `id`        | `INTEGER`    | PK    |
+| `nombre`    | `STRING`     |       |
+| `orden`     | `INTEGER`    |       |
+| `esInicial` | `BOOLEAN`    |       |
+| `esFinal`   | `BOOLEAN`    |       |
+| `activo`    | `BOOLEAN`    |       |
 
 - PK: `id`
 - Estados iniciales previstos: `PENDIENTE`, `CONFIRMADO`, `EN_PREPARACION`, `LISTO`, `EN_CAMINO`, `ENTREGADO`, `CANCELADO`.
 
 ### 2.15 PedidoEstadoHistorial
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `pedidoId` | `INTEGER` | FK → `Pedido.id` |
-| `estadoId` | `INTEGER` | FK → `EstadoPedido.id` |
-| `usuarioId` | `INTEGER` | FK → `Usuario.id` |
-| `fechaHora` | `DATE` | |
-| `observacion` | `TEXT` | |
+| Atributo      | Tipo de dato | Notas                  |
+| ------------- | ------------ | ---------------------- |
+| `id`          | `INTEGER`    | PK                     |
+| `pedidoId`    | `INTEGER`    | FK → `Pedido.id`       |
+| `estadoId`    | `INTEGER`    | FK → `EstadoPedido.id` |
+| `usuarioId`   | `INTEGER`    | FK → `Usuario.id`      |
+| `fechaHora`   | `DATE`       |                        |
+| `observacion` | `TEXT`       |                        |
 
 - PK: `id`
 - FK: `pedidoId → Pedido.id`
@@ -256,26 +258,26 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 
 ### 2.16 Promocion
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `nombre` | `STRING` | |
-| `descripcion` | `TEXT` | |
-| `tipo` | `ENUM('DESCUENTO_PORCENTUAL', 'DOS_POR_UNO')` | |
-| `valor` | `DECIMAL(10,2)` | |
-| `fechaInicio` | `DATE` | |
-| `fechaFin` | `DATE` | |
-| `activa` | `BOOLEAN` | |
+| Atributo      | Tipo de dato                                  | Notas |
+| ------------- | --------------------------------------------- | ----- |
+| `id`          | `INTEGER`                                     | PK    |
+| `nombre`      | `STRING`                                      |       |
+| `descripcion` | `TEXT`                                        |       |
+| `tipo`        | `ENUM('DESCUENTO_PORCENTUAL', 'DOS_POR_UNO')` |       |
+| `valor`       | `DECIMAL(10,2)`                               |       |
+| `fechaInicio` | `DATE`                                        |       |
+| `fechaFin`    | `DATE`                                        |       |
+| `activa`      | `BOOLEAN`                                     |       |
 
 - PK: `id`
 
 ### 2.17 PromocionProducto
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `promocionId` | `INTEGER` | FK → `Promocion.id` |
-| `productoId` | `INTEGER` | FK → `Producto.id` |
+| Atributo      | Tipo de dato | Notas               |
+| ------------- | ------------ | ------------------- |
+| `id`          | `INTEGER`    | PK                  |
+| `promocionId` | `INTEGER`    | FK → `Promocion.id` |
+| `productoId`  | `INTEGER`    | FK → `Producto.id`  |
 
 - PK: `id`
 - FK: `promocionId → Promocion.id`
@@ -284,12 +286,12 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 
 ### 2.18 PedidoPromocion
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `pedidoId` | `INTEGER` | FK → `Pedido.id` |
-| `promocionId` | `INTEGER` | FK → `Promocion.id` |
-| `descuentoAplicado` | `DECIMAL(10,2)` | snapshot |
+| Atributo            | Tipo de dato    | Notas               |
+| ------------------- | --------------- | ------------------- |
+| `id`                | `INTEGER`       | PK                  |
+| `pedidoId`          | `INTEGER`       | FK → `Pedido.id`    |
+| `promocionId`       | `INTEGER`       | FK → `Promocion.id` |
+| `descuentoAplicado` | `DECIMAL(10,2)` | snapshot            |
 
 - PK: `id`
 - FK: `pedidoId → Pedido.id`
@@ -298,12 +300,12 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 
 ### 2.19 ParametroSistema
 
-| Atributo | Tipo de dato | Notas |
-|---|---|---|
-| `id` | `INTEGER` | PK |
-| `clave` | `STRING` | UNIQUE |
-| `valor` | `STRING` | |
-| `descripcion` | `TEXT` | |
+| Atributo      | Tipo de dato | Notas  |
+| ------------- | ------------ | ------ |
+| `id`          | `INTEGER`    | PK     |
+| `clave`       | `STRING`     | UNIQUE |
+| `valor`       | `STRING`     |        |
+| `descripcion` | `TEXT`       |        |
 
 - PK: `id`
 - UNIQUE: `clave`
@@ -343,31 +345,31 @@ Promocion N:N Producto            (mediante PromocionProducto)
 Pedido N:N Promocion              (mediante PedidoPromocion)
 ```
 
-| # | A | B | Cardinalidad | FK |
-|---|---|---|---|---|
-| 1 | Usuario | Direccion | 1:N | `Direccion.usuarioId` |
-| 2 | Usuario | Pedido | 1:N | `Pedido.usuarioId` |
-| 3 | Categoria | Producto | 1:N | `Producto.categoriaId` |
-| 4 | Producto | ProductoOpcionGrupo | 1:N | `ProductoOpcionGrupo.productoId` |
-| 5 | OpcionGrupo | ProductoOpcionGrupo | 1:N | `ProductoOpcionGrupo.grupoId` |
-| 6 | OpcionGrupo | Opcion | 1:N | `Opcion.grupoId` |
-| 7 | Producto (combo) | ComboComponente | 1:N | `ComboComponente.comboId` |
-| 8 | Producto (componente) | ComboComponente | 1:N | `ComboComponente.productoId` |
-| 9 | Sucursal | Stock | 1:N | `Stock.sucursalId` |
-| 10 | Producto | Stock | 1:N | `Stock.productoId` |
-| 11 | Sucursal | Pedido | 1:N | `Pedido.sucursalId` |
-| 12 | EstadoPedido | Pedido | 1:N | `Pedido.estadoId` |
-| 13 | Pedido | PedidoItem | 1:N | `PedidoItem.pedidoId` |
-| 14 | Producto | PedidoItem | 1:N | `PedidoItem.productoId` |
-| 15 | PedidoItem | PedidoItemOpcion | 1:N | `PedidoItemOpcion.pedidoItemId` |
-| 16 | Opcion | PedidoItemOpcion | 1:N | `PedidoItemOpcion.opcionId` |
-| 17 | Pedido | PedidoEstadoHistorial | 1:N | `PedidoEstadoHistorial.pedidoId` |
-| 18 | EstadoPedido | PedidoEstadoHistorial | 1:N | `PedidoEstadoHistorial.estadoId` |
-| 19 | Usuario | PedidoEstadoHistorial | 1:N | `PedidoEstadoHistorial.usuarioId` |
-| 20 | Promocion | PromocionProducto | 1:N | `PromocionProducto.promocionId` |
-| 21 | Producto | PromocionProducto | 1:N | `PromocionProducto.productoId` |
-| 22 | Pedido | PedidoPromocion | 1:N | `PedidoPromocion.pedidoId` |
-| 23 | Promocion | PedidoPromocion | 1:N | `PedidoPromocion.promocionId` |
+| #   | A                     | B                     | Cardinalidad | FK                                |
+| --- | --------------------- | --------------------- | ------------ | --------------------------------- |
+| 1   | Usuario               | Direccion             | 1:N          | `Direccion.usuarioId`             |
+| 2   | Usuario               | Pedido                | 1:N          | `Pedido.usuarioId`                |
+| 3   | Categoria             | Producto              | 1:N          | `Producto.categoriaId`            |
+| 4   | Producto              | ProductoOpcionGrupo   | 1:N          | `ProductoOpcionGrupo.productoId`  |
+| 5   | OpcionGrupo           | ProductoOpcionGrupo   | 1:N          | `ProductoOpcionGrupo.grupoId`     |
+| 6   | OpcionGrupo           | Opcion                | 1:N          | `Opcion.grupoId`                  |
+| 7   | Producto (combo)      | ComboComponente       | 1:N          | `ComboComponente.comboId`         |
+| 8   | Producto (componente) | ComboComponente       | 1:N          | `ComboComponente.productoId`      |
+| 9   | Sucursal              | Stock                 | 1:N          | `Stock.sucursalId`                |
+| 10  | Producto              | Stock                 | 1:N          | `Stock.productoId`                |
+| 11  | Sucursal              | Pedido                | 1:N          | `Pedido.sucursalId`               |
+| 12  | EstadoPedido          | Pedido                | 1:N          | `Pedido.estadoId`                 |
+| 13  | Pedido                | PedidoItem            | 1:N          | `PedidoItem.pedidoId`             |
+| 14  | Producto              | PedidoItem            | 1:N          | `PedidoItem.productoId`           |
+| 15  | PedidoItem            | PedidoItemOpcion      | 1:N          | `PedidoItemOpcion.pedidoItemId`   |
+| 16  | Opcion                | PedidoItemOpcion      | 1:N          | `PedidoItemOpcion.opcionId`       |
+| 17  | Pedido                | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.pedidoId`  |
+| 18  | EstadoPedido          | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.estadoId`  |
+| 19  | Usuario               | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.usuarioId` |
+| 20  | Promocion             | PromocionProducto     | 1:N          | `PromocionProducto.promocionId`   |
+| 21  | Producto              | PromocionProducto     | 1:N          | `PromocionProducto.productoId`    |
+| 22  | Pedido                | PedidoPromocion       | 1:N          | `PedidoPromocion.pedidoId`        |
+| 23  | Promocion             | PedidoPromocion       | 1:N          | `PedidoPromocion.promocionId`     |
 
 ## 4. Claves y restricciones
 
@@ -456,6 +458,7 @@ erDiagram
         string telefono
         string rol
         boolean activo
+        dateonly fechaNacimiento
         datetime createdAt
         datetime updatedAt
     }

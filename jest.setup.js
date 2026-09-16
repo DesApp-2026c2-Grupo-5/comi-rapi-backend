@@ -1,3 +1,7 @@
 import db from './lib/models';
+import { closeSessionPool } from './lib/middlewares/session';
 
-afterAll(() => db.sequelize.close());
+afterAll(async () => {
+  await db.sequelize.close();
+  await closeSessionPool();
+});
