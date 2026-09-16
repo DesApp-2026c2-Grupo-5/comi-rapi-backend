@@ -95,6 +95,7 @@ module.exports = {
       'Categorias',
       categorias.map((categoria) => ({
         ...categoria,
+        activa: true,
         createdAt: new Date(),
         updatedAt: new Date(),
       }))

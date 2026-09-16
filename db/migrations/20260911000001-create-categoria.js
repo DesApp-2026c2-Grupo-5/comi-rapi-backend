@@ -17,6 +17,11 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: true,
       },
+      activa: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+      },
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
