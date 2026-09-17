@@ -2,7 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Sucursales', {
+    await queryInterface.createTable('EstadoPedidos', {
       id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -11,28 +11,23 @@ module.exports = {
       nombre: {
         type: Sequelize.STRING,
         allowNull: false,
+        unique: true,
       },
-      direccion: {
-        type: Sequelize.STRING,
+      orden: {
+        type: Sequelize.INTEGER,
         allowNull: false,
       },
-      latitud: {
-        type: Sequelize.DECIMAL(10, 7),
-        allowNull: true,
+      esInicial: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
-      longitud: {
-        type: Sequelize.DECIMAL(10, 7),
-        allowNull: true,
+      esFinal: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
-      telefono: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
-      horarios: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
-      activa: {
+      activo: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: true,
@@ -49,6 +44,6 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('Sucursales');
+    await queryInterface.dropTable('EstadoPedidos');
   },
 };
