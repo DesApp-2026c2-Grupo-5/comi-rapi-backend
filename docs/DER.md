@@ -69,12 +69,13 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 
 ### 2.4 Categoria
 
-| Atributo      | Tipo de dato | Notas  |
-| ------------- | ------------ | ------ |
-| `id`          | `INTEGER`    | PK     |
-| `nombre`      | `STRING`     | UNIQUE |
-| `descripcion` | `TEXT`       |        |
-| `activa`      | `BOOLEAN`    |        |
+| Atributo      | Tipo de dato | Notas                                         |
+| ------------- | ------------ | --------------------------------------------- |
+| `id`          | `INTEGER`    | PK                                            |
+| `nombre`      | `STRING`     | UNIQUE                                        |
+| `descripcion` | `TEXT`       |                                               |
+| `imagen`      | `STRING`     | ruta relativa en `public/imagenes/categorias` |
+| `activa`      | `BOOLEAN`    |                                               |
 
 - PK: `id`
 - UNIQUE: `nombre`
@@ -492,6 +493,7 @@ erDiagram
         int id PK
         string nombre UK
         string descripcion
+        string imagen
         boolean activa
     }
 

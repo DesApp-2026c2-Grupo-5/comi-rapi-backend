@@ -1,13 +1,54 @@
 'use strict';
 
 const categorias = [
-  { nombre: 'Hamburguesas', descripcion: 'Nuestras deliciosas hamburguesas' },
-  { nombre: 'Pizzas', descripcion: 'Pizzas artesanales al horno de barro' },
-  { nombre: 'Combos', descripcion: 'Combos con papas y bebida' },
-  { nombre: 'Papas', descripcion: 'Papas fritas para compartir' },
-  { nombre: 'Bebidas', descripcion: 'Bebidas frías y calientes' },
-  { nombre: 'Postres', descripcion: 'El mejor cierre para tu pedido' },
+  {
+    nombre: 'Hamburguesas',
+    descripcion: 'Nuestras deliciosas hamburguesas',
+    imagen: '/imagenes/categorias/hamburguesas-1790053851796.webp',
+  },
+  {
+    nombre: 'Pizzas',
+    descripcion: 'Pizzas artesanales al horno de barro',
+    imagen: '/imagenes/categorias/pizzas-1790053880184.webp',
+  },
+  {
+    nombre: 'Combos',
+    descripcion: 'Combos con papas y bebida',
+    imagen: '/imagenes/categorias/combos-1790053842240.webp',
+  },
+  {
+    nombre: 'Papas',
+    descripcion: 'Papas fritas para compartir',
+    imagen: '/imagenes/categorias/papas-1790053863426.webp',
+  },
+  {
+    nombre: 'Bebidas',
+    descripcion: 'Bebidas frías y calientes',
+    imagen: '/imagenes/categorias/bebidas-1790053831873.webp',
+  },
+  {
+    nombre: 'Postres',
+    descripcion: 'El mejor cierre para tu pedido',
+    imagen: '/imagenes/categorias/postres-1790053891920.webp',
+  },
 ];
+
+const imagenProducto = {
+  'Hamburguesa Clásica':
+    '/imagenes/productos/hamburguesa-cl-sica-1790052254629.webp',
+  'Hamburguesa Doble':
+    '/imagenes/productos/hamburguesa-doble-1790052273784.webp',
+  'Pizza Muzzarella': '/imagenes/productos/pizza-muzzarella-1790052372329.webp',
+  'Pizza Napolitana': '/imagenes/productos/pizza-napolitana-1790052386484.webp',
+  'Coca-Cola 500ml': '/imagenes/productos/coca-cola-500ml-1790052521265.webp',
+  'Limonada Natural': '/imagenes/productos/limonada-natural-1790052306263.webp',
+  'Combo Doble': '/imagenes/productos/combo-doble-1790052511089.webp',
+  'Papas Fritas Grandes':
+    '/imagenes/productos/papas-fritas-grandes-1790052356724.webp',
+  'Papas Cheddar': '/imagenes/productos/papas-cheddar-1790052341490.webp',
+  'Lava Cake': '/imagenes/productos/lava-cake-1790052288448.webp',
+  Cheesecake: '/imagenes/productos/cheesecake-1790052214004.webp',
+};
 
 const productos = [
   {
@@ -113,9 +154,7 @@ module.exports = {
       productos.map((producto) => ({
         nombre: producto.nombre,
         precio: producto.precio,
-        imagen: `https://via.placeholder.com/300x200?text=${encodeURIComponent(
-          producto.nombre
-        )}`,
+        imagen: imagenProducto[producto.nombre] || null,
         descripcion: producto.descripcion,
         categoriaId: idsPorNombre[producto.categoria],
         activo: true,

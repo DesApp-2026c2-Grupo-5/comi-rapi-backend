@@ -48,6 +48,7 @@
     "express-session": "^1.19.0",
     "helmet": "^3.22.0",
     "morgan": "^1.9.1",
+    "multer": "^2.0.0",
     "pg": "^8.3.3",
     "pg-hstore": "^2.3.3",
     "sequelize": "^5.x"
