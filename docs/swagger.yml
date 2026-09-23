@@ -1,0 +1,1953 @@
+openapi: 3.0.0
+info:
+  title: Comi-Rapi API
+  description: |-
+    API REST de **Comi-Rapi**. Autenticación por sesión server-side (cookie
+    HttpOnly `comirapi.sid`) + protección CSRF por doble envío de cookie y
+    header.
+
+    ### Credenciales de prueba (seed)
+
+    | Rol | Email | Contraseña |
+    |---|---|---|
+    | ADMINISTRADOR | `admin@test.com` | `123456` |
+    | CLIENTE | `cliente@test.com` | `123456` |
+
+    ### Roles y alcance
+
+    - **ADMINISTRADOR**: gestiona usuarios, categorías, productos, sucursales
+      e imágenes, y avanza los pedidos (preparación, envío, entrega).
+    - **CLIENTE**: registra pedidos, confirma o cancela los propios, administra
+      sus direcciones y consulta sus pedidos.
+    - **Sin sesión**: solo acceso al catálogo público (GET de categorías,
+      productos y sucursales activas) y a `/api/auth/*`.
+
+    ### Cómo probar desde Swagger UI
+
+    1. `GET /api/auth/csrf-token` → copiar `data.csrfToken` de la respuesta.
+    2. Botón **Authorize** → esquema `csrfToken` → pegar el token y autorizar.
+    3. `POST /api/auth/login` con las credenciales del rol a probar.
+    4. Ejecutar los endpoints deseados (los 🔒 quedan autorizados).
+
+    ### Convenciones
+
+    - **CSRF**: todo POST/PUT/PATCH/DELETE (incluidos los públicos) exige el
+      header `x-csrf-token` con el mismo valor de la cookie `csrf-token`.
+      Un `403 "Solicitud no válida"` indica desincronización: generar un token
+      nuevo y repetir el paso 2.
+    - **Respuestas**: éxito `{ success: true, data }`; error
+      `{ success: false, error }`. Única excepción: `/api/usuarios`
+      (`{ data }` / `{ message }`).
+    - **No implementado**: el módulo `/api/personalizacion` no tiene endpoints
+      reales.
+  version: 1.1.0
+servers:
+  - url: http://localhost:3000/api
+    description: Backend en desarrollo (Express + Sequelize)
+tags:
+  - name: Salud
+    description: Endpoint de verificación de conexión
+  - name: Autenticacion
+    description: Registro, login, logout y sesión
+  - name: Usuarios
+    description: Usuarios (solo administrador)
+  - name: Categorias
+    description: ABM de categorías de productos
+  - name: Productos
+    description: ABM de productos
+  - name: Pedidos
+    description: Registración, consulta y cambios de estado de pedidos
+  - name: Sucursales
+    description: ABM de sucursales
+  - name: Direcciones
+    description: CRUD de direcciones del cliente
+  - name: Imagenes
+    description: Subida de imágenes (productos y categorías)
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: comirapi.sid
+      description: Cookie de sesión emitida por POST /api/auth/registro o /api/auth/login
+    csrfToken:
+      type: apiKey
+      in: header
+      name: x-csrf-token
+      description: Token antiforgery emitido por GET /api/auth/csrf-token (necesario en todo POST/PUT/PATCH/DELETE)
+  schemas:
+    RespuestaOk:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+    RespuestaError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+    RolUsuario:
+      type: string
+      enum:
+        - CLIENTE
+        - ADMINISTRADOR
+    TipoProducto:
+      type: string
+      enum:
+        - PRODUCTO
+        - COMBO
+    MedioPago:
+      type: string
+      enum:
+        - MERCADO_PAGO
+        - TARJETA
+    EstadoPedidoEnum:
+      type: string
+      enum:
+        - pendiente
+        - confirmado
+        - en_preparacion
+        - listo_para_entregar
+        - en_camino
+        - entregado
+        - cancelado
+
+    UsuarioPublico:
+      type: object
+      description: Datos públicos del usuario (sin password)
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        apellido:
+          type: string
+          nullable: true
+        email:
+          type: string
+        telefono:
+          type: string
+          nullable: true
+        rol:
+          $ref: '#/components/schemas/RolUsuario'
+        activo:
+          type: boolean
+        fechaNacimiento:
+          type: string
+          format: date
+          nullable: true
+
+    Usuario:
+      type: object
+      description: Usuario completo sin password (respuesta de /api/usuarios)
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        apellido:
+          type: string
+          nullable: true
+        email:
+          type: string
+        telefono:
+          type: string
+          nullable: true
+        rol:
+          $ref: '#/components/schemas/RolUsuario'
+        activo:
+          type: boolean
+        fechaNacimiento:
+          type: string
+          format: date
+          nullable: true
+        edad:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Categoria:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        descripcion:
+          type: string
+          nullable: true
+        imagen:
+          type: string
+          nullable: true
+        activa:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Producto:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        precio:
+          type: number
+          format: double
+        categoria:
+          type: string
+          nullable: true
+        categoriaId:
+          type: integer
+        imagen:
+          type: string
+          nullable: true
+        descripcion:
+          type: string
+          nullable: true
+        activo:
+          type: boolean
+        tipo:
+          $ref: '#/components/schemas/TipoProducto'
+
+    Sucursal:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        direccion:
+          type: string
+        latitud:
+          type: number
+          format: double
+          nullable: true
+        longitud:
+          type: number
+          format: double
+          nullable: true
+        telefono:
+          type: string
+          nullable: true
+        horarios:
+          type: string
+          nullable: true
+        activa:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Direccion:
+      type: object
+      properties:
+        id:
+          type: integer
+        usuarioId:
+          type: integer
+        calle:
+          type: string
+        altura:
+          type: integer
+          nullable: true
+        ciudad:
+          type: string
+          nullable: true
+        codigoPostal:
+          type: string
+          nullable: true
+        referencia:
+          type: string
+          nullable: true
+        latitud:
+          type: number
+          format: double
+          nullable: true
+        longitud:
+          type: number
+          format: double
+          nullable: true
+        alias:
+          type: string
+          nullable: true
+        activa:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ClienteResumen:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        apellido:
+          type: string
+          nullable: true
+        email:
+          type: string
+
+    EstadoPedido:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        orden:
+          type: integer
+        esInicial:
+          type: boolean
+        esFinal:
+          type: boolean
+        activo:
+          type: boolean
+
+    ProductoResumen:
+      type: object
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        precio:
+          type: number
+          format: double
+
+    PedidoItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        pedidoId:
+          type: integer
+        productoId:
+          type: integer
+          nullable: true
+        nombreProducto:
+          type: string
+        precioUnitario:
+          type: number
+          format: double
+        cantidad:
+          type: integer
+        subtotal:
+          type: number
+          format: double
+        observacion:
+          type: string
+          nullable: true
+        Producto:
+          $ref: '#/components/schemas/ProductoResumen'
+          nullable: true
+
+    PedidoEstadoHistorial:
+      type: object
+      properties:
+        id:
+          type: integer
+        pedidoId:
+          type: integer
+        estadoId:
+          type: integer
+        usuarioId:
+          type: integer
+          nullable: true
+        fechaHora:
+          type: string
+          format: date-time
+        observacion:
+          type: string
+          nullable: true
+        EstadoPedido:
+          $ref: '#/components/schemas/EstadoPedido'
+
+    Pedido:
+      type: object
+      description: Pedido serializado (con cliente, sucursal, estado e histórico)
+      properties:
+        id:
+          type: integer
+        usuarioId:
+          type: integer
+        sucursalId:
+          type: integer
+        estadoId:
+          type: integer
+        fechaHora:
+          type: string
+          format: date-time
+        costoEnvio:
+          type: number
+          format: double
+        total:
+          type: number
+          format: double
+        medioPago:
+          $ref: '#/components/schemas/MedioPago'
+          nullable: true
+        observacion:
+          type: string
+          nullable: true
+        calle:
+          type: string
+          nullable: true
+        altura:
+          type: integer
+          nullable: true
+        ciudad:
+          type: string
+          nullable: true
+        codigoPostal:
+          type: string
+          nullable: true
+        referencia:
+          type: string
+          nullable: true
+        latitud:
+          type: number
+          format: double
+          nullable: true
+        longitud:
+          type: number
+          format: double
+          nullable: true
+        estado:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        cliente:
+          $ref: '#/components/schemas/ClienteResumen'
+        sucursal:
+          $ref: '#/components/schemas/Sucursal'
+        estadoActual:
+          $ref: '#/components/schemas/EstadoPedido'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PedidoItem'
+        historial:
+          type: array
+          items:
+            $ref: '#/components/schemas/PedidoEstadoHistorial'
+
+    # ---------- Requests ----------
+    RegistroRequest:
+      type: object
+      required:
+        - email
+        - password
+        - nombre
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+          description: Mínimo 6 caracteres
+        nombre:
+          type: string
+        apellido:
+          type: string
+        telefono:
+          type: string
+        rol:
+          $ref: '#/components/schemas/RolUsuario'
+          description: Opcional, por defecto CLIENTE
+        fechaNacimiento:
+          type: string
+          format: date
+          description: Formato YYYY-MM-DD (opcional)
+      example:
+        email: nuevo.cliente@test.com
+        password: '123456'
+        nombre: Marta
+        apellido: González
+        telefono: '11-5555-1234'
+        rol: CLIENTE
+        fechaNacimiento: '2000-05-14'
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+      example:
+        email: admin@test.com
+        password: '123456'
+      description: |
+        Usuarios de prueba del seed:
+        - ADMINISTRADOR: admin@test.com / 123456
+        - CLIENTE: cliente@test.com / 123456
+
+    ElementoPersonalizacion:
+      type: object
+      properties:
+        precio:
+          type: number
+          format: double
+
+    PersonalizacionInput:
+      type: object
+      properties:
+        extras:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElementoPersonalizacion'
+        acompanamientos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElementoPersonalizacion'
+
+    PedidoItemInput:
+      type: object
+      description: >-
+        Una línea del pedido. Se requiere un identificador (productoId) o bien
+        nombre + precio (nombre/nombreProducto y precio/precioUnitario).
+      properties:
+        productoId:
+          type: integer
+        nombre:
+          type: string
+        nombreProducto:
+          type: string
+        precio:
+          type: number
+          format: double
+          minimum: 0
+        precioUnitario:
+          type: number
+          format: double
+          minimum: 0
+        cantidad:
+          type: integer
+          minimum: 1
+          default: 1
+        observacion:
+          type: string
+        personalizacion:
+          $ref: '#/components/schemas/PersonalizacionInput'
+        extras:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElementoPersonalizacion'
+        acompanamientos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElementoPersonalizacion'
+
+    DireccionEntregaInput:
+      type: object
+      description: Snapshot de la dirección de entrega que se persiste en el pedido
+      properties:
+        calle:
+          type: string
+        altura:
+          type: integer
+        ciudad:
+          type: string
+        codigoPostal:
+          type: string
+        referencia:
+          type: string
+        latitud:
+          type: number
+          format: double
+        longitud:
+          type: number
+          format: double
+
+    CrearPedidoRequest:
+      type: object
+      required:
+        - productos
+      properties:
+        productos:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/PedidoItemInput'
+        sucursalId:
+          type: integer
+          description: >-
+            Opcional. Si se omite se asigna automáticamente la sucursal con
+            menor carga de pedidos pendientes.
+        direccionEntrega:
+          $ref: '#/components/schemas/DireccionEntregaInput'
+        costoEnvio:
+          type: number
+          format: double
+          minimum: 0
+          default: 0
+        medioPago:
+          $ref: '#/components/schemas/MedioPago'
+        observacion:
+          type: string
+
+    CambiarEstadoRequest:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          $ref: '#/components/schemas/EstadoPedidoEnum'
+          description: >-
+            Transiciones permitidas: pendiente→confirmado|cancelado;
+            confirmado→en_preparacion|cancelado;
+            en_preparacion→listo_para_entregar;
+            listo_para_entregar→en_camino; en_camino→entregado.
+            Confirmar (pendiente→confirmado) solo lo puede hacer el CLIENTE
+            dueño y exige medioPago; cancelar, el CLIENTE dueño o el
+            ADMINISTRADOR; el resto de las transiciones solo ADMINISTRADOR.
+        observacion:
+          type: string
+        medioPago:
+          $ref: '#/components/schemas/MedioPago'
+          description: Obligatorio al confirmar un pedido
+
+    CategoriaRequest:
+      type: object
+      required:
+        - nombre
+      properties:
+        nombre:
+          type: string
+        descripcion:
+          type: string
+        imagen:
+          type: string
+      example:
+        nombre: Entradas
+        descripcion: Picadas y aperitivos para compartir
+
+    ProductoRequest:
+      type: object
+      required:
+        - nombre
+        - tipo
+        - precio
+      properties:
+        nombre:
+          type: string
+        tipo:
+          $ref: '#/components/schemas/TipoProducto'
+        precio:
+          type: number
+          format: double
+          minimum: 0
+        categoria:
+          type: string
+          description: Nombre de la categoría (alternativa a categoriaId)
+        categoriaId:
+          type: integer
+        imagen:
+          type: string
+        descripcion:
+          type: string
+      example:
+        nombre: Picada para dos
+        tipo: PRODUCTO
+        precio: 8500
+        categoria: Entradas
+        descripcion: Tabla de fiambres y quesos para compartir
+
+    SucursalRequest:
+      type: object
+      required:
+        - nombre
+        - direccion
+      properties:
+        nombre:
+          type: string
+        direccion:
+          type: string
+        latitud:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitud:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        telefono:
+          type: string
+        horarios:
+          type: string
+        activa:
+          type: boolean
+          default: true
+      example:
+        nombre: Sucursal Centro
+        direccion: Av. Rivadavia 2100
+        latitud: -34.6083
+        longitud: -58.3812
+        telefono: '11-5555-0001'
+        horarios: Lun a Dom 10:00-23:00
+
+    DireccionRequest:
+      type: object
+      required:
+        - calle
+      properties:
+        calle:
+          type: string
+        altura:
+          type: integer
+          minimum: 0
+        ciudad:
+          type: string
+        codigoPostal:
+          type: string
+        referencia:
+          type: string
+        latitud:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitud:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        alias:
+          type: string
+      example:
+        calle: Av. Mitre
+        altura: 750
+        ciudad: Hurlingham
+        codigoPostal: '1686'
+        referencia: 'Casa blanca, semáforo de la plaza'
+        latitud: -34.5912
+        longitud: -58.6364
+        alias: Casa
+
+    HealthData:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        servicio:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    CsrfData:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            csrfToken:
+              type: string
+
+    MensajeData:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+
+    ImagenData:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            url:
+              type: string
+
+    # ---------- Wrappers de respuesta ----------
+    RespuestaUsuarioPublico:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/UsuarioPublico'
+    RespuestaListaUsuarios:
+      type: object
+      description: Formato de /api/usuarios (carece del wrapper success)
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Usuario'
+    RespuestaUsuario:
+      type: object
+      description: Formato de GET /api/usuarios/{id} (carece del wrapper success)
+      properties:
+        data:
+          $ref: '#/components/schemas/Usuario'
+    RespuestaCategoria:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Categoria'
+    RespuestaListaCategorias:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Categoria'
+    RespuestaProducto:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Producto'
+    RespuestaListaProductos:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Producto'
+    RespuestaPedido:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Pedido'
+    RespuestaListaPedidos:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pedido'
+    RespuestaSucursal:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Sucursal'
+    RespuestaListaSucursales:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sucursal'
+    RespuestaDireccion:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Direccion'
+    RespuestaListaDirecciones:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Direccion'
+
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      description: Identificador numérico del recurso
+      schema:
+        type: integer
+
+paths:
+  /health:
+    get:
+      tags:
+        - Salud
+      summary: Estado del servicio
+      description: Verifica que la API esté arriba. No toca la base de datos.
+      operationId: health
+      responses:
+        '200':
+          description: Servicio disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthData'
+
+  /auth/csrf-token:
+    get:
+      tags:
+        - Autenticacion
+      summary: Emite el token CSRF
+      description: >
+        Emite la cookie csrf-token (no httpOnly) y devuelve el token en
+        data.csrfToken. Debe llamarse antes de cualquier POST/PUT/PATCH/DELETE.
+      operationId: authCsrfToken
+      responses:
+        '200':
+          description: Token CSRF emitido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsrfData'
+
+  /auth/registro:
+    post:
+      tags:
+        - Autenticacion
+      summary: Registra un usuario y abre sesión
+      operationId: authRegistro
+      security:
+        - csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroRequest'
+      responses:
+        '201':
+          description: Usuario creado y sesión iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaUsuarioPublico'
+        '400':
+          description: Datos inválidos o email duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '429':
+          description: Demasiados intentos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /auth/login:
+    post:
+      tags:
+        - Autenticacion
+      summary: Inicia sesión
+      operationId: authLogin
+      security:
+        - csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Sesión iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaUsuarioPublico'
+        '401':
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '429':
+          description: Demasiados intentos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /auth/logout:
+    post:
+      tags:
+        - Autenticacion
+      summary: Cierra la sesión
+      operationId: authLogout
+      security:
+        - csrfToken: []
+      responses:
+        '200':
+          description: Sesión cerrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MensajeData'
+        '403':
+          description: Token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /auth/me:
+    get:
+      tags:
+        - Autenticacion
+      summary: Datos del usuario autenticado
+      operationId: authMe
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Datos públicos del usuario en sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaUsuarioPublico'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /usuarios:
+    get:
+      tags:
+        - Usuarios
+      summary: Lista todos los usuarios
+      description: Solo administradores. Sin paginación.
+      operationId: usuariosIndex
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Listado de usuarios
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaListaUsuarios'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /usuarios/{id}:
+    get:
+      tags:
+        - Usuarios
+      summary: Obtiene un usuario por id
+      description: Solo administradores.
+      operationId: usuariosShow
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaUsuario'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /categorias:
+    get:
+      tags:
+        - Categorias
+      summary: Lista categorías (público)
+      description: Por defecto solo categorías activas. Con activa=false y sesión de administrador se incluyen las inactivas.
+      operationId: categoriasIndex
+      parameters:
+        - name: activa
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - 'false'
+              - 'true'
+      responses:
+        '200':
+          description: Listado de categorías
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaListaCategorias'
+    post:
+      tags:
+        - Categorias
+      summary: Crea una categoría (solo ADMINISTRADOR)
+      operationId: categoriasCreate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+      responses:
+        '201':
+          description: Categoría creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaCategoria'
+        '400':
+          description: Nombre obligatorio o categoría duplicada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado o token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /categorias/{id}:
+    get:
+      tags:
+        - Categorias
+      summary: Obtiene una categoría por id
+      operationId: categoriasShow
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Categoría encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaCategoria'
+        '404':
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    put:
+      tags:
+        - Categorias
+      summary: Actualiza una categoría (solo ADMINISTRADOR)
+      operationId: categoriasUpdate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaRequest'
+      responses:
+        '200':
+          description: Categoría actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaCategoria'
+        '400':
+          description: Nombre vacío o duplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    delete:
+      tags:
+        - Categorias
+      summary: Elimina una categoría (baja lógica, solo ADMINISTRADOR)
+      description: Marca activa=false.
+      operationId: categoriasDestroy
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Categoría desactivada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaOk'
+        '404':
+          description: Categoría no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /productos:
+    get:
+      tags:
+        - Productos
+      summary: Lista productos activos (público)
+      operationId: productosIndex
+      responses:
+        '200':
+          description: Listado de productos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaListaProductos'
+    post:
+      tags:
+        - Productos
+      summary: Crea un producto (solo ADMINISTRADOR)
+      operationId: productosCreate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductoRequest'
+      responses:
+        '201':
+          description: Producto creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaProducto'
+        '400':
+          description: Datos inválidos o categoría inexistente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado o token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /productos/{id}:
+    get:
+      tags:
+        - Productos
+      summary: Obtiene un producto por id
+      operationId: productosShow
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Producto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaProducto'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    put:
+      tags:
+        - Productos
+      summary: Actualiza un producto (solo ADMINISTRADOR)
+      operationId: productosUpdate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductoRequest'
+      responses:
+        '200':
+          description: Producto actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaProducto'
+        '400':
+          description: Datos inválidos o categoría inexistente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    delete:
+      tags:
+        - Productos
+      summary: Elimina un producto (baja lógica, solo ADMINISTRADOR)
+      description: Marca activo=false.
+      operationId: productosDestroy
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Producto desactivado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaOk'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /pedidos:
+    post:
+      tags:
+        - Pedidos
+      summary: Registra un pedido
+      operationId: pedidosCreate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearPedidoRequest'
+      responses:
+        '201':
+          description: Pedido creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaPedido'
+        '400':
+          description: Validación de productos, sucursal o medio de pago
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado o token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    get:
+      tags:
+        - Pedidos
+      summary: Lista pedidos
+      description: >-
+        Un CLIENTE ve sus propios pedidos; un ADMINISTRADOR ve todos y puede
+        filtrar por sucursal con ?sucursalId=.
+      operationId: pedidosIndex
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: sucursalId
+          in: query
+          required: false
+          description: Solo tiene efecto para administradores
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Listado de pedidos (recientes primero)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaListaPedidos'
+        '403':
+          description: Acceso denegado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /pedidos/{id}:
+    get:
+      tags:
+        - Pedidos
+      summary: Obtiene un pedido por id
+      description: Un CLIENTE solo puede ver sus propios pedidos.
+      operationId: pedidosShow
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Pedido encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaPedido'
+        '403':
+          description: Acceso denegado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /pedidos/{id}/estado:
+    patch:
+      tags:
+        - Pedidos
+      summary: Cambia el estado de un pedido
+      operationId: pedidosCambiarEstado
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambiarEstadoRequest'
+      responses:
+        '200':
+          description: Pedido con el nuevo estado e histórico actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaPedido'
+        '400':
+          description: Estado obligatorio, transición o medio de pago inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol o propietario no autorizado / token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /sucursales:
+    get:
+      tags:
+        - Sucursales
+      summary: Lista sucursales (público)
+      description: Por defecto solo sucursales activas. Con activa=false y sesión de administrador se incluyen las inactivas.
+      operationId: sucursalesIndex
+      parameters:
+        - name: activa
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - 'false'
+              - 'true'
+      responses:
+        '200':
+          description: Listado de sucursales
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaListaSucursales'
+    post:
+      tags:
+        - Sucursales
+      summary: Crea una sucursal (solo ADMINISTRADOR)
+      operationId: sucursalesCreate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SucursalRequest'
+      responses:
+        '201':
+          description: Sucursal creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaSucursal'
+        '400':
+          description: Nombre, dirección o coordenadas inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado o token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /sucursales/{id}:
+    get:
+      tags:
+        - Sucursales
+      summary: Obtiene una sucursal por id
+      operationId: sucursalesShow
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Sucursal encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaSucursal'
+        '404':
+          description: Sucursal no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    put:
+      tags:
+        - Sucursales
+      summary: Actualiza una sucursal (solo ADMINISTRADOR)
+      operationId: sucursalesUpdate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SucursalRequest'
+      responses:
+        '200':
+          description: Sucursal actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaSucursal'
+        '400':
+          description: Coordenadas inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Sucursal no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    delete:
+      tags:
+        - Sucursales
+      summary: Elimina una sucursal (baja lógica, solo ADMINISTRADOR)
+      description: Marca activa=false.
+      operationId: sucursalesDestroy
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Sucursal desactivada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaOk'
+        '404':
+          description: Sucursal no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /direcciones:
+    get:
+      tags:
+        - Direcciones
+      summary: Lista direcciones
+      description: >-
+        Un CLIENTE ve sus direcciones activas. Un ADMINISTRADOR ve todas y
+        puede filtrar por usuarioId y activa.
+      operationId: direccionesIndex
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: usuarioId
+          in: query
+          required: false
+          description: Solo administradores
+          schema:
+            type: integer
+        - name: activa
+          in: query
+          required: false
+          description: Solo administradores (por defecto solo activas)
+          schema:
+            type: string
+            enum:
+              - 'false'
+              - 'true'
+      responses:
+        '200':
+          description: Listado de direcciones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaListaDirecciones'
+        '403':
+          description: Acceso denegado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    post:
+      tags:
+        - Direcciones
+      summary: Crea una dirección (solo CLIENTE)
+      operationId: direccionesCreate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DireccionRequest'
+      responses:
+        '201':
+          description: Dirección creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaDireccion'
+        '400':
+          description: Calle, altura o coordenadas inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado o token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /direcciones/{id}:
+    get:
+      tags:
+        - Direcciones
+      summary: Obtiene una dirección por id
+      description: Solo el dueño o un administrador.
+      operationId: direccionesShow
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Dirección encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaDireccion'
+        '404':
+          description: Dirección no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    put:
+      tags:
+        - Direcciones
+      summary: Actualiza una dirección (solo dueño, CLIENTE)
+      operationId: direccionesUpdate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DireccionRequest'
+      responses:
+        '200':
+          description: Dirección actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaDireccion'
+        '400':
+          description: Calle, altura o coordenadas inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Dirección no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    delete:
+      tags:
+        - Direcciones
+      summary: Elimina una dirección (baja lógica, solo dueño)
+      description: Marca activa=false.
+      operationId: direccionesDestroy
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Dirección desactivada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaOk'
+        '403':
+          description: Acceso denegado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Dirección no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /imagenes/upload:
+    post:
+      tags:
+        - Imagenes
+      summary: Sube una imagen de producto (solo ADMINISTRADOR)
+      description: Multipart, campo imagen. Solo JPG, PNG o WEBP, máximo 5 MB.
+      operationId: imagenesUploadProducto
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - imagen
+              properties:
+                imagen:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Imagen subida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImagenData'
+        '400':
+          description: Imagen ausente, tipo inválido o excede 5 MB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado o token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /imagenes/upload/categoria:
+    post:
+      tags:
+        - Imagenes
+      summary: Sube una imagen de categoría (solo ADMINISTRADOR)
+      description: Multipart, campo imagen. Solo JPG, PNG o WEBP, máximo 5 MB.
+      operationId: imagenesUploadCategoria
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - imagen
+              properties:
+                imagen:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Imagen subida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImagenData'
+        '400':
+          description: Imagen ausente, tipo inválido o excede 5 MB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado o token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
