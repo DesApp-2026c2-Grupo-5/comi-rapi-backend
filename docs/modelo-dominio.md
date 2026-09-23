@@ -139,12 +139,13 @@ Relaciones:
 
 ### 5.4 Categoria
 
-| Atributo      | Tipo / Notas |
-| ------------- | ------------ |
-| `id`          | PK           |
-| `nombre`      | único        |
-| `descripcion` |              |
-| `activa`      | booleano     |
+| Atributo      | Tipo / Notas                                  |
+| ------------- | --------------------------------------------- |
+| `id`          | PK                                            |
+| `nombre`      | único                                         |
+| `descripcion` |                                               |
+| `imagen`      | ruta relativa en `public/imagenes/categorias` |
+| `activa`      | booleano                                      |
 
 Reglas:
 

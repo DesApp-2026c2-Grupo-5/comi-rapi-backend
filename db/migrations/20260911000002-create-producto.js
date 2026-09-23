@@ -31,7 +31,7 @@ module.exports = {
           model: 'Categorias',
           key: 'id',
         },
-        onDelete: 'CASCADE',
+        onDelete: 'RESTRICT',
       },
       activo: {
         type: Sequelize.BOOLEAN,
