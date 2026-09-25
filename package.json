@@ -49,9 +49,11 @@
     "helmet": "^3.22.0",
     "morgan": "^1.9.1",
     "multer": "^2.0.0",
-    "pg": "^8.3.3",
+    "pg": "8.11.5",
     "pg-hstore": "^2.3.3",
-    "sequelize": "^5.x"
+    "sequelize": "^5.x",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
