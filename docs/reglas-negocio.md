@@ -57,8 +57,13 @@ Regla de negocio, no entidad:
 
 ## 7. Direcciones
 
-- `Usuario 1:N Direccion`.
-- La dirección incluye domicilio textual y geolocalización (latitud/longitud).
+- `Direccion` es la única entidad que almacena los datos de ubicación (domicilio textual y geolocalización latitud/longitud), tanto para usuarios como para sucursales.
+- `Usuario 1:N Direccion`: un usuario puede tener muchas direcciones.
+- `Sucursal 1:1 Direccion`: cada sucursal tiene exactamente una dirección (FK `Direccion.sucursalId`). `Sucursal` ya no almacena `direccion` como string ni coordenadas propias.
+- Una dirección pertenece a un usuario o a una sucursal, nunca a ambos simultáneamente ni a ninguno. Se garantiza a nivel de persistencia mediante el CHECK `CK_Direcciones_propietario`.
+- **Campos obligatorios** al ingresar una dirección (cliente y admin, en la creación de la sucursal): `calle`, `altura`, `provincia`, `localidad` y `codigoPostal`. Se validan en la API y a nivel de modelo (`NOT NULL`).
+- **Coordenadas no manuales**: `latitud`/`longitud` son opcionales y **no se ingresan manualmente** (ni por el admin ni por nadie): la API las rechaza. A futuro, un servicio de geolocalización del backend las calculará a partir de los datos de la dirección ingresados.
+- La dirección de un usuario se gestiona mediante la API de direcciones; la dirección de una sucursal se gestiona mediante la API de sucursales (como objeto `direccion` anidado).
 - La dirección puede modificarse o eliminarse tras un pedido.
 - El pedido conserva un snapshot de la dirección al generarse/confirmarse: calle, altura, ciudad, codigoPostal, referencia, latitud y longitud.
 
