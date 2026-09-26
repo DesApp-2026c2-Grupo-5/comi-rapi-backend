@@ -40,7 +40,7 @@ El dominio cubre:
 | #   | Entidad                 | Responsabilidad                               |
 | --- | ----------------------- | --------------------------------------------- |
 | 1   | `Usuario`               | Actor autenticado (cliente o administrador)   |
-| 2   | `Direccion`             | Dirección guardada por un usuario             |
+| 2   | `Direccion`             | Dirección de un usuario o una sucursal        |
 | 3   | `Sucursal`              | Local físico                                  |
 | 4   | `Categoria`             | Agrupar productos                             |
 | 5   | `Producto`              | Artículo vendible (normal o combo)            |
@@ -94,46 +94,60 @@ No crear entidades separadas `Cliente` ni `Administrador`.
 
 ### 5.2 Direccion
 
-| Atributo       | Tipo / Notas      |
-| -------------- | ----------------- |
-| `id`           | PK                |
-| `usuarioId`    | FK → `Usuario.id` |
-| `calle`        |                   |
-| `altura`       |                   |
-| `ciudad`       |                   |
-| `codigoPostal` |                   |
-| `referencia`   |                   |
-| `latitud`      |                   |
-| `longitud`     |                   |
-| `alias`        |                   |
-| `activa`       | booleano          |
+`Direccion` es la única entidad que almacena los datos de ubicación (domicilio textual y, posteriormente, coordenadas) tanto de un **usuario** como de una **sucursal**. Puede pertenecer a un usuario o a una sucursal, pero **no a ambos simultáneamente ni a ninguno**.
 
-Relación: `Direccion.usuarioId → Usuario.id`
+| Atributo       | Tipo / Notas                |
+| -------------- | --------------------------- |
+| `id`           | PK                          |
+| `usuarioId`    | FK opcional → `Usuario.id`  |
+| `sucursalId`   | FK opcional → `Sucursal.id` |
+| `calle`        | obligatorio                 |
+| `altura`       | obligatorio                 |
+| `provincia`    | obligatorio                 |
+| `localidad`    | obligatorio                 |
+| `codigoPostal` | obligatorio                 |
+| `referencia`   | opcional                    |
+| `latitud`      | opcional                    |
+| `longitud`     | opcional                    |
+| `alias`        | opcional                    |
+| `activa`       | booleano                    |
+
+Relaciones:
+
+- `Direccion.usuarioId → Usuario.id` (opcional)
+- `Direccion.sucursalId → Sucursal.id` (opcional)
 
 Cardinalidad:
 
-- Un usuario puede tener muchas direcciones.
-- Una dirección pertenece a un usuario.
+- `Usuario 1:N Direccion`: un usuario puede tener muchas direcciones.
+- `Sucursal 1:1 Direccion`: una sucursal tiene exactamente una dirección.
+
+Reglas:
+
+- **Propietario exclusivo**: exactamente uno de `usuarioId` / `sucursalId` debe estar informado. Se garantiza a nivel de persistencia mediante el CHECK `CK_Direcciones_propietario` (`("usuarioId" IS NOT NULL)::int + ("sucursalId" IS NOT NULL)::int = 1`) y a nivel de modelo mediante una validación de instancia.
+- `Usuario.id` y `Sucursal.id` son FKs con `ON DELETE RESTRICT`.
+- **Campos obligatorios**: `calle`, `altura`, `provincia`, `localidad` y `codigoPostal`. Se validan a nivel de modelo (`NOT NULL`), en la API de direcciones (cliente) y en la API de sucursales (admin, al crear/actualizar la dirección de la sucursal).
+- **Coordenadas no manuales**: `latitud` y `longitud` son opcionales y **no se ingresan manualmente** (ni por el admin ni por nadie): la API las rechaza. A futuro, un servicio de geolocalización del backend las calculará a partir de los datos de la dirección ingresados (`calle`, `altura`, `provincia`, `localidad`, `codigoPostal`).
 
 Importante: la dirección utilizada en un pedido **no debe depender de esta entidad para conservar el historial**. Al confirmar/generar el pedido, los datos se copian como snapshot dentro de `Pedido`. No crear `PedidoDireccion`.
 
 ### 5.3 Sucursal
 
-| Atributo    | Tipo / Notas                      |
-| ----------- | --------------------------------- |
-| `id`        | PK                                |
-| `nombre`    |                                   |
-| `direccion` |                                   |
-| `latitud`   |                                   |
-| `longitud`  |                                   |
-| `telefono`  |                                   |
-| `horarios`  | información propia de la sucursal |
-| `activa`    | booleano                          |
+| Atributo   | Tipo / Notas                      |
+| ---------- | --------------------------------- |
+| `id`       | PK                                |
+| `nombre`   |                                   |
+| `telefono` |                                   |
+| `horarios` | información propia de la sucursal |
+| `activa`   | booleano                          |
+
+`Sucursal` **no** almacena `direccion` ni `latitud`/`longitud`: esos datos quedan centralizados en `Direccion` mediante la relación `Sucursal 1:1 Direccion` (FK `Direccion.sucursalId`). Antes de esta alineación, `Sucursal` los duplicaba como `direccion STRING` + coordenadas; dichas columnas fueron eliminadas.
 
 `horarios` se documenta como información de la sucursal, no como entidad independiente. No crear `HorarioSucursal`. La decisión podrá revisarse si se requiere gestionar horarios de forma estructurada.
 
 Relaciones:
 
+- `Sucursal 1:1 Direccion`
 - `Sucursal 1:N Stock`
 - `Sucursal 1:N Pedido`
 
@@ -471,6 +485,8 @@ Regla: `clave` debe ser única. No crear entidades específicas para cada parám
 Usuario 1:N Direccion
 Usuario 1:N Pedido
 
+Sucursal 1:1 Direccion
+
 Categoria 1:N Producto
 
 Producto N:N OpcionGrupo
@@ -504,6 +520,7 @@ Pedido N:N Promocion
 | A                     | B                     | Cardinalidad | FK                                |
 | --------------------- | --------------------- | ------------ | --------------------------------- |
 | Usuario               | Direccion             | 1:N          | `Direccion.usuarioId`             |
+| Sucursal              | Direccion             | 1:1          | `Direccion.sucursalId`            |
 | Usuario               | Pedido                | 1:N          | `Pedido.usuarioId`                |
 | Categoria             | Producto              | 1:N          | `Producto.categoriaId`            |
 | Producto              | ProductoOpcionGrupo   | 1:N          | `ProductoOpcionGrupo.productoId`  |
@@ -543,6 +560,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 ### 7.2 Otras reglas
 
 - `Usuario.email` único; `password` como hash.
+- `Direccion`: pertenece a un usuario o a una sucursal, nunca a ambos ni a ninguno (CHECK `CK_Direcciones_propietario`). La dirección de una sucursal se gestiona mediante la API de sucursales; la de un usuario mediante la API de direcciones.
 - `Categoria.nombre` único; sin jerarquía de categorías.
 - `ParametroSistema.clave` único.
 - `Stock`: PK compuesta `(sucursalId, productoId)` única.
@@ -551,7 +569,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 
 ## 8. Snapshots históricos
 
-- **Dirección en `Pedido`**: al confirmar/generar el pedido se copian `calle`, `altura`, `ciudad`, `codigoPostal`, `referencia`, `latitud` y `longitud`. No depende de `Direccion` para conservar el historial.
+- **Dirección en `Pedido`**: al confirmar/generar el pedido se copian `calle`, `altura`, `ciudad`, `codigoPostal`, `referencia`, `latitud` y `longitud`. No depende de `Direccion` para conservar el historial. Nota: el snapshot de `Pedido` conserva su propia columna `ciudad`; con la alineación de `Direccion` (que ahora usa `provincia`/`localidad`), la localidad se mapea a esa columna. Queda pendiente alinear el naming del snapshot en una etapa posterior.
 - **Producto en `PedidoItem`**: `nombreProducto` y `precioUnitario` son copia del momento del pedido. No se reconstruyen desde `Producto`.
 - **Opción en `PedidoItemOpcion`**: `nombre` y `precioAdicional` son copia del momento del pedido.
 - **Promoción en `PedidoPromocion`**: `descuentoAplicado` conserva el beneficio efectivamente aplicado.
@@ -559,6 +577,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 ## 9. Decisiones importantes
 
 - Una sola entidad `Usuario` con `rol` (sin `Cliente`/`Administrador` separados).
+- `Direccion` como única entidad de ubicación (domicilio + coordenadas), compartida por usuarios y sucursales; `Sucursal 1:1 Direccion` (sin `direccion STRING` ni coordenadas en `Sucursal`).
 - Dirección histórica por snapshot dentro de `Pedido` (sin `PedidoDireccion`).
 - `horarios` como información de `Sucursal` (sin `HorarioSucursal`).
 - Combos como `Producto` con `tipo = COMBO` + `ComboComponente` (sin entidad `Combo`).
@@ -608,8 +627,8 @@ La arquitectura futura podrá incorporar, por ejemplo:
 | Entidad                 | Responsabilidad                    | Relaciones principales                                                                                                  |
 | ----------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `Usuario`               | Actor autenticado                  | 1:N `Direccion`, 1:N `Pedido`                                                                                           |
-| `Direccion`             | Dirección guardada                 | N:1 `Usuario`                                                                                                           |
-| `Sucursal`              | Local físico                       | 1:N `Stock`, 1:N `Pedido`                                                                                               |
+| `Direccion`             | Dirección de usuario o sucursal    | N:1 `Usuario` (opcional), 1:1 `Sucursal` (opcional)                                                                     |
+| `Sucursal`              | Local físico                       | 1:1 `Direccion`, 1:N `Stock`, 1:N `Pedido`                                                                              |
 | `Categoria`             | Agrupar productos                  | 1:N `Producto`                                                                                                          |
 | `Producto`              | Artículo vendible (normal o combo) | N:1 `Categoria`, 1:N `ProductoOpcionGrupo`, 1:N `ComboComponente`, 1:N `Stock`, 1:N `PedidoItem`                        |
 | `ComboComponente`       | Composición de combo               | N:1 `Producto` (combo), N:1 `Producto` (componente)                                                                     |

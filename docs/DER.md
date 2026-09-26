@@ -34,38 +34,44 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 
 ### 2.2 Direccion
 
-| Atributo       | Tipo de dato    | Notas             |
-| -------------- | --------------- | ----------------- |
-| `id`           | `INTEGER`       | PK                |
-| `usuarioId`    | `INTEGER`       | FK → `Usuario.id` |
-| `calle`        | `STRING`        |                   |
-| `altura`       | `INTEGER`       |                   |
-| `ciudad`       | `STRING`        |                   |
-| `codigoPostal` | `STRING`        |                   |
-| `referencia`   | `TEXT`          | Opcional          |
-| `latitud`      | `DECIMAL(10,7)` | Opcional          |
-| `longitud`     | `DECIMAL(10,7)` | Opcional          |
-| `alias`        | `STRING`        | Opcional          |
-| `activa`       | `BOOLEAN`       |                   |
+`Direccion` es la única entidad que almacena los datos de ubicación, tanto para un usuario como para una sucursal. Puede pertenecer a un usuario o a una sucursal, pero **no a ambos simultáneamente ni a ninguno**.
+
+| Atributo       | Tipo de dato    | Notas                       |
+| -------------- | --------------- | --------------------------- |
+| `id`           | `INTEGER`       | PK                          |
+| `usuarioId`    | `INTEGER`       | FK opcional → `Usuario.id`  |
+| `sucursalId`   | `INTEGER`       | FK opcional → `Sucursal.id` |
+| `calle`        | `STRING`        | Obligatorio                 |
+| `altura`       | `INTEGER`       | Obligatorio                 |
+| `provincia`    | `STRING`        | Obligatorio                 |
+| `localidad`    | `STRING`        | Obligatorio                 |
+| `codigoPostal` | `STRING`        | Obligatorio                 |
+| `referencia`   | `TEXT`          | Opcional                    |
+| `latitud`      | `DECIMAL(10,7)` | Opcional                    |
+| `longitud`     | `DECIMAL(10,7)` | Opcional                    |
+| `alias`        | `STRING`        | Opcional                    |
+| `activa`       | `BOOLEAN`       |                             |
 
 - PK: `id`
-- FK: `usuarioId → Usuario.id`
+- FK (opcional): `usuarioId → Usuario.id`, `ON DELETE RESTRICT`
+- FK (opcional): `sucursalId → Sucursal.id`, `ON DELETE RESTRICT`
+- CHECK: `CK_Direcciones_propietario` — exactamente uno de `usuarioId` / `sucursalId` debe estar informado (`("usuarioId" IS NOT NULL)::int + ("sucursalId" IS NOT NULL)::int = 1`)
+- Obligatorios: `calle`, `altura`, `provincia`, `localidad`, `codigoPostal` (NOT NULL; también validados en la API). Antes de la alineación existía `ciudad`, renombrada a `localidad`.
+- `latitud`/`longitud` son opcionales y **no se ingresan manualmente** (la API las rechaza): a futuro un servicio de geolocalización del backend las calculará a partir de los datos de la dirección.
 
 ### 2.3 Sucursal
 
-| Atributo    | Tipo de dato    | Notas                             |
-| ----------- | --------------- | --------------------------------- |
-| `id`        | `INTEGER`       | PK                                |
-| `nombre`    | `STRING`        |                                   |
-| `direccion` | `STRING`        |                                   |
-| `latitud`   | `DECIMAL(10,7)` |                                   |
-| `longitud`  | `DECIMAL(10,7)` |                                   |
-| `telefono`  | `STRING`        |                                   |
-| `horarios`  | `STRING`        | información propia de la sucursal |
-| `activa`    | `BOOLEAN`       |                                   |
+| Atributo   | Tipo de dato | Notas                             |
+| ---------- | ------------ | --------------------------------- |
+| `id`       | `INTEGER`    | PK                                |
+| `nombre`   | `STRING`     |                                   |
+| `telefono` | `STRING`     |                                   |
+| `horarios` | `STRING`     | información propia de la sucursal |
+| `activa`   | `BOOLEAN`    |                                   |
 
 - PK: `id`
-- Sin FKs. `horarios` no es una entidad independiente.
+- FK: `Direccion.sucursalId → Sucursal.id` (relación `Sucursal 1:1 Direccion`, declarada en `Direccion`). `Sucursal` no almacena `direccion` ni coordenadas: esos datos quedan centralizados en `Direccion`.
+- `horarios` no es una entidad independiente.
 
 ### 2.4 Categoria
 
@@ -313,11 +319,13 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 
 ## 3. Relaciones y cardinalidades
 
-A continuación se documentan las **23 relaciones únicas** del modelo.
+A continuación se documentan las **24 relaciones únicas** del modelo.
 
 ```
 Usuario 1:N Direccion
 Usuario 1:N Pedido
+
+Sucursal 1:1 Direccion
 
 Categoria 1:N Producto
 
@@ -349,28 +357,29 @@ Pedido N:N Promocion              (mediante PedidoPromocion)
 | #   | A                     | B                     | Cardinalidad | FK                                |
 | --- | --------------------- | --------------------- | ------------ | --------------------------------- |
 | 1   | Usuario               | Direccion             | 1:N          | `Direccion.usuarioId`             |
-| 2   | Usuario               | Pedido                | 1:N          | `Pedido.usuarioId`                |
-| 3   | Categoria             | Producto              | 1:N          | `Producto.categoriaId`            |
-| 4   | Producto              | ProductoOpcionGrupo   | 1:N          | `ProductoOpcionGrupo.productoId`  |
-| 5   | OpcionGrupo           | ProductoOpcionGrupo   | 1:N          | `ProductoOpcionGrupo.grupoId`     |
-| 6   | OpcionGrupo           | Opcion                | 1:N          | `Opcion.grupoId`                  |
-| 7   | Producto (combo)      | ComboComponente       | 1:N          | `ComboComponente.comboId`         |
-| 8   | Producto (componente) | ComboComponente       | 1:N          | `ComboComponente.productoId`      |
-| 9   | Sucursal              | Stock                 | 1:N          | `Stock.sucursalId`                |
-| 10  | Producto              | Stock                 | 1:N          | `Stock.productoId`                |
-| 11  | Sucursal              | Pedido                | 1:N          | `Pedido.sucursalId`               |
-| 12  | EstadoPedido          | Pedido                | 1:N          | `Pedido.estadoId`                 |
-| 13  | Pedido                | PedidoItem            | 1:N          | `PedidoItem.pedidoId`             |
-| 14  | Producto              | PedidoItem            | 1:N          | `PedidoItem.productoId`           |
-| 15  | PedidoItem            | PedidoItemOpcion      | 1:N          | `PedidoItemOpcion.pedidoItemId`   |
-| 16  | Opcion                | PedidoItemOpcion      | 1:N          | `PedidoItemOpcion.opcionId`       |
-| 17  | Pedido                | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.pedidoId`  |
-| 18  | EstadoPedido          | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.estadoId`  |
-| 19  | Usuario               | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.usuarioId` |
-| 20  | Promocion             | PromocionProducto     | 1:N          | `PromocionProducto.promocionId`   |
-| 21  | Producto              | PromocionProducto     | 1:N          | `PromocionProducto.productoId`    |
-| 22  | Pedido                | PedidoPromocion       | 1:N          | `PedidoPromocion.pedidoId`        |
-| 23  | Promocion             | PedidoPromocion       | 1:N          | `PedidoPromocion.promocionId`     |
+| 2   | Sucursal              | Direccion             | 1:1          | `Direccion.sucursalId`            |
+| 3   | Usuario               | Pedido                | 1:N          | `Pedido.usuarioId`                |
+| 4   | Categoria             | Producto              | 1:N          | `Producto.categoriaId`            |
+| 5   | Producto              | ProductoOpcionGrupo   | 1:N          | `ProductoOpcionGrupo.productoId`  |
+| 6   | OpcionGrupo           | ProductoOpcionGrupo   | 1:N          | `ProductoOpcionGrupo.grupoId`     |
+| 7   | OpcionGrupo           | Opcion                | 1:N          | `Opcion.grupoId`                  |
+| 8   | Producto (combo)      | ComboComponente       | 1:N          | `ComboComponente.comboId`         |
+| 9   | Producto (componente) | ComboComponente       | 1:N          | `ComboComponente.productoId`      |
+| 10  | Sucursal              | Stock                 | 1:N          | `Stock.sucursalId`                |
+| 11  | Producto              | Stock                 | 1:N          | `Stock.productoId`                |
+| 12  | Sucursal              | Pedido                | 1:N          | `Pedido.sucursalId`               |
+| 13  | EstadoPedido          | Pedido                | 1:N          | `Pedido.estadoId`                 |
+| 14  | Pedido                | PedidoItem            | 1:N          | `PedidoItem.pedidoId`             |
+| 15  | Producto              | PedidoItem            | 1:N          | `PedidoItem.productoId`           |
+| 16  | PedidoItem            | PedidoItemOpcion      | 1:N          | `PedidoItemOpcion.pedidoItemId`   |
+| 17  | Opcion                | PedidoItemOpcion      | 1:N          | `PedidoItemOpcion.opcionId`       |
+| 18  | Pedido                | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.pedidoId`  |
+| 19  | EstadoPedido          | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.estadoId`  |
+| 20  | Usuario               | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.usuarioId` |
+| 21  | Promocion             | PromocionProducto     | 1:N          | `PromocionProducto.promocionId`   |
+| 22  | Producto              | PromocionProducto     | 1:N          | `PromocionProducto.productoId`    |
+| 23  | Pedido                | PedidoPromocion       | 1:N          | `PedidoPromocion.pedidoId`        |
+| 24  | Promocion             | PedidoPromocion       | 1:N          | `PedidoPromocion.promocionId`     |
 
 ## 4. Claves y restricciones
 
@@ -384,6 +393,7 @@ Pedido N:N Promocion              (mediante PedidoPromocion)
   - `PromocionProducto (promocionId, productoId)`
   - `PedidoPromocion (pedidoId, promocionId)`
   - `ParametroSistema.clave`
+- **CHECK**: `Direccion`: `CK_Direcciones_propietario` — exactamente uno de `usuarioId` / `sucursalId` debe estar informado (`("usuarioId" IS NOT NULL)::int + ("sucursalId" IS NOT NULL)::int = 1`). Una dirección pertenece a un usuario o a una sucursal, nunca a ambos ni a ninguno.
 - **Relaciones N:M resueltas por entidades asociativas**:
   - `Producto N:N OpcionGrupo` → `ProductoOpcionGrupo`
   - `Promocion N:N Producto` → `PromocionProducto`
@@ -418,6 +428,7 @@ Pedido N:N Promocion              (mediante PedidoPromocion)
 ```mermaid
 erDiagram
     Usuario ||--o{ Direccion : "1:N"
+    Sucursal ||--|| Direccion : "1:1"
     Usuario ||--o{ Pedido : "1:N"
     Usuario ||--o{ PedidoEstadoHistorial : "1:N"
 
@@ -466,10 +477,12 @@ erDiagram
 
     Direccion {
         int id PK
-        int usuarioId FK
+        int usuarioId FK "opcional"
+        int sucursalId FK "opcional"
         string calle
         int altura
-        string ciudad
+        string provincia
+        string localidad
         string codigoPostal
         string referencia
         decimal latitud
@@ -481,9 +494,6 @@ erDiagram
     Sucursal {
         int id PK
         string nombre
-        string direccion
-        decimal latitud
-        decimal longitud
         string telefono
         string horarios
         boolean activa
@@ -647,4 +657,4 @@ Las siguientes decisiones provienen directamente del modelo de dominio y afectan
 
 ## Observaciones
 
-- La tabla de relaciones de `docs/modelo-dominio.md` (§6) contiene la relación `Usuario → Pedido` duplicada (aparece dos veces con la misma FK `Pedido.usuarioId`). En este DER se documentan las 23 relaciones únicas. No se modifica `modelo-dominio.md`; se deja señalado para que el equipo corrija la duplicación si lo considera oportuno.
+- La relación `Usuario → Pedido` que estaba duplicada en `docs/modelo-dominio.md` (§6) fue corregida: ambos documentos listan ahora las 24 relaciones únicas, incluida la nueva `Sucursal 1:1 Direccion` (`Direccion.sucursalId`).
