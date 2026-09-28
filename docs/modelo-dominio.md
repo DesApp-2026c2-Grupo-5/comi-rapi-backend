@@ -127,7 +127,7 @@ Reglas:
 - **Propietario exclusivo**: exactamente uno de `usuarioId` / `sucursalId` debe estar informado. Se garantiza a nivel de persistencia mediante el CHECK `CK_Direcciones_propietario` (`("usuarioId" IS NOT NULL)::int + ("sucursalId" IS NOT NULL)::int = 1`) y a nivel de modelo mediante una validación de instancia.
 - `Usuario.id` y `Sucursal.id` son FKs con `ON DELETE RESTRICT`.
 - **Campos obligatorios**: `calle`, `altura`, `provincia`, `localidad` y `codigoPostal`. Se validan a nivel de modelo (`NOT NULL`), en la API de direcciones (cliente) y en la API de sucursales (admin, al crear/actualizar la dirección de la sucursal).
-- **Coordenadas no manuales**: `latitud` y `longitud` son opcionales y **no se ingresan manualmente** (ni por el admin ni por nadie): la API las rechaza. A futuro, un servicio de geolocalización del backend las calculará a partir de los datos de la dirección ingresados (`calle`, `altura`, `provincia`, `localidad`, `codigoPostal`).
+- **Coordenadas no manuales**: `latitud` y `longitud` son opcionales y **no se ingresan manualmente** (ni por el admin ni por nadie): la API las rechaza. El servicio de geolocalización `geolocation_service` (Georef Argentina) las calcula a partir de los datos de la dirección (`calle`, `altura`, `provincia`, `localidad`); su integración con el ABM de `Direccion` es una tarea posterior. Ver `docs/reglas-negocio.md` §14.
 
 Importante: la dirección utilizada en un pedido **no debe depender de esta entidad para conservar el historial**. Al confirmar/generar el pedido, los datos se copian como snapshot dentro de `Pedido`. No crear `PedidoDireccion`.
 
@@ -561,6 +561,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 
 - `Usuario.email` único; `password` como hash.
 - `Direccion`: pertenece a un usuario o a una sucursal, nunca a ambos ni a ninguno (CHECK `CK_Direcciones_propietario`). La dirección de una sucursal se gestiona mediante la API de sucursales; la de un usuario mediante la API de direcciones.
+- **Geocodificación de direcciones**: el servicio `geolocation_service` (Georef Argentina) obtiene `latitud`/`longitud` a partir de los datos de la dirección. Errores tipados: `GeorefError`, `DireccionNoEncontradaError`, `DireccionAmbiguaError`. Ver `docs/reglas-negocio.md` §14. La integración con el ABM de `Direccion` es una tarea posterior.
 - `Categoria.nombre` único; sin jerarquía de categorías.
 - `ParametroSistema.clave` único.
 - `Stock`: PK compuesta `(sucursalId, productoId)` única.

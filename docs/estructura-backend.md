@@ -57,7 +57,7 @@ comi-rapi-backend/
 - **`lib/routes/`** — Declaran los endpoints (método + ruta + middlewares + controller). No contienen lógica de negocio.
 - **`lib/middlewares/`** — Autenticación/autorización, manejo de errores y (a futuro) validación de entrada.
 - **`lib/controllers/`** — Traducen HTTP↔dominio y orquestan la petición. No contienen reglas de negocio.
-- **`lib/services/`** — Reglas de negocio reutilizables.
+- **`lib/services/`** — Reglas de negocio reutilizables. Incluye `geolocation_service.js` (geocodificación de direcciones vía Georef Argentina: HTTP + parseo + errores tipados, sin reglas de negocio).
 - **`lib/models/`** — Modelos Sequelize correspondientes a las entidades del DER.
 - **`lib/utils/`** — Helpers transversales sin estado. Carpeta prevista, aún sin crear; solo se materializará cuando una implementación concreta la requiera.
 - **`db/migrations/`** — Migraciones de base de datos gestionadas por Sequelize.
@@ -86,6 +86,7 @@ comi-rapi-backend/
 - Manejo centralizado de errores (`lib/middlewares/error_handler.js`).
 - CRUD funcional de `Categoria` y `Producto` (modelo, migración, controller, ruta y seeder).
 - Helper de rutas (`lib/routes/utils.js`).
+- Servicio de geocodificación (`lib/services/geolocation_service.js`) con Georef Argentina: `geocodificarDireccion` + `buscarDirecciones`, errores tipados (`GeorefError`, `DireccionNoEncontradaError`, `DireccionAmbiguaError`), config `georef` en `lib/config/config.js`. Sin integración aún con el ABM de `Direccion` (tarea posterior).
 
 **Se implementará posteriormente (a medida que avance el desarrollo):**
 

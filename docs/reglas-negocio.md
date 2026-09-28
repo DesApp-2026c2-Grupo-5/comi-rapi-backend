@@ -113,3 +113,19 @@ Regla de negocio, no entidad:
 3. Dominio del `valor` de las promociones.
 4. Cálculo del tiempo estimado de entrega (ETA).
 5. Reglas de transición de estados.
+
+## 14. Geolocalización (Georef Argentina)
+
+- **Servicio de geocodificación**: `lib/services/geolocation_service.js` encapsula la comunicación con Georef Argentina (`https://apis.datos.gob.ar/georef`, API pública sin secretos). No contiene reglas de negocio ni integración con modelos/controllers.
+- **API del servicio**:
+  - `geocodificarDireccion({ calle, altura, provincia, localidad })` → `{ latitud, longitud, nomenclatura, normalizada: { calle, provincia, departamento, localidad } }`.
+  - `buscarDirecciones({ ... })` → lista cruda de resultados (para desambiguación futura).
+- **Fuente de datos**: los datos obligatorios de `Direccion` (`calle`, `altura`, `provincia`, `localidad`) se envían a Georef como query; `codigoPostal` no se usa en la query (Georef no lo admite en el endpoint `direcciones`).
+- **Persistencia**: solo `latitud`/`longitud` se persistirán en `Direccion` (tarea futura de integración con el ABM). Los datos normalizados (`nomenclatura`, `provincia`, `localidad` de Georef) se devuelven pero no se persisten en esta etapa.
+- **Errores tipados**:
+  - `GeorefError`: errores HTTP (4xx/5xx), de conexión/timeout o respuesta inválida/incompleta.
+  - `DireccionNoEncontradaError`: la dirección no fue encontrada (`total = 0`).
+  - `DireccionAmbiguaError`: más de un resultado; incluye `resultados` para que la tarea posterior decida (no se elige automáticamente).
+- **Políticas**: un solo intento sin retry (ToS de Georef), timeout configurable (`GEOREF_TIMEOUT_MS`), `User-Agent` de identificación del backend.
+- **Configuración**: `GEOREF_BASE_URL`, `GEOREF_TIMEOUT_MS`, `GEOREF_MAX_RESULTADOS` (sin secretos). Bloque `georef` en `lib/config/config.js`.
+- **Fuera de alcance actual**: OSRM, cálculo de distancias/rutas, reglas de cobertura, validación CABA/AMBA, radio de 5 km, integración con el ABM de `Direccion`, endpoints nuevos. El servicio queda preparado para esas tareas posteriores.
