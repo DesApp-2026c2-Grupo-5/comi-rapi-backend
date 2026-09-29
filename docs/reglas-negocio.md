@@ -62,7 +62,8 @@ Regla de negocio, no entidad:
 - `Sucursal 1:1 Direccion`: cada sucursal tiene exactamente una dirección (FK `Direccion.sucursalId`). `Sucursal` ya no almacena `direccion` como string ni coordenadas propias.
 - Una dirección pertenece a un usuario o a una sucursal, nunca a ambos simultáneamente ni a ninguno. Se garantiza a nivel de persistencia mediante el CHECK `CK_Direcciones_propietario`.
 - **Campos obligatorios** al ingresar una dirección (cliente y admin, en la creación de la sucursal): `calle`, `altura`, `provincia`, `localidad` y `codigoPostal`. Se validan en la API y a nivel de modelo (`NOT NULL`).
-- **Coordenadas no manuales**: `latitud`/`longitud` son opcionales y **no se ingresan manualmente** (ni por el admin ni por nadie): la API las rechaza. A futuro, un servicio de geolocalización del backend las calculará a partir de los datos de la dirección ingresados.
+- **Coordenadas no manuales**: `latitud`/`longitud` son opcionales y **no se ingresan manualmente** (ni por el admin ni por nadie): la API las rechaza. El backend las calcula mediante `geolocation_service` (Georef) al crear/editar la dirección y las persiste. Ver §17.
+- **ABM integrado con geolocalización/cobertura**: la creación y actualización de direcciones (usuario y sucursal) pasan por `direccion_service` (validación → Georef → zona/cobertura según corresponda → persistencia). Ver §17.
 - La dirección de un usuario se gestiona mediante la API de direcciones; la dirección de una sucursal se gestiona mediante la API de sucursales (como objeto `direccion` anidado).
 - La dirección puede modificarse o eliminarse tras un pedido.
 - El pedido conserva un snapshot de la dirección al generarse/confirmarse: calle, altura, ciudad, codigoPostal, referencia, latitud y longitud.
@@ -162,6 +163,23 @@ Regla de negocio, no entidad:
 - **API del servicio**:
   - `evaluarZona(normalizada, zonas)` → zona coincidente | null (función pura).
   - `obtenerSucursalesActivas()` → sucursales activas con dirección geolocalizada (de la BD).
+  - `evaluarCoberturaCoordenadas({ coordenadas, normalizada, sucursales })` → resultado detallado, evaluando zona + rutas sobre coordenadas **ya geocodificadas** (permite reutilizar la geocodificación del llamador sin una segunda llamada a Georef).
   - `validarCoberturaDireccion({ direccion, sucursales = null })` → `{ dentroZona, zona, sucursal: { id, nombre, distanciaMetros } | null, coberturaDisponible, radioMaxKm, mensaje, coordenadas }`. La lista de sucursales puede inyectarse (útil para tests y reutilización); si no, se obtienen de la BD.
-- **Resultado**: objeto detallado; **no** se lanza un error por regla de negocio incumplida (quien lo consuma decide cómo tratarlo: validación del pedido, endpoints de tareas posteriores). Los errores de infraestructura de Georef/ORS sí se propagan.
-- **Fuera de alcance actual**: integración con el ABM de `Direccion` (persistir coordenadas y validar al guardar), frontend, endpoints, ETA, costo de envío, asignación de sucursal por stock.
+  - `validarCoberturaParaDelivery({ coordenadas, normalizada, sucursales })` → variante de validación del ABM: igual que `evaluarCoberturaCoordenadas`, pero lanza `DireccionFueraDeZonaError` / `DireccionSinCoberturaError` si la dirección no es válida para delivery.
+- **Resultado**: objeto detallado; **no** se lanza un error por regla de negocio incumplida (quien lo consuma decide cómo tratarlo). Los errores de infraestructura de Georef/ORS sí se propagan. La variante del ABM (`validarCoberturaParaDelivery`) sí lanza los errores tipados.
+- **Fuera de alcance actual**: frontend (el frontend no consume estas APIs directamente), endpoints de validación de pedido, ETA, costo de envío, asignación de sucursal por stock.
+
+## 17. ABM de Direccion integrado (geolocalización + cobertura)
+
+- **Servicio de orquestación**: `lib/services/direccion_service.js` concentra el flujo del ABM de `Direccion` (usuario y sucursal): validación de datos → geocodificación (Georef) → validación de zona/cobertura según corresponda → persistencia. Los controllers quedan delgados (traducen HTTP↔dominio) y los errores tipados se traducen a HTTP en el error handler.
+- **Dirección de usuario (entrega)**: al crear/editar se geocodifica y se valida la cobertura (`validarCoberturaParaDelivery`): zona de operación + sucursal activa dentro del radio máximo por ruta. Si no supera las reglas, **la dirección no se persiste/no se actualiza nada**. Se reutiliza la geocodificación ya obtenida (sin segunda llamada a Georef).
+- **Dirección de sucursal (origen)**: geocodificación **obligatoria** (una sucursal sin coordenadas no puede ser utilizada por `CoberturaService`); **sin** validación de zona/cobertura (la zona es una regla para direcciones de entrega). Si Georef falla, no se persiste nada.
+- **Transacciones (sucursal)**: la llamada externa a Georef ocurre **antes** de iniciar la transacción; toda la persistencia (sucursal + dirección) se realiza dentro de la misma transacción: si falla cualquier operación, rollback y no queda nada parcial.
+- **Re-geocodificación en actualización**: `CAMPOS_UBICACION` (`calle`, `altura`, `provincia`, `localidad`) — si cambia alguno, se vuelve a geocodificar (y re-validar cobertura en el flujo de usuario) y se actualizan las coordenadas. `codigoPostal` NO dispara re-geocodificación (Georef no lo usa en la query). Cambios solo en `alias`/`referencia` (o payload idéntico reenviado por el frontend): se actualiza **sin llamar a proveedores externos**; la detección compara los datos enviados contra los persistidos.
+- **Errores tipados del ABM** (en `cobertura_service` / `direccion_service`):
+  - `ErrorValidacionDireccion`: datos de entrada inválidos/insuficientes → HTTP 400.
+  - `DireccionNoEncontradaError` / `DireccionAmbiguaError`: no pudo ubicarse → HTTP 422 (mensaje amigable, sin detalles del proveedor).
+  - `DireccionFueraDeZonaError` / `DireccionSinCoberturaError`: cobertura incumplida → HTTP 422.
+  - `GeorefError`: indisponibilidad/timeout/conexión → HTTP 503.
+  - `OrsError` (y subclases, incluida `CredencialesInvalidasError`): indisponibilidad/falla de infraestructura → HTTP 503. Una caída de un proveedor externo nunca se traduce en 422.
+- **Fuera de alcance actual**: ETA, asignación de sucursal por stock, pagos, pedidos, ABM de zonas geográficas.

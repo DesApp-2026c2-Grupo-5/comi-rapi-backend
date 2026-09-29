@@ -1599,7 +1599,9 @@ paths:
               $ref: '#/components/schemas/SucursalRequest'
       responses:
         '201':
-          description: Sucursal creada
+          description: >-
+            Sucursal creada con su dirección geocodificada por el backend
+            (geocodificación obligatoria; sin validación de zona/cobertura)
           content:
             application/json:
               schema:
@@ -1612,6 +1614,18 @@ paths:
                 $ref: '#/components/schemas/RespuestaError'
         '403':
           description: Acceso denegado o token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '422':
+          description: La dirección de la sucursal no pudo ubicarse (no se persiste nada)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Servicio de geolocalización no disponible temporalmente
           content:
             application/json:
               schema:
@@ -1669,6 +1683,22 @@ paths:
                 $ref: '#/components/schemas/RespuestaError'
         '404':
           description: Sucursal no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '422':
+          description: >-
+            La nueva dirección de la sucursal no pudo ubicarse (no se actualiza
+            nada). Si cambió un campo de ubicación se re-geocodifica; si solo
+            cambió referencia (o el payload es idéntico) no se consultan
+            proveedores externos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Servicio de geolocalización no disponible temporalmente
           content:
             application/json:
               schema:
@@ -1754,7 +1784,7 @@ paths:
               $ref: '#/components/schemas/DireccionRequest'
       responses:
         '201':
-          description: Dirección creada
+          description: Dirección creada (geocodificada por el backend y con cobertura válida)
           content:
             application/json:
               schema:
@@ -1767,6 +1797,21 @@ paths:
                 $ref: '#/components/schemas/RespuestaError'
         '403':
           description: Acceso denegado o token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '422':
+          description: >-
+            La dirección no es válida para delivery: no pudo ubicarse (no
+            encontrada/ambigua), está fuera de la zona de operación o no hay
+            sucursales activas dentro de la distancia máxima
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Servicio de geolocalización o rutas no disponible temporalmente
           content:
             application/json:
               schema:
@@ -1814,7 +1859,11 @@ paths:
               $ref: '#/components/schemas/DireccionRequest'
       responses:
         '200':
-          description: Dirección actualizada
+          description: >-
+            Dirección actualizada. Si cambió un campo de ubicación (calle,
+            altura, provincia, localidad) se re-geocodifica y re-valida la
+            cobertura; si solo cambiaron alias/referencia no se consultan
+            proveedores externos
           content:
             application/json:
               schema:
@@ -1833,6 +1882,21 @@ paths:
                 $ref: '#/components/schemas/RespuestaError'
         '404':
           description: Dirección no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '422':
+          description: >-
+            La nueva dirección no es válida para delivery (no se actualiza
+            nada): no pudo ubicarse, está fuera de la zona de operación o no
+            hay sucursales activas dentro de la distancia máxima
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Servicio de geolocalización o rutas no disponible temporalmente
           content:
             application/json:
               schema:
