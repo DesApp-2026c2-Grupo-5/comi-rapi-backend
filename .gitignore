@@ -64,3 +64,6 @@ typings/
 
 # Docker
 docker/postgres/data
+
+# Sesiones en cache de la verificación end-to-end del canal de tiempo real
+test/tiempo-real/.sesiones.json

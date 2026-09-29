@@ -53,3 +53,5 @@ Flujo de una petición:
 - `npm run db:seed` — carga seeders.
 - `npm run lint` — eslint + prettier.
 - `npm test` / `npm run test:watch` — tests con Jest.
+- `npm run test:tiempo-real` — verificación end-to-end del canal WebSocket contra el backend de desarrollo (debe estar levantado en `:3000`). Al terminar borra los pedidos que creó.
+- `npm run limpiar:pruebas` — borra los pedidos de los usuarios de prueba (`@test.com`, menos los de la seeder). Acepta `--dry-run`.

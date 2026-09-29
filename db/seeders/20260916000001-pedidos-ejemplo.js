@@ -23,6 +23,43 @@ async function buscarId(queryInterface, tabla, columna, valor) {
   return filas[0].id;
 }
 
+/**
+ * Dirección activa del cliente, para usarla como snapshot de entrega.
+ *
+ * Los pedidos guardan una COPIA de la dirección en el momento del pedido
+ * (columnas sueltas en `Pedidos`), no una referencia a `Direcciones`. Por eso
+ * los pedidos sin dirección propia usan la que tiene el cliente cargada, que es
+ * lo que hace la app al elegir una dirección en el carrito.
+ *
+ * Ojo con los nombres: `Direcciones` tiene `provincia`/`localidad` y el snapshot
+ * tiene `ciudad`. Se mapea `localidad` -> `ciudad`, igual que `payloadBackend` en
+ * el frontend.
+ */
+async function buscarDireccionCliente(queryInterface, usuarioId) {
+  const [filas] = await queryInterface.sequelize.query(
+    `SELECT "calle", "altura", "localidad", "codigoPostal", "referencia"
+       FROM "Direcciones"
+      WHERE "usuarioId" = :usuarioId AND "activa" = TRUE
+      ORDER BY id ASC
+      LIMIT 1`,
+    { replacements: { usuarioId } }
+  );
+  if (!filas.length) {
+    throw new Error(
+      'Seeder de pedidos: el cliente no tiene ninguna dirección activa. ' +
+        'Ejecutar antes 20260915000002-direccion-cliente-demo.'
+    );
+  }
+  const d = filas[0];
+  return {
+    calle: d.calle,
+    altura: d.altura,
+    ciudad: d.localidad,
+    codigoPostal: d.codigoPostal,
+    referencia: d.referencia,
+  };
+}
+
 async function borrarSeedPrevio(queryInterface) {
   const [pedidos] = await queryInterface.sequelize.query(
     `SELECT id FROM "Pedidos" WHERE observacion = '${MARCA}'`
@@ -75,8 +112,9 @@ async function crearPedido(queryInterface, datos) {
 
 module.exports = {
   up: async (queryInterface) => {
-    await borrarSeedPrevio(queryInterface);
-
+    // Nota: `borrarSeedPrevio` va DESPUÉS de resolver los datos que necesita el
+    // seeder. Si faltara alguno (usuario, sucursal, dirección) y se borrara
+    // primero, un fallo dejaría la base sin los pedidos de ejemplo.
     const usuarioId = await buscarId(
       queryInterface,
       'Usuarios',
@@ -139,6 +177,14 @@ module.exports = {
     });
 
     const ahora = Date.now();
+    const direccionCliente = await buscarDireccionCliente(
+      queryInterface,
+      usuarioId
+    );
+
+    // Recién ahora, con todo resuelto, se limpia la corrida anterior.
+    await borrarSeedPrevio(queryInterface);
+
     const pedidos = [
       {
         // 1. Entregado con historial completo
@@ -183,7 +229,9 @@ module.exports = {
         })),
       },
       {
-        // 3. Pendiente con snapshot de dirección
+        // 3. Pendiente con dirección propia: el snapshot es una COPIA, así que
+        //    un pedido viejo puede tener una dirección que el cliente ya no usa
+        //    (p. ej. la casa anterior). Por eso este NO usa la del cliente.
         sucursalId: sucursal.centro,
         estadoId: estado.pendiente,
         fechaHora: new Date(ahora - 30 * MIN),
@@ -222,11 +270,12 @@ module.exports = {
         costoEnvio: pedido.costoEnvio,
         total: totalItems + pedido.costoEnvio,
         medioPago: pedido.medioPago,
-        calle: pedido.calle,
-        altura: pedido.altura,
-        ciudad: pedido.ciudad,
-        codigoPostal: pedido.codigoPostal,
-        referencia: pedido.referencia,
+        // `??` y no `||`: un pedido con dirección propia la gana siempre.
+        calle: pedido.calle ?? direccionCliente.calle,
+        altura: pedido.altura ?? direccionCliente.altura,
+        ciudad: pedido.ciudad ?? direccionCliente.ciudad,
+        codigoPostal: pedido.codigoPostal ?? direccionCliente.codigoPostal,
+        referencia: pedido.referencia ?? direccionCliente.referencia,
       });
       await queryInterface.bulkInsert(
         'PedidoItems',
