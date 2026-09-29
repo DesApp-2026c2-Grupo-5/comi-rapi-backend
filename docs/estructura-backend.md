@@ -57,7 +57,7 @@ comi-rapi-backend/
 - **`lib/routes/`** — Declaran los endpoints (método + ruta + middlewares + controller). No contienen lógica de negocio.
 - **`lib/middlewares/`** — Autenticación/autorización, manejo de errores y (a futuro) validación de entrada.
 - **`lib/controllers/`** — Traducen HTTP↔dominio y orquestan la petición. No contienen reglas de negocio.
-- **`lib/services/`** — Reglas de negocio reutilizables. Incluye `geolocation_service.js` (geocodificación de direcciones vía Georef Argentina: HTTP + parseo + errores tipados, sin reglas de negocio) y `routing_service.js` (cálculo de rutas: distancia/duración vía OpenRouteService, abstracción reemplazable por OSRM).
+- **`lib/services/`** — Reglas de negocio reutilizables. Incluye `geolocation_service.js` (geocodificación de direcciones vía Georef Argentina: HTTP + parseo + errores tipados, sin reglas de negocio), `routing_service.js` (cálculo de rutas: distancia/duración vía OpenRouteService, abstracción reemplazable por OSRM) y `cobertura_service.js` (reglas de cobertura geográfica para delivery: zona de operación + sucursal activa dentro de la distancia máxima por ruta).
 - **`lib/models/`** — Modelos Sequelize correspondientes a las entidades del DER.
 - **`lib/utils/`** — Helpers transversales sin estado. Carpeta prevista, aún sin crear; solo se materializará cuando una implementación concreta la requiera.
 - **`db/migrations/`** — Migraciones de base de datos gestionadas por Sequelize.
@@ -88,6 +88,7 @@ comi-rapi-backend/
 - Helper de rutas (`lib/routes/utils.js`).
 - Servicio de geocodificación (`lib/services/geolocation_service.js`) con Georef Argentina: `geocodificarDireccion` + `buscarDirecciones`, errores tipados (`GeorefError`, `DireccionNoEncontradaError`, `DireccionAmbiguaError`), config `georef` en `lib/config/config.js`. Sin integración aún con el ABM de `Direccion` (tarea posterior).
 - Servicio de rutas (`lib/services/routing_service.js`) con OpenRouteService: `calcularRuta` (distancia/duración/geometría), errores tipados (`OrsError`, `CredencialesInvalidasError`, `LimiteSolicitudesError`, `RutaInexistenteError`), config `ors` en `lib/config/config.js` con `ORS_API_KEY` vía override `.env.local` (gitignored). Sin integración aún con reglas de negocio (tarea posterior).
+- Servicio de cobertura (`lib/services/cobertura_service.js`): `evaluarZona`, `obtenerSucursalesActivas` y `validarCoberturaDireccion` (zona de operación configurable en `lib/config/cobertura-zonas.js` + sucursal activa dentro de `COBERTURA_RADIO_MAX_KM`, distancia real por ruta). Reutiliza `geolocation_service` y `routing_service`. Sin integración aún con el ABM de `Direccion`, frontend ni endpoints (tarea posterior).
 
 **Se implementará posteriormente (a medida que avance el desarrollo):**
 

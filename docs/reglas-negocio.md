@@ -128,7 +128,7 @@ Regla de negocio, no entidad:
   - `DireccionAmbiguaError`: más de un resultado; incluye `resultados` para que la tarea posterior decida (no se elige automáticamente).
 - **Políticas**: un solo intento sin retry (ToS de Georef), timeout configurable (`GEOREF_TIMEOUT_MS`), `User-Agent` de identificación del backend.
 - **Configuración**: `GEOREF_BASE_URL`, `GEOREF_TIMEOUT_MS`, `GEOREF_MAX_RESULTADOS` (sin secretos). Bloque `georef` en `lib/config/config.js`.
-- **Fuera de alcance actual**: OSRM, cálculo de distancias/rutas, reglas de cobertura, validación CABA/AMBA, radio de 5 km, integración con el ABM de `Direccion`, endpoints nuevos. El servicio queda preparado para esas tareas posteriores.
+- **Fuera de alcance actual**: OSRM, cálculo de distancias/rutas, integración con el ABM de `Direccion`, endpoints nuevos. La cobertura que consume este servicio está implementada (ver §16).
 
 ## 15. Cálculo de rutas (OpenRouteService)
 
@@ -146,4 +146,22 @@ Regla de negocio, no entidad:
 - **Validación de entrada**: coordenadas presentes, numéricas y en rango (lat ±90, lon ±180); fallan sin llamar a la API.
 - **Políticas**: un solo intento, sin retry ni cache (alcance académico); timeout configurable (`ORS_TIMEOUT_MS`).
 - **Configuración**: `ORS_API_KEY` (clave gratuita del dashboard de HeiGIT), `ORS_BASE_URL`, `ORS_TIMEOUT_MS`, `ORS_PROFILE` (`driving-car`). Bloque `ors` en `lib/config/config.js`. **La clave nunca se commitea**: los `.env` versionados la dejan vacía y la clave real va en `.env.local` (gitignored), que gana sobre ellos (mecanismo de override en `initializeEnv`).
-- **Fuera de alcance actual**: reglas de cobertura, radio de 5 km, ABM de `Direccion`, frontend, ETA, infraestructura Docker para OSRM, cache/colas. El servicio queda preparado para esas tareas posteriores.
+- **Fuera de alcance actual**: ABM de `Direccion`, frontend, ETA, infraestructura Docker para OSRM, cache/colas. La cobertura que consume este servicio está implementada (ver §16).
+
+## 16. Cobertura geográfica (reglas de cobertura)
+
+- **Servicio de reglas de negocio**: `lib/services/cobertura_service.js` determina si una dirección es válida para delivery. Reutiliza `geolocation_service` (dirección → coordenadas, Georef) y `routing_service` (coordenadas → distancia real por ruta, ORS) **sin duplicar su lógica**.
+- **Reglas de negocio, no entidad**: no se creó ninguna entidad de zonas ni ABM. La cobertura se define en `services` según la arquitectura del proyecto.
+- **Reglas en orden de evaluación**:
+  1. La dirección debe geocodificarse (Georef, con los datos obligatorios `calle`, `altura`, `provincia`, `localidad`). Los errores tipados de Georef (`DireccionNoEncontradaError`, `DireccionAmbiguaError`, `GeorefError`) se propagan: una dirección no geocodificable no es válida para delivery.
+  2. La dirección debe pertenecer a la **zona geográfica de operación**: se valida contra la configuración genérica de `lib/config/cobertura-zonas.js` usando los datos territoriales normalizados de Georef (`normalizada.provincia`, `normalizada.departamento`, `normalizada.localidad`). Si no pertenece a ninguna zona, la dirección no es válida y NO se consultan sucursales ni rutas.
+  3. Debe existir al menos una **sucursal activa** con dirección geolocalizada dentro de la distancia máxima, medida como **distancia real por ruta** (no línea recta). Las sucursales inactivas o sin coordenadas se ignoran.
+- **Distancia máxima**: 5 km inicial, configurable vía `COBERTURA_RADIO_MAX_KM` (bloque `cobertura` en `lib/config/config.js`). No hardcodeada.
+- **Zonas de operación**: configuración genérica (estructura de datos, no lógica): cada zona define `provincias` (obligatorio) y listas opcionales de `departamentos`/`localidades`; comparación insensible a mayúsculas/minúsculas y acentos. Agregar o quitar zonas/partidos **no requiere modificar el servicio**: solo editar la configuración.
+- **Definición adoptada de AMBA** (documentada explícitamente): la documentación del proyecto no definía la zona de operación, por lo que se adopta la definición oficial del AMBA / Región Metropolitana de Buenos Aires (INDEC): CABA + la totalidad de los 40 partidos bonaerenses que la rodean. En esta etapa la configuración incluye **CABA** (provincia completa) y los partidos del **primer y segundo cordón del conurbano**: Almirante Brown, Avellaneda, Berazategui, Esteban Echeverría, Ezeiza, Florencio Varela, General San Martín, Hurlingham, Ituzaingó, José C. Paz, La Matanza, Lanús, Lomas de Zamora, Malvinas Argentinas, Merlo, Moreno, Morón, Quilmes, San Fernando, San Isidro, San Miguel, Tigre, Tres de Febrero y Vicente López. Los partidos restantes del AMBA (Berisso, Brandsen, Campana, Cañuelas, Ensenada, Escobar, Exaltación de la Cruz, General Las Heras, General Rodríguez, La Plata, Luján, Marcos Paz, Pilar, Presidente Perón, San Vicente, Zárate) pueden agregarse a la lista sin tocar el servicio.
+- **API del servicio**:
+  - `evaluarZona(normalizada, zonas)` → zona coincidente | null (función pura).
+  - `obtenerSucursalesActivas()` → sucursales activas con dirección geolocalizada (de la BD).
+  - `validarCoberturaDireccion({ direccion, sucursales = null })` → `{ dentroZona, zona, sucursal: { id, nombre, distanciaMetros } | null, coberturaDisponible, radioMaxKm, mensaje, coordenadas }`. La lista de sucursales puede inyectarse (útil para tests y reutilización); si no, se obtienen de la BD.
+- **Resultado**: objeto detallado; **no** se lanza un error por regla de negocio incumplida (quien lo consuma decide cómo tratarlo: validación del pedido, endpoints de tareas posteriores). Los errores de infraestructura de Georef/ORS sí se propagan.
+- **Fuera de alcance actual**: integración con el ABM de `Direccion` (persistir coordenadas y validar al guardar), frontend, endpoints, ETA, costo de envío, asignación de sucursal por stock.

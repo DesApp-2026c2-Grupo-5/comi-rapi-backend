@@ -562,7 +562,8 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - `Usuario.email` único; `password` como hash.
 - `Direccion`: pertenece a un usuario o a una sucursal, nunca a ambos ni a ninguno (CHECK `CK_Direcciones_propietario`). La dirección de una sucursal se gestiona mediante la API de sucursales; la de un usuario mediante la API de direcciones.
 - **Geocodificación de direcciones**: el servicio `geolocation_service` (Georef Argentina) obtiene `latitud`/`longitud` a partir de los datos de la dirección. Errores tipados: `GeorefError`, `DireccionNoEncontradaError`, `DireccionAmbiguaError`. Ver `docs/reglas-negocio.md` §14. La integración con el ABM de `Direccion` es una tarea posterior.
-- **Cálculo de rutas**: el servicio `routing_service` (OpenRouteService) calcula distancia/duración entre coordenadas (`calcularRuta({ origen, destino })`). Ver `docs/reglas-negocio.md` §15. Su integración con reglas de negocio (asignación de sucursal, cobertura) es una tarea posterior.
+- **Cálculo de rutas**: el servicio `routing_service` (OpenRouteService) calcula distancia/duración entre coordenadas (`calcularRuta({ origen, destino })`). Ver `docs/reglas-negocio.md` §15.
+- **Cobertura geográfica**: el servicio `cobertura_service` determina si una dirección es válida para delivery: zona geográfica de operación (configurable en `cobertura-zonas`) + al menos una sucursal activa dentro de la distancia máxima por ruta (5 km inicial, configurable vía `COBERTURA_RADIO_MAX_KM`). Reutiliza `geolocation_service` y `routing_service`. Ver `docs/reglas-negocio.md` §16. La integración con el ABM de `Direccion`, frontend y la asignación de sucursal por stock son tareas posteriores.
 - `Categoria.nombre` único; sin jerarquía de categorías.
 - `ParametroSistema.clave` único.
 - `Stock`: PK compuesta `(sucursalId, productoId)` única.
