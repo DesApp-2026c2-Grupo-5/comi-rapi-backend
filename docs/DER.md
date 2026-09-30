@@ -25,6 +25,7 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 | `rol`             | `ENUM('CLIENTE', 'ADMINISTRADOR')` |                  |
 | `activo`          | `BOOLEAN`                          |                  |
 | `fechaNacimiento` | `DATEONLY`                         | Opcional         |
+| `fotoPerfilUrl`   | `STRING`                           | Opcional         |
 | `createdAt`       | `DATE`                             |                  |
 | `updatedAt`       | `DATE`                             |                  |
 
@@ -305,7 +306,26 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 - FK: `promocionId → Promocion.id`
 - UNIQUE: `(pedidoId, promocionId)`
 
-### 2.19 ParametroSistema
+### 2.19 PasswordResetToken
+
+| Atributo        | Tipo de dato | Notas                                        |
+| --------------- | ------------ | -------------------------------------------- |
+| `id`            | `INTEGER`    | PK                                           |
+| `usuarioId`     | `INTEGER`    | FK a `Usuario.id` (NOT NULL)                 |
+| `tokenHash`     | `STRING`     | UNIQUE, SHA-256 en hexadecimal (64 chars)    |
+| `expiresAt`     | `DATE`       | NOT NULL                                     |
+| `usedAt`        | `DATE`       | NULLABLE (timestamp de consumo)              |
+| `invalidatedAt` | `DATE`       | NULLABLE (token anulado por nueva solicitud) |
+| `createdAt`     | `DATE`       | NOT NULL                                     |
+| `updatedAt`     | `DATE`       | NOT NULL                                     |
+
+- PK: `id`
+- FK: `PasswordResetToken.usuarioId` → `Usuario.id` (ON DELETE CASCADE)
+- UNIQUE: `tokenHash`
+- Índices: `usuarioId`, `expiresAt`, `usedAt`, `invalidatedAt`
+- Reglas de seguridad: **no** se almacena el token en texto plano; solo su hash SHA-256. Un token expirado, usado o invalidado no es reutilizable.
+
+### 2.20 ParametroSistema
 
 | Atributo      | Tipo de dato | Notas  |
 | ------------- | ------------ | ------ |
@@ -324,6 +344,7 @@ A continuación se documentan las **24 relaciones únicas** del modelo.
 ```
 Usuario 1:N Direccion
 Usuario 1:N Pedido
+Usuario 1:N PasswordResetToken
 
 Sucursal 1:1 Direccion
 
