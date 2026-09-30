@@ -25,6 +25,7 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 | `rol`             | `ENUM('CLIENTE', 'ADMINISTRADOR')` |                  |
 | `activo`          | `BOOLEAN`                          |                  |
 | `fechaNacimiento` | `DATEONLY`                         | Opcional         |
+| `fotoPerfilUrl`   | `STRING`                           | Opcional         |
 | `createdAt`       | `DATE`                             |                  |
 | `updatedAt`       | `DATE`                             |                  |
 

@@ -74,6 +74,7 @@ El dominio cubre:
 | `rol`             | enum: `CLIENTE`, `ADMINISTRADOR` |
 | `activo`          | booleano                         |
 | `fechaNacimiento` | `DATEONLY`, opcional             |
+| `fotoPerfilUrl`   | STRING, opcional                 |
 | `createdAt`       |                                  |
 | `updatedAt`       |                                  |
 
