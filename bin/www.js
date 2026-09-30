@@ -8,14 +8,19 @@ import debugPkg from 'debug';
 import http from 'http';
 import app from '../lib/app';
 import db from '../lib/models';
+import { configurarSocketIO } from '../lib/realtime';
 
 const debug = debugPkg('js/www:server');
 
 /**
  * Create HTTP server.
+ *
+ * Socket.IO se adjunta a este mismo servidor: el canal de tiempo real comparte
+ * servidor y cookie de sesión con la API REST.
  */
 
 const server = http.createServer(app);
+configurarSocketIO(server);
 
 /**
  * Listen on the port set on the app, on all network interfaces.
@@ -28,7 +33,7 @@ if (!port) {
 // Run sequelize before listen, but don't crash if the DB is unavailable:
 // the server must boot anyway so the API responds (e.g. /api/health).
 function startServer() {
-  app.listen(port, () => {
+  server.listen(port, () => {
     console.log(`¡Aplicación iniciada! ====> 🌎 http://localhost:${port}`);
   });
 }

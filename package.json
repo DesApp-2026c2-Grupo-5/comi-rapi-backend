@@ -17,10 +17,13 @@
     "transpile:lib": "babel ./lib --out-dir dist/lib --copy-files --source-maps",
     "transpile:bin": "babel ./bin --out-dir dist/bin --copy-files --source-maps",
     "lint": "run-p lint:*",
-    "lint:eslint": "eslint --fix ./lib",
-    "lint:prettier": "prettier --write ./lib",
+    "lint:eslint": "eslint --fix ./lib ./scripts ./test",
+    "lint:prettier": "prettier --write ./lib ./scripts ./test ./db/seeders",
     "test": "jest --runInBand",
     "test:watch": "jest --runInBand --watch",
+    "test:tiempo-real": "node test/tiempo-real/protocolo.js",
+    "limpiar:pruebas": "node scripts/limpiar-pedidos-de-prueba.js",
+    "limpiar:tokens": "node scripts/limpiar-tokens-expirados.js",
     "heroku-postbuild": "run-s build db:migrate"
   },
   "nodemonConfig": {
@@ -49,9 +52,11 @@
     "helmet": "^3.22.0",
     "morgan": "^1.9.1",
     "multer": "^2.0.0",
+    "nodemailer": "^6.10.1",
     "pg": "8.11.5",
     "pg-hstore": "^2.3.3",
     "sequelize": "^5.x",
+    "socket.io": "^4.8.4",
     "swagger-ui-express": "^5.0.1",
     "yamljs": "^0.3.0"
   },
@@ -74,6 +79,7 @@
     "prettier": "2.2.1",
     "rimraf": "^3.0.2",
     "sequelize-cli": "^6.2.0",
+    "socket.io-client": "^4.8.4",
     "supertest": "^5.0.0"
   },
   "optionalDependencies": {
