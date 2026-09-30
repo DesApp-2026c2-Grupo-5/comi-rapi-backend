@@ -21,6 +21,19 @@ services:
       timeout: 5s
       retries: 5
 
+  # Servidor SMTP de desarrollo. La interfaz web queda en http://localhost:8025
+  # y el SMTP escucha en el puerto 1025.
+  # En producción se reemplaza por un proveedor SMTP real (ver .env.example).
+  mailpit:
+    image: axllent/mailpit
+    restart: always
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+
 volumes:
   postgres_data:
 
