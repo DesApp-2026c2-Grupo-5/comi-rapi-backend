@@ -61,3 +61,9 @@ docker exec -it comi-rapi-backend-db-1 psql -U unahur_desapp -d postgres -c "GRA
 ## Cada integrante debe ejecutar el reset en su máquina
 
 Este procedimiento es **por entorno local**. No se resuelve una sola vez para todos: cada desarrollador debe correr `docker compose down -v` + `docker compose up -d` (y las migraciones/seeders) en su propia máquina cuando sea necesario.
+
+## Nota sobre los seeders (geocodificación y re-ejecución)
+
+- **Los seeders geocodifican con Georef**: las sucursales (`Sucursal Oeste`, `Sucursal Palermo`) y la dirección demo del cliente (`20260915000002-direccion-cliente-demo`) obtienen sus coordenadas en el `up` con el mismo servicio que usa la app (`geolocation_service`, vía el build transpilado — ver `db/seeders/utils/utils-georef.js`). Requieren conexión a internet al seedear: si Georef no encuentra una dirección, es ambigua o falla, el seeder se detiene con un error claro y no inserta nada.
+- **El seeder requiere build actualizado**: los seeders no pasan por Babel; el helper requiere `dist/lib/services/geolocation_service`. El flujo documentado arriba corre `npm run db:init` (transpila + migra) antes de seedear, así `dist/` está al día. Si se corre `npm run db:seed` sin build, el error indica ejecutar `npm run build` primero.
+- **El cambio de seeds NO se refleja sin reset**: los seeders ya ejecutados quedan registrados en el storage (`SequelizeSeed`) y `db:seed:all` no los re-corre, aunque su código haya cambiado. Para que las sucursales/direcciones actualizadas aparezcan en la base de desarrollo local hay que ejecutar el **reset completo** documentado arriba (`docker compose down -v` borra solo el volumen del proyecto). Alternativa no destructiva: `npm run db:seed:undo:all` + `npm run db:seed:all` re-ejecuta los `down`/`up` de los seeders.

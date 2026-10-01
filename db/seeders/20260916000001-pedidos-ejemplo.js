@@ -122,23 +122,17 @@ module.exports = {
       'cliente@test.com'
     );
     const sucursal = {
-      centro: await buscarId(
+      oeste: await buscarId(
         queryInterface,
         'Sucursales',
         'nombre',
-        'Sucursal Centro'
+        'Sucursal Oeste'
       ),
-      norte: await buscarId(
+      palermo: await buscarId(
         queryInterface,
         'Sucursales',
         'nombre',
-        'Sucursal Norte'
-      ),
-      sur: await buscarId(
-        queryInterface,
-        'Sucursales',
-        'nombre',
-        'Sucursal Sur'
+        'Sucursal Palermo'
       ),
     };
     const estado = {};
@@ -188,7 +182,7 @@ module.exports = {
     const pedidos = [
       {
         // 1. Entregado con historial completo
-        sucursalId: sucursal.centro,
+        sucursalId: sucursal.oeste,
         estadoId: estado.entregado,
         fechaHora: new Date(ahora - 2 * 24 * 60 * MIN),
         costoEnvio: 0,
@@ -211,7 +205,7 @@ module.exports = {
       },
       {
         // 2. En camino
-        sucursalId: sucursal.norte,
+        sucursalId: sucursal.palermo,
         estadoId: estado.en_camino,
         fechaHora: new Date(ahora - 5 * 60 * MIN),
         costoEnvio: 500,
@@ -232,7 +226,7 @@ module.exports = {
         // 3. Pendiente con dirección propia: el snapshot es una COPIA, así que
         //    un pedido viejo puede tener una dirección que el cliente ya no usa
         //    (p. ej. la casa anterior). Por eso este NO usa la del cliente.
-        sucursalId: sucursal.centro,
+        sucursalId: sucursal.oeste,
         estadoId: estado.pendiente,
         fechaHora: new Date(ahora - 30 * MIN),
         costoEnvio: 500,
@@ -247,7 +241,7 @@ module.exports = {
       },
       {
         // 4. Confirmado
-        sucursalId: sucursal.sur,
+        sucursalId: sucursal.palermo,
         estadoId: estado.confirmado,
         fechaHora: new Date(ahora - 60 * MIN),
         costoEnvio: 0,

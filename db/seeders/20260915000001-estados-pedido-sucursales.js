@@ -1,5 +1,7 @@
 'use strict';
 
+const { geocodificarDireccion } = require('./utils/utils-georef');
+
 const estados = [
   { nombre: 'pendiente', orden: 1, esInicial: true, esFinal: false },
   { nombre: 'confirmado', orden: 2, esInicial: false, esFinal: false },
@@ -15,56 +17,59 @@ const estados = [
   { nombre: 'cancelado', orden: 7, esInicial: false, esFinal: true },
 ];
 
-// Las sucursales ya no almacenan `direccion`/`latitud`/`longitud`: cada una tiene
-// un registro 1:1 en `Direcciones` (FK `sucursalId`), que concentra los datos de
-// ubicación. Se preservan las coordenadas que antes estaban en `Sucursales`.
+// Sucursales reales. Las coordenadas NO se cargan a mano: se geocodifican en
+// `up` con el MISMO servicio que usa la app (geolocation_service, Georef
+// Argentina, vía el build transpilado — ver ./utils/utils-georef.js).
+//
+// Nota (Sucursal Oeste): la dirección oficial de Plaza Oeste es "Av. Brig.
+// Gral. Juan Manuel de Rosas 658, Morón". Dos particularidades de Georef:
+//   1. En el segmento de Morón de esa calle solo hay numeración para alturas
+//      bajas (400/500/600); la altura 658 (e incluso 650/660/700) no existe en
+//      la numeración de Georef (la única "J M DE ROSAS 658" que encuentra está
+//      en Chivilcoy, una ciudad distinta).
+//   2. El endpoint `direcciones` de Georef no matchea esta calle con el
+//      prefijo "Av." (0 resultados con cualquier variante "Av. ..."); sin el
+//      prefijo sí ("J. M. de Rosas 600" → 1 resultado).
+// Por eso se usa la calle sin el prefijo "Av." y la altura 600 de la misma
+// cuadra, frente al shopping, verificada: -34.6356, -58.6282 (Morón).
 const sucursales = [
   {
-    nombre: 'Sucursal Centro',
-    telefono: '011-1234-5678',
+    nombre: 'Sucursal Oeste',
+    telefono: '011-4627-0000',
     horarios: 'Lun-Dom 10:00-23:00',
     direccion: {
-      calle: 'Av. Principal',
-      altura: 123,
-      provincia: 'Ciudad Autónoma de Buenos Aires',
-      localidad: 'CABA',
-      codigoPostal: '1000',
-      latitud: -34.6037,
-      longitud: -58.3816,
+      calle: 'J. M. de Rosas',
+      altura: 600,
+      provincia: 'Buenos Aires',
+      localidad: 'Morón',
+      codigoPostal: '1708',
     },
   },
   {
-    nombre: 'Sucursal Norte',
-    telefono: '011-8765-4321',
-    horarios: 'Lun-Vie 10:00-22:00',
+    nombre: 'Sucursal Palermo',
+    telefono: '011-5777-3000',
+    horarios: 'Lun-Dom 11:00-00:00',
     direccion: {
-      calle: 'Calle Norte',
-      altura: 456,
+      calle: 'Av. Santa Fe',
+      altura: 3253,
       provincia: 'Ciudad Autónoma de Buenos Aires',
-      localidad: 'CABA',
+      localidad: 'Palermo',
       codigoPostal: '1425',
-      latitud: -34.5926,
-      longitud: -58.3912,
-    },
-  },
-  {
-    nombre: 'Sucursal Sur',
-    telefono: '011-5678-1234',
-    horarios: 'Lun-Sab 11:00-00:00',
-    direccion: {
-      calle: 'Av. Sur',
-      altura: 789,
-      provincia: 'Ciudad Autónoma de Buenos Aires',
-      localidad: 'CABA',
-      codigoPostal: '1064',
-      latitud: -34.6123,
-      longitud: -58.3718,
     },
   },
 ];
 
 module.exports = {
   up: async (queryInterface) => {
+    // Geocodificación (Georef) ANTES de persistir: si una dirección no se
+    // encuentra, es ambigua o Georef falla, el seeder se detiene con el error
+    // tipado y no se inserta nada (sin coordenadas de respaldo manuales).
+    const geocodificadas = [];
+    for (const sucursal of sucursales) {
+      const geo = await geocodificarDireccion(sucursal.direccion);
+      geocodificadas.push({ sucursal, geo });
+    }
+
     await queryInterface.bulkInsert(
       'EstadoPedidos',
       estados.map((e) => ({
@@ -94,7 +99,10 @@ module.exports = {
     await queryInterface.bulkInsert(
       'Direcciones',
       creadas.map((s) => {
-        const dir = sucursales.find((x) => x.nombre === s.nombre).direccion;
+        const { sucursal, geo } = geocodificadas.find(
+          (x) => x.sucursal.nombre === s.nombre
+        );
+        const dir = sucursal.direccion;
         return {
           sucursalId: s.id,
           calle: dir.calle,
@@ -102,8 +110,8 @@ module.exports = {
           provincia: dir.provincia,
           localidad: dir.localidad,
           codigoPostal: dir.codigoPostal,
-          latitud: dir.latitud,
-          longitud: dir.longitud,
+          latitud: geo.latitud,
+          longitud: geo.longitud,
           activa: true,
           createdAt: new Date(),
           updatedAt: new Date(),
