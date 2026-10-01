@@ -74,6 +74,7 @@ El dominio cubre:
 | `rol`             | enum: `CLIENTE`, `ADMINISTRADOR` |
 | `activo`          | booleano                         |
 | `fechaNacimiento` | `DATEONLY`, opcional             |
+| `fotoPerfilUrl`   | STRING, opcional                 |
 | `createdAt`       |                                  |
 | `updatedAt`       |                                  |
 
@@ -287,6 +288,10 @@ Interpretación:
 - `cantidad = 0`: el producto se ofrece pero no tiene stock.
 
 El stock es independiente para cada sucursal.
+
+En un combo, `cantidad` es la cantidad de combos que la sucursal pone a la venta:
+un tope, no la garantía de que se pueda armar. Lo que sale de verdad de su stock
+está en §7.2 ("Combos y stock").
 
 ### 5.9 Pedido
 
@@ -568,7 +573,13 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - `ParametroSistema.clave` único.
 - `Stock`: PK compuesta `(sucursalId, productoId)` única.
 - El carrito es estado temporal y se revalida contra la BD al confirmar.
-- **Combos y stock (decisión pendiente)**: un combo es un `Producto` cuya composición se define mediante `ComboComponente`. Su disponibilidad puede depender de la disponibilidad de sus componentes (por ejemplo, hamburguesa, papas y bebida), por lo que no alcanza necesariamente con consultar un stock independiente del combo. Queda pendiente definir la estrategia de verificación de stock para combos antes de implementar la lógica de stock y pedidos. No se agregan entidades ni se modifica la estructura.
+- **Combos y stock (resuelto)**: un combo es un `Producto` cuya composición se define mediante `ComboComponente`. Su disponibilidad **se deriva del stock de sus componentes**, no de una existencia propia:
+  - Un combo tiene fila propia en `Stock`, pero su `cantidad` es un **tope** que cargó la sucursal, no la garantía de que se pueda armar.
+  - El máximo real sale de la receta: `max = min(floor(cantidad del componente / cantidad que lleva la receta))`. Si al combo le falta un componente en esa sucursal, el máximo es 0.
+  - Lo que se vende es `min(cantidad cargada del combo, max derivado de los componentes)`. Si a un componente se le baja el stock o se da de baja, el combo se limita solo, sin scripts de reparación.
+  - Vender un combo descuenta las dos cosas: su propia unidad y las unidades de cada componente según la receta.
+  - No se agregan entidades ni se modifica la estructura: `Stock` conserva `(sucursalId, productoId, cantidad, disponible)` y `ComboComponente` `(id, comboId, productoId, cantidad)`.
+- El stock se descuenta al crear el pedido y se repone al cancelarlo, dentro de la transacción del pedido. Los descuentos son atómicos (`UPDATE ... WHERE cantidad >= n`) para que dos pedidos simultáneos sobre la última unidad no sobrevendan.
 
 ## 8. Snapshots históricos
 

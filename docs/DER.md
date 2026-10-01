@@ -25,6 +25,7 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 | `rol`             | `ENUM('CLIENTE', 'ADMINISTRADOR')` |                  |
 | `activo`          | `BOOLEAN`                          |                  |
 | `fechaNacimiento` | `DATEONLY`                         | Opcional         |
+| `fotoPerfilUrl`   | `STRING`                           | Opcional         |
 | `createdAt`       | `DATE`                             |                  |
 | `updatedAt`       | `DATE`                             |                  |
 
@@ -114,6 +115,10 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 - PK: `id`
 - FK: `comboId → Producto.id` (producto tipo `COMBO`)
 - FK: `productoId → Producto.id` (producto componente)
+- UNIQUE: `(comboId, productoId)`
+
+Implementado. `cantidad` es cuántas unidades del componente lleva **una** unidad
+del combo, y no puede ser negativa (CHECK `CK_ComboComponentes_cantidad`).
 
 ### 2.7 OpcionGrupo
 
@@ -169,6 +174,10 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 - PK (compuesta): `(sucursalId, productoId)` — la combinación sucursal + producto debe ser única.
 - FK: `sucursalId → Sucursal.id`
 - FK: `productoId → Producto.id`
+
+Implementado. `cantidad` no puede ser negativa (CHECK `CK_Stocks_cantidad`). La
+disponibilidad de un combo se deriva de los componentes (§8), por lo que la
+`cantidad` de un combo es un tope, no una garantía.
 
 ### 2.11 Pedido
 
@@ -305,7 +314,26 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 - FK: `promocionId → Promocion.id`
 - UNIQUE: `(pedidoId, promocionId)`
 
-### 2.19 ParametroSistema
+### 2.19 PasswordResetToken
+
+| Atributo        | Tipo de dato | Notas                                        |
+| --------------- | ------------ | -------------------------------------------- |
+| `id`            | `INTEGER`    | PK                                           |
+| `usuarioId`     | `INTEGER`    | FK a `Usuario.id` (NOT NULL)                 |
+| `tokenHash`     | `STRING`     | UNIQUE, SHA-256 en hexadecimal (64 chars)    |
+| `expiresAt`     | `DATE`       | NOT NULL                                     |
+| `usedAt`        | `DATE`       | NULLABLE (timestamp de consumo)              |
+| `invalidatedAt` | `DATE`       | NULLABLE (token anulado por nueva solicitud) |
+| `createdAt`     | `DATE`       | NOT NULL                                     |
+| `updatedAt`     | `DATE`       | NOT NULL                                     |
+
+- PK: `id`
+- FK: `PasswordResetToken.usuarioId` → `Usuario.id` (ON DELETE CASCADE)
+- UNIQUE: `tokenHash`
+- Índices: `usuarioId`, `expiresAt`, `usedAt`, `invalidatedAt`
+- Reglas de seguridad: **no** se almacena el token en texto plano; solo su hash SHA-256. Un token expirado, usado o invalidado no es reutilizable.
+
+### 2.20 ParametroSistema
 
 | Atributo      | Tipo de dato | Notas  |
 | ------------- | ------------ | ------ |
@@ -324,6 +352,7 @@ A continuación se documentan las **24 relaciones únicas** del modelo.
 ```
 Usuario 1:N Direccion
 Usuario 1:N Pedido
+Usuario 1:N PasswordResetToken
 
 Sucursal 1:1 Direccion
 
@@ -650,7 +679,7 @@ erDiagram
 
 Las siguientes decisiones provienen directamente del modelo de dominio y afectan al diseño o implementación de la base de datos:
 
-- **Verificación de stock de combos**: un combo es un `Producto` cuya composición se define mediante `ComboComponente`; su disponibilidad puede depender de la disponibilidad de sus componentes. La estrategia de verificación de stock para combos debe definirse antes de implementar la lógica de stock y pedidos. No se agrega entidad para resolverla.
+- **Verificación de stock de combos (resuelto)**: un combo es un `Producto` cuya composición se define mediante `ComboComponente`. Su disponibilidad se **deriva del stock de sus componentes**: el máximo es `min(floor(cantidad del componente / cantidad que lleva la receta))`, y lo que se vende es `min(cantidad cargada del combo, ese máximo)`. La fila de stock del combo es un tope, no la garantía de que se pueda armar. Vender un combo descuenta su unidad y la de cada componente. No se agregó ninguna entidad ni se modificó la estructura.
 - **`Pedido.medioPago`**: valores `MERCADO_PAGO` y `TARJETA` (enunciado no define explícitamente el listado; conviene confirmarlo antes de implementar).
 - **Dominio de `Promocion.valor`**: no se especifica (porcentaje, monto fijo, etc.); conviene precisarlo.
 - **Tiempo estimado de entrega**: no requiere almacenamiento persistente; su cálculo se definirá como regla de negocio (dinámicamente a partir del estado del pedido y/o parámetros del sistema). `PedidoEstadoHistorial` permite calcular tiempos reales e históricos, pero no representa por sí mismo una estimación futura.
