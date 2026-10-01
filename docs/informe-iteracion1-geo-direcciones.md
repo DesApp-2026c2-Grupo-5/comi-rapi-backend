@@ -39,7 +39,7 @@ Alinear `Direccion` y el flujo de ingreso de direcciones con el modelo territori
 - `CAMPOS_UBICACION` = calle, altura, provincia, **departamento**, **localidad**.
 - **Regla territorial**: si la provincia (normalizada, sin acentos) es Buenos Aires y no hay `departamento` → `ErrorValidacionDireccion` ("El partido es obligatorio..."). Se aplica sobre los datos combinados en `prepararDireccion` (cubre también updates parciales que cambian la provincia).
 - `validarDatosDireccion`: `departamento`, `localidad` y `codigoPostal` opcionales (null/vacío limpia el campo); provincia sigue siendo obligatoria.
-- Al geocodificar, se persisten **normalizados**: `departamento`, `localidad` (localidad censal) y `nomenclatura`. `calle` conserva el texto del usuario (la forma oficial queda en `nomenclatura`).
+- Al geocodificar, se persisten **normalizados por Georef** — Iteración 2 (ampliación): `provincia`, `calle`, `departamento` (partido/comuna), `localidad` (localidad censal) y `nomenclatura` como dato geográfico complementario. La fila persistida refleja exactamente la dirección resuelta; no se conserva la escritura original del usuario.
 
 ### 3.4 Manejo de errores (HTTP)
 

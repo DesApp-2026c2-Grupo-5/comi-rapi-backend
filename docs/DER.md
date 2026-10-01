@@ -62,7 +62,7 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 - FK (opcional): `sucursalId → Sucursal.id`, `ON DELETE RESTRICT`
 - CHECK: `CK_Direcciones_propietario` — exactamente uno de `usuarioId` / `sucursalId` debe estar informado (`("usuarioId" IS NOT NULL)::int + ("sucursalId" IS NOT NULL)::int = 1`)
 - Obligatorios: `calle`, `altura`, `provincia` (NOT NULL; también validados en la API). Iteración 1-geo: `localidad` y `codigoPostal` pasaron a ser opcionales (NOT NULL retirado); el `departamento` (partido) se exige en la API cuando la provincia es Buenos Aires, pero no a nivel de persistencia. Antes de la alineación existía `ciudad`, renombrada a `localidad`.
-- `latitud`/`longitud` son opcionales y **no se ingresan manualmente** (la API las rechaza): las calcula `geolocation_service` (Georef) a partir de los datos de la dirección. Ídem `departamento`/`localidad`/`nomenclatura`: se persisten normalizados por el backend al geocodificar.
+- `latitud`/`longitud` son opcionales y **no se ingresan manualmente** (la API las rechaza): las calcula `geolocation_service` (Georef) a partir de los datos de la dirección. Ídem `provincia`/`calle`/`departamento`/`localidad`/`nomenclatura`: desde la Iteración 2 el backend los persiste **todos normalizados por Georef** al geocodificar (la `nomenclatura` queda como dato geográfico complementario; no se conserva la escritura original del usuario).
 
 ### 2.3 Sucursal
 
