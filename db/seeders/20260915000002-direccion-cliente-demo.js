@@ -63,7 +63,12 @@ module.exports = {
         calle: DIRECCION.calle,
         altura: DIRECCION.altura,
         provincia: DIRECCION.provincia,
-        localidad: DIRECCION.localidad,
+        // Iteración 1-geo: datos territoriales persistidos NORMALIZADOS
+        // por Georef (partido/comuna, localidad censal, nomenclatura),
+        // igual que hace el ABM (direccion_service).
+        departamento: geo.normalizada.departamento,
+        localidad: geo.normalizada.localidad,
+        nomenclatura: geo.nomenclatura,
         codigoPostal: DIRECCION.codigoPostal,
         referencia: DIRECCION.referencia,
         alias: ALIAS,

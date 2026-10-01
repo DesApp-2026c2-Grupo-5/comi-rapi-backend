@@ -105,8 +105,10 @@ No crear entidades separadas `Cliente` ni `Administrador`.
 | `calle`        | obligatorio                 |
 | `altura`       | obligatorio                 |
 | `provincia`    | obligatorio                 |
-| `localidad`    | obligatorio                 |
-| `codigoPostal` | obligatorio                 |
+| `departamento` | opcional (iteración 1-geo)  |
+| `localidad`    | opcional (iteración 1-geo)  |
+| `codigoPostal` | opcional (iteración 1-geo)  |
+| `nomenclatura` | opcional (iteración 1-geo)  |
 | `referencia`   | opcional                    |
 | `latitud`      | opcional                    |
 | `longitud`     | opcional                    |
@@ -127,8 +129,10 @@ Reglas:
 
 - **Propietario exclusivo**: exactamente uno de `usuarioId` / `sucursalId` debe estar informado. Se garantiza a nivel de persistencia mediante el CHECK `CK_Direcciones_propietario` (`("usuarioId" IS NOT NULL)::int + ("sucursalId" IS NOT NULL)::int = 1`) y a nivel de modelo mediante una validación de instancia.
 - `Usuario.id` y `Sucursal.id` son FKs con `ON DELETE RESTRICT`.
-- **Campos obligatorios**: `calle`, `altura`, `provincia`, `localidad` y `codigoPostal`. Se validan a nivel de modelo (`NOT NULL`), en la API de direcciones (cliente) y en la API de sucursales (admin, al crear/actualizar la dirección de la sucursal).
-- **Coordenadas no manuales**: `latitud` y `longitud` son opcionales y **no se ingresan manualmente** (ni por el admin ni por nadie): la API las rechaza. El servicio de geolocalización `geolocation_service` (Georef Argentina) las calcula a partir de los datos de la dirección (`calle`, `altura`, `provincia`, `localidad`); `direccion_service` las geocodifica y persiste al crear/editar (integración con el ABM implementada; ver `docs/reglas-negocio.md` §17). Ver `docs/reglas-negocio.md` §14.
+- **Campos obligatorios**: `calle`, `altura` y `provincia`. El `departamento` (partido) es obligatorio en la API cuando la provincia es Buenos Aires (desambiguación territorial). Se validan en la API de direcciones (cliente) y en la API de sucursales (admin, al crear/actualizar la dirección de la sucursal).
+- **Coordenadas no manuales**: `latitud` y `longitud` son opcionales y **no se ingresan manualmente** (ni por el admin ni por nadie): la API las rechaza. El servicio de geolocalización `geolocation_service` (Georef Argentina) las calcula a partir de los datos de la dirección (`calle`, `altura`, `provincia`, `departamento?`, `localidad?`); `direccion_service` las geocodifica y persiste al crear/editar (integración con el ABM implementada; ver `docs/reglas-negocio.md` §17). Ver `docs/reglas-negocio.md` §14.
+
+> **Nota de cambio (Iteración 1-geo):** nuevo modelo territorial alineado con Georef (ver `docs/reglas-negocio.md` §18). Se agregan `departamento` (partido en Buenos Aires / comuna en CABA, normalizado por el backend) y `nomenclatura` (dirección normalizada por Georef). `localidad` pasa a ser **determinada por el backend** (localidad censal de Georef; ya no se exige al usuario) y `codigoPostal` pasa a ser opcional: **Georef no provee códigos postales** (verificado contra su API) y el proyecto no incorpora otros proveedores.
 
 Importante: la dirección utilizada en un pedido **no debe depender de esta entidad para conservar el historial**. Al confirmar/generar el pedido, los datos se copian como snapshot dentro de `Pedido`. No crear `PedidoDireccion`.
 

@@ -45,20 +45,24 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 | `calle`        | `STRING`        | Obligatorio                 |
 | `altura`       | `INTEGER`       | Obligatorio                 |
 | `provincia`    | `STRING`        | Obligatorio                 |
-| `localidad`    | `STRING`        | Obligatorio                 |
-| `codigoPostal` | `STRING`        | Obligatorio                 |
+| `departamento` | `STRING`        | Opcional (iteración 1-geo)  |
+| `localidad`    | `STRING`        | Opcional (iteración 1-geo)  |
+| `codigoPostal` | `STRING`        | Opcional (iteración 1-geo)  |
+| `nomenclatura` | `STRING`        | Opcional (iteración 1-geo)  |
 | `referencia`   | `TEXT`          | Opcional                    |
 | `latitud`      | `DECIMAL(10,7)` | Opcional                    |
 | `longitud`     | `DECIMAL(10,7)` | Opcional                    |
 | `alias`        | `STRING`        | Opcional                    |
 | `activa`       | `BOOLEAN`       |                             |
 
+> **Nota de cambio (Iteración 1-geo):** se agregan `departamento` (unidad territorial intermedia según Georef: **partido** en Buenos Aires, **comuna** en CABA, departamento en el resto) y `nomenclatura` (dirección completa normalizada por Georef). `localidad` y `codigoPostal` pasan a ser **opcionales**: el backend determina la localidad a partir de la `localidad_censal` de Georef y el CP no se exige porque Georef no lo provee (ver `docs/reglas-negocio.md` §18). Ambos campos nuevos son inicialmente nullable para no romper las filas existentes; se completan al editar la dirección o mediante un backfill futuro.
+
 - PK: `id`
 - FK (opcional): `usuarioId → Usuario.id`, `ON DELETE RESTRICT`
 - FK (opcional): `sucursalId → Sucursal.id`, `ON DELETE RESTRICT`
 - CHECK: `CK_Direcciones_propietario` — exactamente uno de `usuarioId` / `sucursalId` debe estar informado (`("usuarioId" IS NOT NULL)::int + ("sucursalId" IS NOT NULL)::int = 1`)
-- Obligatorios: `calle`, `altura`, `provincia`, `localidad`, `codigoPostal` (NOT NULL; también validados en la API). Antes de la alineación existía `ciudad`, renombrada a `localidad`.
-- `latitud`/`longitud` son opcionales y **no se ingresan manualmente** (la API las rechaza): a futuro un servicio de geolocalización del backend las calculará a partir de los datos de la dirección.
+- Obligatorios: `calle`, `altura`, `provincia` (NOT NULL; también validados en la API). Iteración 1-geo: `localidad` y `codigoPostal` pasaron a ser opcionales (NOT NULL retirado); el `departamento` (partido) se exige en la API cuando la provincia es Buenos Aires, pero no a nivel de persistencia. Antes de la alineación existía `ciudad`, renombrada a `localidad`.
+- `latitud`/`longitud` son opcionales y **no se ingresan manualmente** (la API las rechaza): las calcula `geolocation_service` (Georef) a partir de los datos de la dirección. Ídem `departamento`/`localidad`/`nomenclatura`: se persisten normalizados por el backend al geocodificar.
 
 ### 2.3 Sucursal
 
@@ -511,8 +515,10 @@ erDiagram
         string calle
         int altura
         string provincia
-        string localidad
-        string codigoPostal
+        string departamento "opcional (partido/comuna, iteración 1-geo)"
+        string localidad "opcional (iteración 1-geo)"
+        string codigoPostal "opcional (iteración 1-geo)"
+        string nomenclatura "opcional (iteración 1-geo)"
         string referencia
         decimal latitud
         decimal longitud

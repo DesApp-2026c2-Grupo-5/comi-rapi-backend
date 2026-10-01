@@ -41,6 +41,9 @@ const sucursales = [
       calle: 'J. M. de Rosas',
       altura: 600,
       provincia: 'Buenos Aires',
+      // Iteración 1-geo: partido obligatorio en Buenos Aires (desambigua la
+      // dirección en Georef; misma regla que el ABM).
+      departamento: 'Morón',
       localidad: 'Morón',
       codigoPostal: '1708',
     },
@@ -108,7 +111,12 @@ module.exports = {
           calle: dir.calle,
           altura: dir.altura,
           provincia: dir.provincia,
-          localidad: dir.localidad,
+          // Iteración 1-geo: datos territoriales persistidos NORMALIZADOS
+          // por Georef (partido/comuna, localidad censal, nomenclatura),
+          // igual que hace el ABM (direccion_service).
+          departamento: geo.normalizada.departamento,
+          localidad: geo.normalizada.localidad,
+          nomenclatura: geo.nomenclatura,
           codigoPostal: dir.codigoPostal,
           latitud: geo.latitud,
           longitud: geo.longitud,
