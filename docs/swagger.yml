@@ -20,7 +20,8 @@ info:
     - **CLIENTE**: registra pedidos, confirma o cancela los propios, administra
       sus direcciones y consulta sus pedidos.
     - **Sin sesión**: solo acceso al catálogo público (GET de categorías,
-      productos y sucursales activas) y a `/api/auth/*`.
+      productos y sucursales activas), a `/api/geo/*` (catálogo territorial,
+      zonas y preview — iteración 3) y a `/api/auth/*`.
 
     ### Cómo probar desde Swagger UI
 
@@ -61,6 +62,10 @@ tags:
     description: ABM de sucursales
   - name: Direcciones
     description: CRUD de direcciones del cliente
+  - name: Geo
+    description: >-
+      Iteración 3 — catálogo territorial (proxy con cache de Georef),
+      zonas de operación y preview de direcciones (públicos)
   - name: Imagenes
     description: Subida de imágenes (productos y categorías)
 components:
@@ -979,6 +984,309 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthData'
+
+  # Iteración 3: catálogo territorial (proxy con cache de Georef) para los
+  # selects en cascada, el autocompletado de calles, el aviso de cobertura y
+  # el preview de direcciones. Endpoints públicos; el preview exige CSRF como
+  # el resto de los POST.
+  /geo/departamentos:
+    get:
+      tags:
+        - Geo
+      summary: Partidos/comunas de una provincia
+      description: >-
+        Departamentos de Georef: partidos en Buenos Aires, comunas en CABA.
+        Cacheado del lado del backend (la data territorial es casi estática).
+      operationId: geoDepartamentos
+      parameters:
+        - name: provincia
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Nombre oficial de la provincia
+      responses:
+        '200':
+          description: Lista de departamentos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        nombre:
+                          type: string
+        '400':
+          description: Falta la provincia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Georef no disponible temporalmente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /geo/localidades:
+    get:
+      tags:
+        - Geo
+      summary: Localidades (BAHRA) de una provincia/partido
+      description: >-
+        Localidades de Georef (BAHRA; en CABA son los barrios), opcionalmente
+        filtradas por departamento. Es la misma semántica del filtro
+        `localidad` aceptado por la geocodificación.
+      operationId: geoLocalidades
+      parameters:
+        - name: provincia
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: departamento
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de localidades
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        nombre:
+                          type: string
+        '400':
+          description: Falta la provincia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Georef no disponible temporalmente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /geo/calles:
+    get:
+      tags:
+        - Geo
+      summary: Autocompletado de calles por nombre parcial
+      description: >-
+        Calles de Georef por nombre parcial (mínimo 3 letras: con menos
+        devuelve una lista vacía sin consultar al proveedor). Los filtros de
+        provincia/departamento/localidad acotan los resultados.
+      operationId: geoCalles
+      parameters:
+        - name: provincia
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: departamento
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: localidad
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: nombre
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Calles que matchean el nombre
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        nombre:
+                          type: string
+                        categoria:
+                          type: string
+                          nullable: true
+                        departamento:
+                          type: object
+                          nullable: true
+                          description: >-
+                            Comuna/partido de la calle: permite DISTINGUIR
+                            resultados repetidos entre comunas/partidos
+                            (fix bug 3).
+                          properties:
+                            id:
+                              type: string
+                            nombre:
+                              type: string
+                        nomenclatura:
+                          type: string
+                          nullable: true
+                          description: >-
+                            "NOMBRE, partido/comuna, provincia" — etiqueta
+                            lista para mostrar como distinguible.
+        '400':
+          description: Falta la provincia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Georef no disponible temporalmente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /geo/zonas:
+    get:
+      tags:
+        - Geo
+      summary: Zonas de operación (para el aviso de cobertura)
+      description: >-
+        Deriva de la MISMA configuración (cobertura-zonas) que usa la
+        validación real de cobertura: el frontend muestra el aviso "fuera de
+        zona" al seleccionar la provincia sin duplicar la configuración.
+      operationId: geoZonas
+      responses:
+        '200':
+          description: Zonas de operación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nombre:
+                          type: string
+                        provincias:
+                          type: array
+                          items:
+                            type: string
+                        departamentos:
+                          type: array
+                          items:
+                            type: string
+
+  /geo/preview:
+    post:
+      tags:
+        - Geo
+      summary: Preview de dirección (geocodifica sin persistir)
+      description: >-
+        Iteración 3: resuelve la dirección con Georef SIN persistir ni
+        validar cobertura. Devuelve siempre 200 con el estado de la
+        resolución: 'unica' (resultado normalizado + nomenclatura),
+        'ambigua' (opciones por identidad territorial, con la calle oficial
+        para un reintento determinista) o 'no_encontrada'. Permite resolver
+        la ambigüedad ANTES de guardar y de aplicar la cobertura definitiva.
+      operationId: geoPreview
+      security:
+        - csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DireccionRequest'
+      responses:
+        '200':
+          description: Estado de la resolución
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      estado:
+                        type: string
+                        enum: [unica, ambigua, no_encontrada]
+                      resultado:
+                        nullable: true
+                        type: object
+                        properties:
+                          latitud:
+                            type: number
+                          longitud:
+                            type: number
+                          nomenclatura:
+                            type: string
+                          normalizada:
+                            type: object
+                            properties:
+                              calle:
+                                type: string
+                              provincia:
+                                type: string
+                              departamento:
+                                type: string
+                                nullable: true
+                              localidad:
+                                type: string
+                                nullable: true
+                      opciones:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DireccionOpcion'
+        '400':
+          description: Faltan calle, altura o provincia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Georef no disponible temporalmente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
 
   /auth/csrf-token:
     get:
