@@ -1216,12 +1216,18 @@ paths:
         - Geo
       summary: Preview de dirección (geocodifica sin persistir)
       description: >-
-        Iteración 3: resuelve la dirección con Georef SIN persistir ni
-        validar cobertura. Devuelve siempre 200 con el estado de la
-        resolución: 'unica' (resultado normalizado + nomenclatura),
-        'ambigua' (opciones por identidad territorial, con la calle oficial
-        para un reintento determinista) o 'no_encontrada'. Permite resolver
-        la ambigüedad ANTES de guardar y de aplicar la cobertura definitiva.
+        Iteración 3: resuelve la dirección con Georef SIN persistir. Devuelve
+        siempre 200 con el estado de la resolución: 'unica' (resultado
+        normalizado + nomenclatura), 'ambigua' (opciones por identidad
+        territorial, con la calle oficial para un reintento determinista) o
+        'no_encontrada'. Permite resolver la ambigüedad ANTES de guardar y
+        de aplicar la cobertura definitiva.
+        Iteración 5: con `cobertura: true` (opt-in; solo el formulario del
+        cliente lo envía) y resultado único, `data.cobertura` agrega el
+        resultado de la validación REAL de cobertura (zona + sucursal activa
+        a ≤5 km por ruta). Sin el flag, comportamiento previo (0 llamadas a
+        ORS). El alta (POST /direcciones) sigue siendo la validación
+        definitiva: nunca se confía en el preview.
       operationId: geoPreview
       security:
         - csrfToken: []
@@ -1230,7 +1236,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DireccionRequest'
+              allOf:
+                - $ref: '#/components/schemas/DireccionRequest'
+                - type: object
+                  properties:
+                    cobertura:
+                      type: boolean
+                      description: >-
+                        Opt-in (iteración 5): evaluar la cobertura real de la
+                        dirección resuelta. Solo para el alta del cliente.
+                      example: true
       responses:
         '200':
           description: Estado de la resolución
@@ -1274,6 +1289,39 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/DireccionOpcion'
+                      cobertura:
+                        nullable: true
+                        type: object
+                        description: >-
+                          Iteración 5: solo con `cobertura: true` y resultado
+                          único. Resultado de la validación real (no lanza):
+                          zona + sucursal activa más cercana a ≤5 km por ruta.
+                        properties:
+                          dentroZona:
+                            type: boolean
+                          zona:
+                            type: string
+                            nullable: true
+                          sucursal:
+                            nullable: true
+                            type: object
+                            description: >-
+                              Sucursal activa más cercana (null si no hay
+                              ninguna activa geolocalizada).
+                            properties:
+                              id:
+                                type: integer
+                              nombre:
+                                type: string
+                                nullable: true
+                              distanciaMetros:
+                                type: number
+                          coberturaDisponible:
+                            type: boolean
+                          radioMaxKm:
+                            type: number
+                          mensaje:
+                            type: string
         '400':
           description: Faltan calle, altura o provincia
           content:
@@ -2172,7 +2220,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RespuestaError'
+                allOf:
+                  - $ref: '#/components/schemas/RespuestaError'
+                  - type: object
+                    description: >-
+                      Iteración 5: en el rechazo por cobertura, `detalle`
+                      expone la distancia de la sucursal activa más cercana
+                      (metros) para explicar el motivo.
+                    properties:
+                      detalle:
+                        type: object
+                        nullable: true
+                        properties:
+                          distanciaMasCercanaMetros:
+                            type: number
         '503':
           description: Servicio de geolocalización o rutas no disponible temporalmente
           content:
@@ -2276,7 +2337,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RespuestaError'
+                allOf:
+                  - $ref: '#/components/schemas/RespuestaError'
+                  - type: object
+                    description: >-
+                      Iteración 5: en el rechazo por cobertura, `detalle`
+                      expone la distancia de la sucursal activa más cercana.
+                    properties:
+                      detalle:
+                        type: object
+                        nullable: true
+                        properties:
+                          distanciaMasCercanaMetros:
+                            type: number
         '503':
           description: Servicio de geolocalización o rutas no disponible temporalmente
           content:

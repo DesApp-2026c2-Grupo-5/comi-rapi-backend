@@ -131,6 +131,18 @@ npx sequelize seed:generate --name edificios
 npx sequelize db:migrate:undo
 ```
 
+## Pruebas y colección Postman (geolocalización)
+
+La funcionalidad de direcciones y geolocalización (Georef + OpenRouteService) se prueba en tres niveles:
+
+1. **Suite automatizada**: `npm test` (Jest, `--runInBand`). No depende de APIs externas: Georef y ORS están mockeados. Los tests de coverage/integración usan la base `unahur_desapp_test` (debe tener las migraciones aplicadas).
+2. **Colección Postman** (`docs/postman/`): importá `comi-rapi-geo.postman_collection.json` y el entorno `geo-local.postman_environment.json` en Postman. Cubre el flujo completo por HTTP: catálogo territorial, preview (identidad + cobertura), alta/edición/baja de direcciones del cliente y alta de sucursales desde el admin, con los resultados esperados en cada caso. Prerequisitos: backend en `:3000` con migraciones y seeders aplicados, y `ORS_API_KEY` válida en `.env.local` (los casos de distancia la usan). Ejecutá las carpetas en orden (el CSRF se guarda solo en la primera).
+3. **Verificación manual del frontend** (`npm run dev` en ambos repos): cascada territorial, autocompletado, desambiguación, bloqueo por cobertura y confirmación. Checklist en `docs/informe-tarea7-postman-cierre.md`.
+
+Documentación de referencia: `docs/swagger.yml` (contratos), `docs/flujo-direcciones-geolocalizacion.md` (flujo completo) y `docs/informe-mejoras-detallado.md` (historial por iteración).
+
+Credenciales: la clave de ORS vive SOLO en `.env.local` (gitignored); los `.env` versionados la dejan vacía. Nunca commitear claves.
+
 ## Acciones automáticas
 
 Este repositorio está configurado para hacer un formateo automático de código al grabar, y para formatear y pasar chequeos al commitear.

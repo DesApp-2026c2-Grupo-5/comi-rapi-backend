@@ -3,8 +3,8 @@
 // Iteración 1-geo (direcciones y geolocalización): modelo territorial de
 // `Direccion` alineado con Georef Argentina.
 //
-// Cambios y motivos (diseño aprobado en la iteración 1, ver
-// `docs/informe-iteracion1-geo-direcciones.md`):
+// Cambios y motivos (diseño aprobado en la iteración 1, ver módulo 1 de
+// `docs/informe-mejoras-detallado.md`):
 //   - Nueva columna `departamento`: unidad territorial intermedia que usa
 //     Georef (partido en Buenos Aires, comuna en CABA, departamento en el
 //     resto del país). Permite desambiguar direcciones como
