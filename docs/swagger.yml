@@ -20,7 +20,8 @@ info:
     - **CLIENTE**: registra pedidos, confirma o cancela los propios, administra
       sus direcciones y consulta sus pedidos.
     - **Sin sesión**: solo acceso al catálogo público (GET de categorías,
-      productos y sucursales activas) y a `/api/auth/*`.
+      productos y sucursales activas), a `/api/geo/*` (catálogo territorial,
+      zonas y preview — iteración 3) y a `/api/auth/*`.
 
     ### Cómo probar desde Swagger UI
 
@@ -61,6 +62,10 @@ tags:
     description: ABM de sucursales
   - name: Direcciones
     description: CRUD de direcciones del cliente
+  - name: Geo
+    description: >-
+      Iteración 3 — catálogo territorial (proxy con cache de Georef),
+      zonas de operación y preview de direcciones (públicos)
   - name: Imagenes
     description: Subida de imágenes (productos y categorías)
 components:
@@ -255,6 +260,12 @@ components:
           type: string
           format: date-time
 
+    # Iteración 1-geo (direcciones y geolocalización): se agrega
+    # `departamento` (partido/comuna según Georef) y `nomenclatura`
+    # (dirección completa normalizada por Georef); `localidad` y
+    # `codigoPostal` pasan a ser opcionales (el backend determina la
+    # localidad y Georef no provee el CP). Se corrige además `ciudad` →
+    # `provincia`/`localidad`, alineado con el DER actual.
     Direccion:
       type: object
       properties:
@@ -262,15 +273,25 @@ components:
           type: integer
         usuarioId:
           type: integer
+        sucursalId:
+          type: integer
+          nullable: true
         calle:
           type: string
         altura:
           type: integer
+        provincia:
+          type: string
+        departamento:
+          type: string
           nullable: true
-        ciudad:
+        localidad:
           type: string
           nullable: true
         codigoPostal:
+          type: string
+          nullable: true
+        nomenclatura:
           type: string
           nullable: true
         referencia:
@@ -720,43 +741,62 @@ components:
         telefono: '11-5555-0001'
         horarios: Lun a Dom 10:00-23:00
 
+    # Iteración 1-geo (direcciones y geolocalización): contrato del nuevo
+    # flujo territorial. Obligatorios: calle, altura y provincia. En la
+    # provincia de Buenos Aires el `departamento` (partido) es obligatorio
+    # para desambiguar. `localidad` es opcional (la determina el backend con
+    # Georef) y `codigoPostal` ya no se exige (Georef no lo provee).
+    # latitud/longitud no se aceptan (las calcula el backend).
     DireccionRequest:
       type: object
       required:
         - calle
+        - altura
+        - provincia
       properties:
         calle:
           type: string
         altura:
           type: integer
           minimum: 0
-        ciudad:
+        provincia:
           type: string
+        departamento:
+          type: string
+          description: >-
+            Partido (Buenos Aires) / comuna (CABA). Obligatorio cuando la
+            provincia es Buenos Aires; opcional en el resto.
+        localidad:
+          type: string
+          description: Opcional; si no se envía, el backend la determina con Georef.
         codigoPostal:
           type: string
+          description: Opcional; Georef no provee códigos postales.
         referencia:
           type: string
-        latitud:
-          type: number
-          format: double
-          minimum: -90
-          maximum: 90
-        longitud:
-          type: number
-          format: double
-          minimum: -180
-          maximum: 180
         alias:
           type: string
       example:
-        calle: Av. Mitre
-        altura: 750
-        ciudad: Hurlingham
-        codigoPostal: '1686'
-        referencia: 'Casa blanca, semáforo de la plaza'
-        latitud: -34.5912
-        longitud: -58.6364
+        calle: General Villegas
+        altura: 5329
+        provincia: Buenos Aires
+        departamento: Tres de Febrero
+        referencia: 'Casa verde, 2da puerta'
         alias: Casa
+
+    # Iteración 1-geo: respuesta 409 de direcciones ambiguas.
+    DireccionOpcion:
+      type: object
+      properties:
+        nomenclatura:
+          type: string
+        provincia:
+          type: string
+        departamento:
+          type: string
+        localidad:
+          type: string
+          nullable: true
 
     HealthData:
       type: object
@@ -944,6 +984,357 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthData'
+
+  # Iteración 3: catálogo territorial (proxy con cache de Georef) para los
+  # selects en cascada, el autocompletado de calles, el aviso de cobertura y
+  # el preview de direcciones. Endpoints públicos; el preview exige CSRF como
+  # el resto de los POST.
+  /geo/departamentos:
+    get:
+      tags:
+        - Geo
+      summary: Partidos/comunas de una provincia
+      description: >-
+        Departamentos de Georef: partidos en Buenos Aires, comunas en CABA.
+        Cacheado del lado del backend (la data territorial es casi estática).
+      operationId: geoDepartamentos
+      parameters:
+        - name: provincia
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Nombre oficial de la provincia
+      responses:
+        '200':
+          description: Lista de departamentos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        nombre:
+                          type: string
+        '400':
+          description: Falta la provincia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Georef no disponible temporalmente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /geo/localidades:
+    get:
+      tags:
+        - Geo
+      summary: Localidades (BAHRA) de una provincia/partido
+      description: >-
+        Localidades de Georef (BAHRA; en CABA son los barrios), opcionalmente
+        filtradas por departamento. Es la misma semántica del filtro
+        `localidad` aceptado por la geocodificación.
+      operationId: geoLocalidades
+      parameters:
+        - name: provincia
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: departamento
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de localidades
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        nombre:
+                          type: string
+        '400':
+          description: Falta la provincia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Georef no disponible temporalmente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /geo/calles:
+    get:
+      tags:
+        - Geo
+      summary: Autocompletado de calles por nombre parcial
+      description: >-
+        Calles de Georef por nombre parcial (mínimo 3 letras: con menos
+        devuelve una lista vacía sin consultar al proveedor). Los filtros de
+        provincia/departamento/localidad acotan los resultados.
+      operationId: geoCalles
+      parameters:
+        - name: provincia
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: departamento
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: localidad
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: nombre
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Calles que matchean el nombre
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        nombre:
+                          type: string
+                        categoria:
+                          type: string
+                          nullable: true
+                        departamento:
+                          type: object
+                          nullable: true
+                          description: >-
+                            Comuna/partido de la calle: permite DISTINGUIR
+                            resultados repetidos entre comunas/partidos
+                            (fix bug 3).
+                          properties:
+                            id:
+                              type: string
+                            nombre:
+                              type: string
+                        nomenclatura:
+                          type: string
+                          nullable: true
+                          description: >-
+                            "NOMBRE, partido/comuna, provincia" — etiqueta
+                            lista para mostrar como distinguible.
+        '400':
+          description: Falta la provincia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Georef no disponible temporalmente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /geo/zonas:
+    get:
+      tags:
+        - Geo
+      summary: Zonas de operación (para el aviso de cobertura)
+      description: >-
+        Deriva de la MISMA configuración (cobertura-zonas) que usa la
+        validación real de cobertura: el frontend muestra el aviso "fuera de
+        zona" al seleccionar la provincia sin duplicar la configuración.
+      operationId: geoZonas
+      responses:
+        '200':
+          description: Zonas de operación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        nombre:
+                          type: string
+                        provincias:
+                          type: array
+                          items:
+                            type: string
+                        departamentos:
+                          type: array
+                          items:
+                            type: string
+
+  /geo/preview:
+    post:
+      tags:
+        - Geo
+      summary: Preview de dirección (geocodifica sin persistir)
+      description: >-
+        Iteración 3: resuelve la dirección con Georef SIN persistir. Devuelve
+        siempre 200 con el estado de la resolución: 'unica' (resultado
+        normalizado + nomenclatura), 'ambigua' (opciones por identidad
+        territorial, con la calle oficial para un reintento determinista) o
+        'no_encontrada'. Permite resolver la ambigüedad ANTES de guardar y
+        de aplicar la cobertura definitiva.
+        Iteración 5: con `cobertura: true` (opt-in; solo el formulario del
+        cliente lo envía) y resultado único, `data.cobertura` agrega el
+        resultado de la validación REAL de cobertura (zona + sucursal activa
+        a ≤5 km por ruta). Sin el flag, comportamiento previo (0 llamadas a
+        ORS). El alta (POST /direcciones) sigue siendo la validación
+        definitiva: nunca se confía en el preview.
+      operationId: geoPreview
+      security:
+        - csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/DireccionRequest'
+                - type: object
+                  properties:
+                    cobertura:
+                      type: boolean
+                      description: >-
+                        Opt-in (iteración 5): evaluar la cobertura real de la
+                        dirección resuelta. Solo para el alta del cliente.
+                      example: true
+      responses:
+        '200':
+          description: Estado de la resolución
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      estado:
+                        type: string
+                        enum: [unica, ambigua, no_encontrada]
+                      resultado:
+                        nullable: true
+                        type: object
+                        properties:
+                          latitud:
+                            type: number
+                          longitud:
+                            type: number
+                          nomenclatura:
+                            type: string
+                          normalizada:
+                            type: object
+                            properties:
+                              calle:
+                                type: string
+                              provincia:
+                                type: string
+                              departamento:
+                                type: string
+                                nullable: true
+                              localidad:
+                                type: string
+                                nullable: true
+                      opciones:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DireccionOpcion'
+                      cobertura:
+                        nullable: true
+                        type: object
+                        description: >-
+                          Iteración 5: solo con `cobertura: true` y resultado
+                          único. Resultado de la validación real (no lanza):
+                          zona + sucursal activa más cercana a ≤5 km por ruta.
+                        properties:
+                          dentroZona:
+                            type: boolean
+                          zona:
+                            type: string
+                            nullable: true
+                          sucursal:
+                            nullable: true
+                            type: object
+                            description: >-
+                              Sucursal activa más cercana (null si no hay
+                              ninguna activa geolocalizada).
+                            properties:
+                              id:
+                                type: integer
+                              nombre:
+                                type: string
+                                nullable: true
+                              distanciaMetros:
+                                type: number
+                          coberturaDisponible:
+                            type: boolean
+                          radioMaxKm:
+                            type: number
+                          mensaje:
+                            type: string
+        '400':
+          description: Faltan calle, altura o provincia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Georef no disponible temporalmente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
 
   /auth/csrf-token:
     get:
@@ -1599,7 +1990,9 @@ paths:
               $ref: '#/components/schemas/SucursalRequest'
       responses:
         '201':
-          description: Sucursal creada
+          description: >-
+            Sucursal creada con su dirección geocodificada por el backend
+            (geocodificación obligatoria; sin validación de zona/cobertura)
           content:
             application/json:
               schema:
@@ -1612,6 +2005,18 @@ paths:
                 $ref: '#/components/schemas/RespuestaError'
         '403':
           description: Acceso denegado o token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '422':
+          description: La dirección de la sucursal no pudo ubicarse (no se persiste nada)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Servicio de geolocalización no disponible temporalmente
           content:
             application/json:
               schema:
@@ -1669,6 +2074,22 @@ paths:
                 $ref: '#/components/schemas/RespuestaError'
         '404':
           description: Sucursal no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '422':
+          description: >-
+            La nueva dirección de la sucursal no pudo ubicarse (no se actualiza
+            nada). Si cambió un campo de ubicación se re-geocodifica; si solo
+            cambió referencia (o el payload es idéntico) no se consultan
+            proveedores externos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '503':
+          description: Servicio de geolocalización no disponible temporalmente
           content:
             application/json:
               schema:
@@ -1754,7 +2175,7 @@ paths:
               $ref: '#/components/schemas/DireccionRequest'
       responses:
         '201':
-          description: Dirección creada
+          description: Dirección creada (geocodificada por el backend y con cobertura válida)
           content:
             application/json:
               schema:
@@ -1767,6 +2188,54 @@ paths:
                 $ref: '#/components/schemas/RespuestaError'
         '403':
           description: Acceso denegado o token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '409':
+          description: >-
+            Iteración 1-geo: la dirección coincide con varias ubicaciones
+            (identidades territoriales distintas). La respuesta incluye
+            `opciones` para que el usuario elija una y reintente agregando
+            el `departamento` correspondiente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                  opciones:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DireccionOpcion'
+        '422':
+          description: >-
+            La dirección no es válida para delivery: no pudo ubicarse (no
+            encontrada), está fuera de la zona de operación o no hay
+            sucursales activas dentro de la distancia máxima
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/RespuestaError'
+                  - type: object
+                    description: >-
+                      Iteración 5: en el rechazo por cobertura, `detalle`
+                      expone la distancia de la sucursal activa más cercana
+                      (metros) para explicar el motivo.
+                    properties:
+                      detalle:
+                        type: object
+                        nullable: true
+                        properties:
+                          distanciaMasCercanaMetros:
+                            type: number
+        '503':
+          description: Servicio de geolocalización o rutas no disponible temporalmente
           content:
             application/json:
               schema:
@@ -1814,7 +2283,11 @@ paths:
               $ref: '#/components/schemas/DireccionRequest'
       responses:
         '200':
-          description: Dirección actualizada
+          description: >-
+            Dirección actualizada. Si cambió un campo de ubicación (calle,
+            altura, provincia, departamento, localidad) se re-geocodifica y
+            re-valida la cobertura; si solo cambiaron alias/referencia no se
+            consultan proveedores externos
           content:
             application/json:
               schema:
@@ -1833,6 +2306,52 @@ paths:
                 $ref: '#/components/schemas/RespuestaError'
         '404':
           description: Dirección no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '409':
+          description: >-
+            Iteración 1-geo: la nueva dirección coincide con varias
+            ubicaciones; la respuesta incluye `opciones` para que el usuario
+            elija y reintente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                  opciones:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DireccionOpcion'
+        '422':
+          description: >-
+            La nueva dirección no es válida para delivery (no se actualiza
+            nada): no pudo ubicarse, está fuera de la zona de operación o no
+            hay sucursales activas dentro de la distancia máxima
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/RespuestaError'
+                  - type: object
+                    description: >-
+                      Iteración 5: en el rechazo por cobertura, `detalle`
+                      expone la distancia de la sucursal activa más cercana.
+                    properties:
+                      detalle:
+                        type: object
+                        nullable: true
+                        properties:
+                          distanciaMasCercanaMetros:
+                            type: number
+        '503':
+          description: Servicio de geolocalización o rutas no disponible temporalmente
           content:
             application/json:
               schema:

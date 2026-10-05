@@ -1,5 +1,7 @@
 'use strict';
 
+const { geocodificarDireccion } = require('./utils/utils-georef');
+
 // Dirección de ejemplo para el cliente de la seeder de usuarios (`cliente@test.com`).
 //
 // Por qué un seeder propio y no tocar `usuarios-proceres.js`: la dirección es otra
@@ -11,10 +13,29 @@
 //
 // Ojo con `sucursalId`: la tabla tiene el CHECK `CK_Direcciones_propietario`, que
 // exige exactamente un propietario (usuario XOR sucursal). Por eso va en NULL.
-// `latitud`/`longitud` quedan en NULL a propósito: no se ingresan a mano, las calcula
-// el backend con el servicio de geolocalización (tarea pendiente).
+//
+// Coordenadas: NO se cargan a mano. Se geocodifica en `up` con el MISMO servicio
+// que usa la app (geolocation_service, Georef Argentina, vía el build
+// transpilado — ver ./utils/utils-georef.js). Si Georef no encuentra la dirección,
+// devuelve resultados ambiguos o falla, el seeder se detiene con el error tipado
+// y no se inserta nada (sin coordenadas de respaldo).
+//
+// Cobertura (verificada en vivo con ORS al definir el seed, no validada acá):
+// Av. Santa Fe 3700 queda a ~2 km por ruta de Sucursal Palermo (Alto Palermo,
+// Av. Santa Fe 3253) y a ~18+ km por ruta de Sucursal Oeste (Plaza Oeste,
+// Morón): queda cubierta por UNA sola sucursal, para poder probar el flujo real
+// de una dirección de cliente dentro de cobertura.
 
 const ALIAS = 'Casa';
+
+const DIRECCION = {
+  calle: 'Av. Santa Fe',
+  altura: 3700,
+  provincia: 'Ciudad Autónoma de Buenos Aires',
+  localidad: 'Palermo',
+  codigoPostal: '1425',
+  referencia: 'Piso 4, timbre A',
+};
 
 module.exports = {
   up: async (queryInterface) => {
@@ -33,17 +54,26 @@ module.exports = {
       { replacements: { usuarioId, alias: ALIAS } }
     );
 
+    const geo = await geocodificarDireccion(DIRECCION);
+
     await queryInterface.bulkInsert('Direcciones', [
       {
         usuarioId,
         sucursalId: null,
-        calle: 'Av. Corrientes',
-        altura: 2450,
-        provincia: 'Buenos Aires',
-        localidad: 'CABA',
-        codigoPostal: 'C1193',
-        referencia: 'Piso 4, timbre A',
+        calle: DIRECCION.calle,
+        altura: DIRECCION.altura,
+        provincia: DIRECCION.provincia,
+        // Iteración 1-geo: datos territoriales persistidos NORMALIZADOS
+        // por Georef (partido/comuna, localidad censal, nomenclatura),
+        // igual que hace el ABM (direccion_service).
+        departamento: geo.normalizada.departamento,
+        localidad: geo.normalizada.localidad,
+        nomenclatura: geo.nomenclatura,
+        codigoPostal: DIRECCION.codigoPostal,
+        referencia: DIRECCION.referencia,
         alias: ALIAS,
+        latitud: geo.latitud,
+        longitud: geo.longitud,
         activa: true,
         createdAt: new Date(),
         updatedAt: new Date(),

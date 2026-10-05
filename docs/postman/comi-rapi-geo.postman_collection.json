@@ -1,0 +1,860 @@
+{
+  "info": {
+    "name": "Comi-Rapi — Geolocalización (Tarea 7)",
+    "description": "Colección de pruebas de la funcionalidad de direcciones y geolocalización (cierre, Tarea 7). Contratos según docs/swagger.yml. Prerequisitos: backend corriendo en :3000 con migraciones y seeders aplicados (incluye sucursales activas geolocalizadas) y ORS_API_KEY válida en .env.local para los casos de cobertura. Importar junto al environment 'Comi-Rapi Geo — Local'. La cookie de sesión la maneja Postman automáticamente; el CSRF se obtiene en Setup y se reutiliza vía {{csrfToken}}. Ejecutar las carpetas en orden.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Setup",
+      "item": [
+        {
+          "name": "Health",
+          "request": { "method": "GET", "url": "{{baseUrl}}/health" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 y servicio arriba (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json();",
+                  "  pm.expect(d.success).to.eql(true);",
+                  "  pm.expect(d.servicio).to.eql('comi-rapi-backend');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener CSRF (guarda {{csrfToken}})",
+          "request": { "method": "GET", "url": "{{baseUrl}}/auth/csrf-token" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 con token (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json();",
+                  "  pm.expect(d.data.csrfToken).to.be.a('string').and.not.empty;",
+                  "  pm.environment.set('csrfToken', d.data.csrfToken);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Geo catálogo (sin sesión)",
+      "item": [
+        {
+          "name": "Departamentos CABA → 15 comunas",
+          "request": { "method": "GET", "url": "{{baseUrl}}/geo/departamentos?provincia=Ciudad%20Aut%C3%B3noma%20de%20Buenos%20Aires" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 con las 15 comunas (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d).to.have.lengthOf(15);",
+                  "  pm.expect(d.map(x => x.nombre)).to.include('Comuna 1');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Departamentos sin provincia → 400",
+          "request": { "method": "GET", "url": "{{baseUrl}}/geo/departamentos" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('400 provincia obligatoria (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(400);",
+                  "  pm.expect(pm.response.json().error).to.match(/provincia/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Localidades de Tres de Febrero (BAHRA)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/geo/localidades?provincia=Buenos%20Aires&departamento=Tres%20de%20Febrero" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 con localidades del partido (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.length).to.be.above(0);",
+                  "  pm.expect(d.map(x => x.nombre)).to.include('Caseros');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Autocomplete de calles (con nomenclatura distinguible)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/geo/calles?provincia=Buenos%20Aires&departamento=Merlo&nombre=mataco" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 con MATACO y nomenclatura (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.length).to.be.above(0);",
+                  "  pm.expect(d[0].nombre).to.eql('MATACO');",
+                  "  pm.expect(d[0].nomenclatura).to.include('Merlo');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Autocomplete < 3 letras → lista vacía",
+          "request": { "method": "GET", "url": "{{baseUrl}}/geo/calles?provincia=Buenos%20Aires&nombre=ma" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 con data [] (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data).to.eql([]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Calles sin provincia → 400",
+          "request": { "method": "GET", "url": "{{baseUrl}}/geo/calles?nombre=mataco" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('400 provincia obligatoria (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Zonas de operación (CABA + AMBA 40 partidos)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/geo/zonas" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 con CABA y AMBA completa (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const zonas = pm.response.json().data;",
+                  "  const amba = zonas.find(z => z.nombre === 'AMBA');",
+                  "  pm.expect(zonas.map(z => z.nombre)).to.include('CABA');",
+                  "  pm.expect(amba.provincias).to.include('Buenos Aires');",
+                  "  pm.expect(amba.departamentos).to.have.lengthOf(40);",
+                  "  pm.expect(amba.departamentos).to.include('La Plata');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Preview (cliente)",
+      "item": [
+        {
+          "name": "Login cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{clienteEmail}}\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 sesión iniciada (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().success).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preview única (PBA con partido)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"calle\": \"General Villegas\",\n  \"altura\": 5329,\n  \"provincia\": \"Buenos Aires\",\n  \"departamento\": \"Tres de Febrero\"\n}" },
+            "url": "{{baseUrl}}/geo/preview"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 estado 'unica' con normalizada (resultado esperado)\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.estado).to.eql('unica');",
+                  "  pm.expect(d.resultado.nomenclatura).to.be.a('string').and.not.empty;",
+                  "  pm.expect(d.resultado.normalizada.departamento).to.eql('Tres de Febrero');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preview ambigua (opciones con calle oficial)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"calle\": \"juan b justo\",\n  \"altura\": 4200,\n  \"provincia\": \"Ciudad Autónoma de Buenos Aires\"\n}" },
+            "url": "{{baseUrl}}/geo/preview"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 estado 'ambigua' con opciones distinguibles (resultado esperado)\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.estado).to.eql('ambigua');",
+                  "  pm.expect(d.opciones.length).to.be.at.least(2);",
+                  "  d.opciones.forEach(o => pm.expect(o.calle).to.be.a('string'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preview no encontrada",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"calle\": \"Calle Inexistente ZZZ\",\n  \"altura\": 99999,\n  \"provincia\": \"Buenos Aires\",\n  \"departamento\": \"Quilmes\"\n}" },
+            "url": "{{baseUrl}}/geo/preview"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 estado 'no_encontrada' (resultado esperado)\", () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.estado).to.eql('no_encontrada');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preview con cobertura OK (sucursal cercana)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"calle\": \"Av. Santa Fe\",\n  \"altura\": 3700,\n  \"provincia\": \"Ciudad Autónoma de Buenos Aires\",\n  \"cobertura\": true\n}" },
+            "url": "{{baseUrl}}/geo/preview"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 con cobertura disponible y sucursal (resultado esperado; requiere seeds y ORS key)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const c = pm.response.json().data.cobertura;",
+                  "  pm.expect(c.dentroZona).to.eql(true);",
+                  "  pm.expect(c.coberturaDisponible).to.eql(true);",
+                  "  pm.expect(c.sucursal.nombre).to.be.a('string').and.not.empty;",
+                  "  pm.expect(c.sucursal.distanciaMetros).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preview fuera de zona (Córdoba)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"calle\": \"Av. Colón\",\n  \"altura\": 100,\n  \"provincia\": \"Córdoba\",\n  \"departamento\": \"Capital\",\n  \"cobertura\": true\n}" },
+            "url": "{{baseUrl}}/geo/preview"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 dentroZona false sin cobertura (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.estado).to.eql('unica');",
+                  "  pm.expect(d.cobertura.dentroZona).to.eql(false);",
+                  "  pm.expect(d.cobertura.coberturaDisponible).to.eql(false);",
+                  "  pm.expect(d.cobertura.sucursal).to.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preview sin calle/altura → 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"provincia\": \"Buenos Aires\"\n}" },
+            "url": "{{baseUrl}}/geo/preview"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('400 datos obligatorios (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Direcciones (cliente)",
+      "item": [
+        {
+          "name": "POST alta con cobertura → 201 (guarda {{direccionId}})",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"calle\": \"Av. Santa Fe\",\n  \"altura\": 3700,\n  \"provincia\": \"Ciudad Autónoma de Buenos Aires\",\n  \"alias\": \"Tarea 7\",\n  \"referencia\": \"Prueba Postman\"\n}" },
+            "url": "{{baseUrl}}/direcciones"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 con datos normalizados y coords persistidas (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.nomenclatura).to.be.a('string').and.not.empty;",
+                  "  pm.expect(d.departamento).to.be.a('string').and.not.empty;",
+                  "  pm.expect(d.latitud).to.be.a('number');",
+                  "  pm.expect(d.codigoPostal).to.eql(null);",
+                  "  pm.environment.set('direccionId', String(d.id));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST ambigua → 409 con opciones",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"calle\": \"juan b justo\",\n  \"altura\": 4200,\n  \"provincia\": \"Ciudad Autónoma de Buenos Aires\"\n}" },
+            "url": "{{baseUrl}}/direcciones"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('409 con opciones territoriales y sin persistir (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(409);",
+                  "  const d = pm.response.json();",
+                  "  pm.expect(d.opciones.length).to.be.at.least(2);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST no encontrada → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"calle\": \"Calle Inexistente ZZZ\",\n  \"altura\": 99999,\n  \"provincia\": \"Buenos Aires\",\n  \"departamento\": \"Quilmes\"\n}" },
+            "url": "{{baseUrl}}/direcciones"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('422 no pudo ubicarse (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(422);",
+                  "  pm.expect(pm.response.json().error).to.match(/no pudo ser ubicada/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST fuera de zona (Córdoba) → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"calle\": \"Av. Colón\",\n  \"altura\": 100,\n  \"provincia\": \"Córdoba\",\n  \"departamento\": \"Capital\"\n}" },
+            "url": "{{baseUrl}}/direcciones"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('422 fuera de la zona (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(422);",
+                  "  pm.expect(pm.response.json().error).to.match(/fuera de la zona/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST zona OK sin sucursal a 5 km (La Plata) → 422 con detalle",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"calle\": \"Diagonal 74\",\n  \"altura\": 1200,\n  \"provincia\": \"Buenos Aires\",\n  \"departamento\": \"La Plata\"\n}" },
+            "url": "{{baseUrl}}/direcciones"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('422 sin cobertura con distancia en detalle (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(422);",
+                  "  const d = pm.response.json();",
+                  "  pm.expect(d.error).to.match(/sucursales/i);",
+                  "  pm.expect(d.detalle.distanciaMasCercanaMetros).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST PBA sin partido → 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"calle\": \"General Villegas\",\n  \"altura\": 5329,\n  \"provincia\": \"Buenos Aires\"\n}" },
+            "url": "{{baseUrl}}/direcciones"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('400 partido obligatorio (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(400);",
+                  "  pm.expect(pm.response.json().error).to.match(/partido es obligatorio/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST validación acumulada → 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"altura\": -5\n}" },
+            "url": "{{baseUrl}}/direcciones"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('400 con calle y altura (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(400);",
+                  "  const e = pm.response.json().error;",
+                  "  pm.expect(e).to.match(/calle/);",
+                  "  pm.expect(e).to.match(/altura/);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET listado del cliente",
+          "request": { "method": "GET", "url": "{{baseUrl}}/direcciones" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 con la dirección creada (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(Array.isArray(d)).to.eql(true);",
+                  "  pm.expect(d.map(x => String(x.id))).to.include(pm.environment.get('direccionId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET por id",
+          "request": { "method": "GET", "url": "{{baseUrl}}/direcciones/{{direccionId}}" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 con la dirección propia (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(String(pm.response.json().data.id)).to.eql(pm.environment.get('direccionId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT solo alias → 200 (sin re-geocodificar)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"alias\": \"Alias actualizado\"\n}" },
+            "url": "{{baseUrl}}/direcciones/{{direccionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 con alias actualizado y coords conservadas (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.alias).to.eql('Alias actualizado');",
+                  "  pm.expect(d.latitud).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registro otro usuario (tolerante a re-ejecución)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Otro\",\n  \"email\": \"{{otroEmail}}\",\n  \"password\": \"{{password}}\",\n  \"rol\": \"CLIENTE\"\n}" },
+            "url": "{{baseUrl}}/auth/registro"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('registro OK (201) o email ya existente en re-ejecuciones (400/409)', () => {",
+                  "  pm.expect([200, 201, 400, 409]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login otro usuario (sesión para el 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{otroEmail}}\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 sesión como otro usuario (prerrequisito del 403)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT ajena → 403",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"alias\": \"Hack\"\n}" },
+            "url": "{{baseUrl}}/direcciones/{{direccionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 dirección de otro cliente (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Re-login cliente + DELETE baja lógica → 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{clienteEmail}}\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('re-login cliente (prerrequisito del DELETE)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "// El DELETE se hace en el request siguiente."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE {{direccionId}}",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "x-csrf-token", "value": "{{csrfToken}}" }],
+            "url": "{{baseUrl}}/direcciones/{{direccionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 baja lógica (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().success).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Sucursales (admin)",
+      "item": [
+        {
+          "name": "Login admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{password}}\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 sesión admin (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST sucursal dentro de la zona → 201 (guarda {{sucursalId}})",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Sucursal Prueba Tarea 7\",\n  \"direccion\": {\n    \"calle\": \"Av. de Mayo\",\n    \"altura\": 700,\n    \"provincia\": \"Ciudad Autónoma de Buenos Aires\",\n    \"localidad\": \"CABA\"\n  }\n}" },
+            "url": "{{baseUrl}}/sucursales"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 geocodificada (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.direccion.latitud).to.be.a('number');",
+                  "  pm.expect(d.direccion.nomenclatura).to.be.a('string').and.not.empty;",
+                  "  pm.environment.set('sucursalId', String(d.id));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST sucursal FUERA de la zona → 201 (admin sin cobertura comercial)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Sucursal Fuera Zona T7\",\n  \"direccion\": {\n    \"calle\": \"Alsina\",\n    \"altura\": 25,\n    \"provincia\": \"Buenos Aires\",\n    \"departamento\": \"Bahía Blanca\"\n  }\n}" },
+            "url": "{{baseUrl}}/sucursales"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 aunque la zona NO está habilitada para clientes (resultado esperado: regla conservada)', () => {",
+                  "  pm.response.to.have.status(201);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.direccion.departamento).to.eql('Bahía Blanca');",
+                  "  pm.expect(d.direccion.latitud).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT sucursal → 200",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-csrf-token", "value": "{{csrfToken}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"telefono\": \"011-9999-9999\"\n}" },
+            "url": "{{baseUrl}}/sucursales/{{sucursalId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 teléfono actualizado (resultado esperado)', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().data.telefono).to.eql('011-9999-9999');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

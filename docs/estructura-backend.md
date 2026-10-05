@@ -57,7 +57,7 @@ comi-rapi-backend/
 - **`lib/routes/`** — Declaran los endpoints (método + ruta + middlewares + controller). No contienen lógica de negocio.
 - **`lib/middlewares/`** — Autenticación/autorización, manejo de errores y (a futuro) validación de entrada.
 - **`lib/controllers/`** — Traducen HTTP↔dominio y orquestan la petición. No contienen reglas de negocio.
-- **`lib/services/`** — Reglas de negocio reutilizables.
+- **`lib/services/`** — Reglas de negocio reutilizables. Incluye `geolocation_service.js` (geocodificación de direcciones vía Georef Argentina: HTTP + parseo + errores tipados, sin reglas de negocio), `routing_service.js` (cálculo de rutas: distancia/duración vía OpenRouteService, abstracción reemplazable por OSRM) y `cobertura_service.js` (reglas de cobertura geográfica para delivery: zona de operación + sucursal activa dentro de la distancia máxima por ruta).
 - **`lib/models/`** — Modelos Sequelize correspondientes a las entidades del DER.
 - **`lib/utils/`** — Helpers transversales sin estado. Carpeta prevista, aún sin crear; solo se materializará cuando una implementación concreta la requiera.
 - **`db/migrations/`** — Migraciones de base de datos gestionadas por Sequelize.
@@ -86,6 +86,13 @@ comi-rapi-backend/
 - Manejo centralizado de errores (`lib/middlewares/error_handler.js`).
 - CRUD funcional de `Categoria` y `Producto` (modelo, migración, controller, ruta y seeder).
 - Helper de rutas (`lib/routes/utils.js`).
+- Servicio de geocodificación (`lib/services/geolocation_service.js`) con Georef Argentina: `geocodificarDireccion` + `buscarDirecciones`, errores tipados (`GeorefError`, `DireccionNoEncontradaError`, `DireccionAmbiguaError`), config `georef` en `lib/config/config.js`. Integrado al ABM de `Direccion` mediante `direccion_service`.
+  - Iteración 1-geo: filtros opcionales `departamento`/`localidad` en la query, interpretación con **deduplicación por identidad territorial** (provincia + departamento + localidad censal + calle) y `DireccionAmbiguaError` con `opciones` agrupadas (varias identidades → el usuario elige; segmentos de la misma calle no son ambiguos).
+- Servicio de rutas (`lib/services/routing_service.js`) con OpenRouteService: `calcularRuta` (distancia/duración/geometría), errores tipados (`OrsError`, `CredencialesInvalidasError`, `LimiteSolicitudesError`, `RutaInexistenteError`), config `ors` en `lib/config/config.js` con `ORS_API_KEY` vía override `.env.local` (gitignored). Integrado a la cobertura (`cobertura_service`).
+- Servicio de cobertura (`lib/services/cobertura_service.js`): `evaluarZona`, `obtenerSucursalesActivas`, `evaluarCoberturaCoordenadas`, `validarCoberturaDireccion` y `validarCoberturaParaDelivery` (zona de operación configurable en `lib/config/cobertura-zonas.js` + sucursal activa dentro de `COBERTURA_RADIO_MAX_KM`, distancia real por ruta). Reutiliza `geolocation_service` y `routing_service`. **Sin cambios en la iteración 1-geo** (ya compara el `departamento` normalizado contra las zonas).
+- Servicio de direcciones (`lib/services/direccion_service.js`): orquestación del ABM de `Direccion` (usuario y sucursal): `validarDatosDireccion`, `prepararDireccion` (validación + geocodificación + cobertura), `crearDireccionDeUsuario`, `actualizarDireccionDeUsuario` y `persistirDireccionSucursal` (dentro de la transacción del controller). Geocodificación obligatoria para sucursal; cobertura para direcciones de entrega.
+  - Iteración 1-geo / Iteración 2: regla territorial (partido obligatorio cuando la provincia es Buenos Aires), `departamento`/`localidad`/`codigoPostal` opcionales en el ingreso y persistencia de `provincia`/`calle`/`departamento`/`localidad`/`nomenclatura` **todos normalizados por Georef** (la `nomenclatura` como dato geográfico complementario). `CAMPOS_UBICACION` incluye `departamento` y `localidad`.
+- Servicio de catálogo territorial (`lib/services/geo_catalogo_service.js`, Iteración 3): proxy con **cache en memoria** de Georef (`llamarGeoref` reutilizada de `geolocation_service`) para los selects en cascada del frontend, el autocompletado de calles y las zonas de operación. Rutas públicas en `lib/routes/geo.js` (`/api/geo/departamentos|localidades|calles|zonas|preview`); el preview usa `resolverDireccion` (variante no-lanzante de la geocodificación, con las mismas `opciones` por identidad territorial).
 
 **Se implementará posteriormente (a medida que avance el desarrollo):**
 
