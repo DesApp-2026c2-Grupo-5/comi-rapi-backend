@@ -14,6 +14,11 @@ Fuente de verdad estructural: `docs/DER.md` (2.16–2.18) y `docs/modelo-dominio
 - 3x1, 3x2 y demás NxM quedan **afuera** por ahora (requieren cambio de modelo).
 - Sin cupones, envío gratis ni reglas por sucursal (exclusiones del modelo).
 - `PromocionProducto` define qué productos alcanza cada promo (`UNIQUE` por par).
+- **Un combo no puede ser alcanzado por una promoción**: su precio ya es la
+  promoción respecto de sus componentes, así que no baja de precio aunque una
+  promoción alcance al combo o a alguno de sus componentes. El combo es la
+  promoción. Se rechaza al vincular (`POST /promociones/:id/productos`) y una
+  promo que solo alcanzaría a combos no aplica al pedido.
 - `PedidoPromocion.descuentoAplicado` es snapshot histórico: se calcula al confirmar el pedido y nunca se reconstruye desde el catálogo.
 
 ## Motor de aplicación (carrito → pedido)
@@ -47,3 +52,8 @@ Papas $900, 2x1 que las alcanza, 4 unidades:
 Doble alcance (10% vs 2x1 sobre 2 × $1000):
 
 - 10% = 200, 2x1 = 1000 → se aplica 2x1. Total: 1000.
+
+Combo con un componente en promoción (Combo $21900, promo 10% sobre las Papas):
+
+- El combo no se descuenta: se pagan los 21900 enteros. Si además se pide 1 Papa
+  suelta, esa línea sí recibe el 10%.
