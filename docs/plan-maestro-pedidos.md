@@ -1,4 +1,4 @@
-# Plan maestro — Funcionalidades pendientes de pedidos
+# Plan — Funcionalidades pendientes de pedidos
 
 Documento de planificación de referencia para las próximas iteraciones de trabajo: **asignación de sucursal, tiempo estimado de entrega (ETA), seguimiento del pedido y reasignación manual**. Fuente de verdad funcional: `docs/enunciado.md`; auditoría de código: este documento; flujo del feature ya cerrado (direcciones/geolocalización): `docs/flujo-direcciones-geolocalizacion.md`.
 
@@ -23,7 +23,7 @@ Documento de planificación de referencia para las próximas iteraciones de trab
 3. **Seguimiento**: exponer y mostrar el ETA en el ciclo `confirmado → en_camino`; ocultarlo en estados finales y antes de confirmar. Sin GPS ni mapas.
 4. **Reasignación manual**: permitir al admin reasignar el pedido a otra sucursal con las **mismas reglas** (activa + stock + cobertura), en estados no avanzados, con trazabilidad.
 
-## 3. Decisiones cerradas (aprobadas por el equipo)
+## 3. Decisiones cerradas
 
 | #      | Decisión                                               | Detalle                                                                                                                                                                                                                                                                                                           |
 | ------ | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -104,13 +104,6 @@ T1 y T2 son paralelizables; T3 es corta (puede agruparse con T2); T4 al final.
 
 - Suite backend completa en verde (`--runInBand`, Node 14) con los tests de los casos límite de cada módulo; lint 0; builds OK.
 - Verificación en vivo contra Georef/ORS de cada módulo con direcciones/sucursales reales.
-- Docs actualizadas: este plan maestro + reglas-negocio (nueva sección por módulo) + swagger (nuevo 422, `etaMinutos`, `PATCH /sucursal`) + informe de iteración al cierre.
+- Docs actualizadas: este plan + reglas-negocio (nueva sección por módulo) + swagger (nuevo 422, `etaMinutos`, `PATCH /sucursal`) + informe de iteración al cierre.
 - Sin GPS, sin mapas interactivos, sin optimización avanzada, sin múltiples repartidores, sin cambios en pedidos/estados existentes fuera de lo descrito.
 - Node 14.15.5 y lockfile intactos; cero dependencias nuevas.
-
-## 8. Flujo de Git (acordado con el equipo)
-
-- Rama de trabajo: **`feat/pedidos`** (base: dev con el PR #11 ya mergeado).
-- **Un commit por tarea** (C1 refactor + C2 este plan + C3-C7 tareas T0-T4), cada uno verificado (suite + lint + builds) antes de commitear.
-- **Push tras cada commit** (backup inmediato en GitHub).
-- **Un único merge a `dev` al final del trabajo**: local, **sin PR**, **con aprobación explícita del equipo previa**. Luego push de dev.

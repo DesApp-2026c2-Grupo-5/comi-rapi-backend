@@ -219,3 +219,23 @@ Regla de negocio, no entidad:
 - **Flujo del frontend (requisito de orden)**: verificar (preview) → resolver ambigüedad eligiendo una opción (aplica el `departamento` y la calle oficial; **nunca** la localidad censal, que no es un valor válido del filtro BAHRA) → confirmar los datos resueltos → recién entonces guardar; el POST de direcciones re-geocodifica y aplica la cobertura definitiva, sin que la ambigüedad la enmascare.
 - **Validación de parámetros**: en la ruta (400 por provincia/nombre faltantes); errores de Georef → 503 centralizados en el error handler. Sin entidades, dependencias ni migraciones nuevas.
 - **Correcciones de la iteración 3 (post-testeo manual)**: los ítems de `/api/geo/calles` se documentan con `departamento` y `nomenclatura` (vía `campos=estandar` de Georef) para **distinguir** calles repetidas entre comunas/partidos — no se deduplican: son tramos distintos con ids distintos (caso real: "AV JUAN B JUSTO" existe en 6 comunas de CABA). En el frontend, la búsqueda de calle espera a que la provincia esté seleccionada (la query la exige), descarta respuestas obsoletas, no re-busca por el texto que produce la propia selección (la lista ya no se reabre), y los campos territoriales usan un combobox (`Autocomplete`) con filtrado client-side de los catálogos ya cargados y **selección explícita de una opción válida** (el texto libre solo busca; no se acepta como valor).
+
+## 20. Plan de pedidos: selección de sucursal, ETA, seguimiento y reasignación
+
+> **Nota de cambio (plan maestro de pedidos):** nueva sección que documenta las reglas de las funcionalidades en construcción. Referencia: `docs/plan-maestro-pedidos.md`.
+
+### 20.1 Selección de sucursal (T1)
+
+- **Regla D1**: al crear un pedido, el backend selecciona **la sucursal más cercana por ruta que tenga stock suficiente, dentro de cobertura** (≤ `COBERTURA_RADIO_MAX_KM` km por ruta). Reemplaza la lógica anterior de "menor carga de pedidos pendientes" (válida según `enunciado.md:58` que deja la estrategia a criterio del grupo).
+- Elegible = activa ∧ stock suficiente (`faltantesDePedido`) ∧ dentro de cobertura (`sucursalesEnCobertura`, ranking por distancia de ORS).
+- Casos límite: ninguna elegible → 422 "No hay sucursales disponibles con stock dentro de la cobertura"; la más cercana sin stock → la siguiente más cercana con stock; con stock fuera de cobertura → no elegible (cobertura es hard).
+- **El frontend NO pre-asigna sucursal** (se eliminó el espejo `asignacionSucursal.js`): el POST siempre asigna con las reglas reales; la respuesta trae la sucursal asignada.
+- Si el cliente envía `sucursalId`, se valida que sea elegible (cobertura + stock) y se respeta; si no, se elige automáticamente.
+
+### 20.2 Tiempo estimado de entrega — ETA (T2)
+
+- **Fórmula**: `ETA = cocina (30 min fijos, config.pedidos.tiempoCocinaMin) + viaje (ORS duracionSegundos → minutos, redondeo hacia arriba)`.
+- **Cuándo se calcula**: al confirmar el pedido (`pendiente→confirmado`), DESPUÉS de la transacción (ORS es un servicio externo; su latencia no bloquea el pago). Pedidos `pendientes` no tienen ETA.
+- **Persistencia**: `Pedido.etaMinutos` (INTEGER NULL) + `Pedido.etaCalculadoEn` (DATE NULL) — migración `20261002000001`.
+- **Degradación**: si ORS falla, `etaMinutos` queda null y el pago sigue; el error se loguea. El frontend muestra "—" (T3).
+- **Recálculo**: si la sucursal cambia (reasignación automática por stock vencido al confirmar, o manual en T4), el ETA se recalcula con la nueva sucursal (la cocina se mantiene).

@@ -455,6 +455,19 @@ components:
           type: number
           format: double
           nullable: true
+        etaMinutos:
+          type: integer
+          nullable: true
+          description: >-
+            T2: tiempo estimado de entrega en minutos
+            (cocina 30 + viaje por ruta ORS). NULL si ORS falló o si el
+            pedido aún no fue confirmado.
+        etaCalculadoEn:
+          type: string
+          format: date-time
+          nullable: true
+          description: >-
+            T2: timestamp del cálculo — base para mostrar "llegada ~HH:MM".
         estado:
           type: string
         createdAt:
@@ -1334,7 +1347,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
-
 
   /auth/csrf-token:
     get:
