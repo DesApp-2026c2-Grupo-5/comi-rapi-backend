@@ -293,9 +293,10 @@ Interpretación:
 
 El stock es independiente para cada sucursal.
 
-En un combo, `cantidad` es la cantidad de combos que la sucursal pone a la venta:
-un tope, no la garantía de que se pueda armar. Lo que sale de verdad de su stock
-está en §7.2 ("Combos y stock").
+En un combo, `cantidad` es la cantidad de combos que se pueden armar con el stock
+actual de sus componentes. No la carga el administrador: el backend la deriva de
+la receta y la recalcula sola. Lo que sí se maneja a mano es `disponible`, para
+sacarlo del catálogo de la sucursal. Ver §7.2 ("Combos y stock").
 
 ### 5.9 Pedido
 
@@ -577,11 +578,12 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - `ParametroSistema.clave` único.
 - `Stock`: PK compuesta `(sucursalId, productoId)` única.
 - El carrito es estado temporal y se revalida contra la BD al confirmar.
-- **Combos y stock (resuelto)**: un combo es un `Producto` cuya composición se define mediante `ComboComponente`. Su disponibilidad **se deriva del stock de sus componentes**, no de una existencia propia:
-  - Un combo tiene fila propia en `Stock`, pero su `cantidad` es un **tope** que cargó la sucursal, no la garantía de que se pueda armar.
-  - El máximo real sale de la receta: `max = min(floor(cantidad del componente / cantidad que lleva la receta))`. Si al combo le falta un componente en esa sucursal, el máximo es 0.
-  - Lo que se vende es `min(cantidad cargada del combo, max derivado de los componentes)`. Si a un componente se le baja el stock o se da de baja, el combo se limita solo, sin scripts de reparación.
-  - Vender un combo descuenta las dos cosas: su propia unidad y las unidades de cada componente según la receta.
+- **Combos y stock (resuelto)**: un combo es un `Producto` cuya composición se define mediante `ComboComponente`. Su `cantidad` en `Stock` **se deriva del stock de sus componentes**, no de una existencia propia:
+  - Un combo tiene fila propia en `Stock` para estar en el catálogo de la sucursal y poder apagarse con `disponible`, pero su `cantidad` **no la carga el administrador**: es un espejo del máximo que arma la receta.
+  - El máximo sale de la receta: `max = min(floor(cantidad del componente / cantidad que lleva la receta))`. Si al combo le falta un componente en esa sucursal, el máximo es 0.
+  - El backend recalcula ese número (`sincronizarCantidadDeCombos`) cuando cambia el stock o la disponibilidad de un componente, la receta del combo o la fila del combo, y también al crear o cancelar un pedido: vender un componente simple baja los combos que lo usan en su receta. El valor se devuelve derivado en `GET /api/stock`. Si a un componente se le baja el stock o se da de baja, el combo se limita solo, sin scripts de reparación.
+  - Si la fila del combo está apagada (`disponible = false`), no se vende aunque los componentes alcancen.
+  - Vender un combo descuenta las dos cosas: su propia unidad y las unidades de cada componente según la receta. Como la cantidad del combo ya no es un tope, la protección contra sobreventa se apoya en el descuento atómico de los componentes.
   - No se agregan entidades ni se modifica la estructura: `Stock` conserva `(sucursalId, productoId, cantidad, disponible)` y `ComboComponente` `(id, comboId, productoId, cantidad)`.
 - El stock se descuenta al crear el pedido y se repone al cancelarlo, dentro de la transacción del pedido. Los descuentos son atómicos (`UPDATE ... WHERE cantidad >= n`) para que dos pedidos simultáneos sobre la última unidad no sobrevendan.
 

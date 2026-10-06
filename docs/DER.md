@@ -180,8 +180,10 @@ del combo, y no puede ser negativa (CHECK `CK_ComboComponentes_cantidad`).
 - FK: `productoId → Producto.id`
 
 Implementado. `cantidad` no puede ser negativa (CHECK `CK_Stocks_cantidad`). La
-disponibilidad de un combo se deriva de los componentes (§8), por lo que la
-`cantidad` de un combo es un tope, no una garantía.
+cantidad de un combo se deriva de los componentes (§8) y no se carga a mano: el
+backend la recalcula cada vez que cambia el stock de un componente, la receta o
+la fila del combo. La fila existe para que el combo esté en el catálogo de la
+sucursal y se pueda apagar con `disponible`.
 
 ### 2.11 Pedido
 
@@ -685,7 +687,7 @@ erDiagram
 
 Las siguientes decisiones provienen directamente del modelo de dominio y afectan al diseño o implementación de la base de datos:
 
-- **Verificación de stock de combos (resuelto)**: un combo es un `Producto` cuya composición se define mediante `ComboComponente`. Su disponibilidad se **deriva del stock de sus componentes**: el máximo es `min(floor(cantidad del componente / cantidad que lleva la receta))`, y lo que se vende es `min(cantidad cargada del combo, ese máximo)`. La fila de stock del combo es un tope, no la garantía de que se pueda armar. Vender un combo descuenta su unidad y la de cada componente. No se agregó ninguna entidad ni se modificó la estructura.
+- **Verificación de stock de combos (resuelto)**: un combo es un `Producto` cuya composición se define mediante `ComboComponente`. Su `cantidad` en `Stock` se **deriva del stock de sus componentes**: el valor es `min(floor(cantidad del componente / cantidad que lleva la receta))` en cada sucursal. No es un tope que cargue el administrador: el backend lo recalcula (`sincronizarCantidadDeCombos`) cuando cambia el stock o la disponibilidad de un componente, la receta del combo o la fila del combo, y lo devuelve derivado en `GET /api/stock`, así que no queda un número que el admin pueda dejar desfasado. El recálculo también corre al crear o cancelar un pedido, porque vender un componente simple baja los combos que lo usan en su receta. La fila del combo existe para estar en el catálogo de la sucursal y poder apagarse con `disponible`; si está apagada, no se vende aunque los componentes alcancen. Vender un combo descuenta su unidad y la de cada componente; como la cantidad del combo es derivada, la protección contra sobreventa se apoya en el descuento atómico de los componentes. No se agregó ninguna entidad ni se modificó la estructura.
 - **`Pedido.medioPago`**: valores `MERCADO_PAGO` y `TARJETA` (enunciado no define explícitamente el listado; conviene confirmarlo antes de implementar).
 - **Dominio de `Promocion.valor`**: no se especifica (porcentaje, monto fijo, etc.); conviene precisarlo.
 - **Tiempo estimado de entrega**: no requiere almacenamiento persistente; su cálculo se definirá como regla de negocio (dinámicamente a partir del estado del pedido y/o parámetros del sistema). `PedidoEstadoHistorial` permite calcular tiempos reales e históricos, pero no representa por sí mismo una estimación futura.
