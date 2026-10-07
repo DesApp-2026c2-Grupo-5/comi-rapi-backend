@@ -1858,6 +1858,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
+        '422':
+          description: >-
+            Ninguna sucursal activa dentro de la cobertura de la dirección de
+            entrega tiene stock suficiente (regla D1: cobertura hard). Si se
+            evaluaron candidatas con stock parcial, el mensaje informa los
+            faltantes de la mejor (el máximo realmente entregable).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
     get:
       tags:
         - Pedidos
@@ -1939,7 +1949,13 @@ paths:
               $ref: '#/components/schemas/CambiarEstadoRequest'
       responses:
         '200':
-          description: Pedido con el nuevo estado e histórico actualizado
+          description: >-
+            Pedido con el nuevo estado e histórico actualizado. En la
+            confirmación del pago (pendiente→confirmado), si la reserva de
+            stock de la sucursal original venció, el pedido se reasigna
+            automáticamente a la sucursal MÁS CERCANA por ruta con stock
+            suficiente dentro de la cobertura (mismas reglas D1, excluyendo
+            la original).
           content:
             application/json:
               schema:
@@ -1958,6 +1974,16 @@ paths:
                 $ref: '#/components/schemas/RespuestaError'
         '404':
           description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '409':
+          description: >-
+            Confirmación del pago rechazada: ninguna sucursal dentro de la
+            cobertura tiene stock suficiente para reasignar el pedido. El
+            mensaje informa los faltantes de la mejor candidata; el pedido
+            queda pendiente con su sucursal original y puede cancelarse.
           content:
             application/json:
               schema:

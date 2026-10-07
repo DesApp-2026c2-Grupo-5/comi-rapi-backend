@@ -13,7 +13,7 @@ Documento de planificación de referencia para las próximas iteraciones de trab
 | **Stock**                 | PK (sucursalId, productoId) con `cantidad` y `disponible` (stock.js:24-44). Se descuenta **al crear** (reserva implícita atómica, stock.js:620-662), se re-verifica al confirmar el pago con **reasignación automática** si la reserva venció (pedido_controller.js:602-632), se repone al cancelar (655-663). Combos derivados de componentes (stock.js:43-57).                                                                                           |
 | **ETA**                   | **No existe nada.** `routing_service.calcularRuta` ya devuelve `{distanciaMetros, duracionSegundos}` (routing_service.js:17) — hoy la duración se calcula y se descarta.                                                                                                                                                                                                                                                                                   |
 | **Estados y seguimiento** | 7 estados con matriz de roles completa (estados_pedido.js:71-88). WebSocket `pedido_actualizado` único evento, sin polling (webSocketContext.md). Stepper con fechas por estado; **sin estimaciones en ninguna vista**.                                                                                                                                                                                                                                    |
-| **Reasignación manual**   | **No existe**. Solo la automática por stock vencido al confirmar el pago. Sin endpoint ni UI.                                                                                                                                                                                                                                                                                                                                                              |
+| **Reasignación manual**   | **Implementada (T4)**: `PATCH /api/pedidos/:id/sucursal` (solo ADMIN) con validación de cobertura/stock/estado, transferencia atómica de reserva, trazabilidad en historial y recálculo de ETA. Reglas en `reglas-negocio.md` §20.4.                                                                                                                                                                                                                       |
 | **Docs previas**          | plan-etapa-pedidos.md y plan-estados-pedido.md: implementados completos y superados (el polling de 3s que describen ya no existe).                                                                                                                                                                                                                                                                                                                         |
 
 ## 2. Objetivos
@@ -44,6 +44,12 @@ T4 (M4) Reasignación manual (admin)           ← depende de T0 + T2
 ```
 
 T1 y T2 son paralelizables; T3 es corta (puede agruparse con T2); T4 al final.
+
+## 8. Cierre de la iteración (T0–T4 + corrección)
+
+- **T0–T3**: implementadas y commiteadas (snapshot con coords, selección D1, ETA, seguimiento).
+- **T4**: implementada — endpoint admin, service con validaciones, UI en panel, swagger y tests (`reasignacion_service`). Reglas vigentes en `reglas-negocio.md` §20.4.
+- **Corrección post-T4 (reasignación automática al pagar)**: el path de confirmación usaba la lógica leg pre-T1 (`asignarSucursalOptima`: menor carga entre TODAS las activas, sin cobertura/distancia) y podía reasignar a una sucursal fuera del radio (caso real: pedido en Hurlingham terminó en sucursal Palermo con Oeste a <5 km). Ahora delega en `seleccionarSucursal` con `exceptoSucursalId` (mismas reglas D1); si ninguna sucursal en cobertura tiene stock → 409, el pago se corta y el pedido queda `pendiente` (sin estados nuevos ni reembolsos). El 422/409 informa los faltantes de la mejor candidata en cobertura. `asignacion_sucursal.js` se eliminó (sin uso). Detalle en `reglas-negocio.md` §20.3 e `informe-reasignacion-sucursal.md`.
 
 ## 5. Division en tareas (referencia para los plannings individuales)
 

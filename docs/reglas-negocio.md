@@ -228,7 +228,7 @@ Regla de negocio, no entidad:
 
 - **Regla D1**: al crear un pedido, el backend selecciona **la sucursal más cercana por ruta que tenga stock suficiente, dentro de cobertura** (≤ `COBERTURA_RADIO_MAX_KM` km por ruta). Reemplaza la lógica anterior de "menor carga de pedidos pendientes" (válida según `enunciado.md:58` que deja la estrategia a criterio del grupo).
 - Elegible = activa ∧ stock suficiente (`faltantesDePedido`) ∧ dentro de cobertura (`sucursalesEnCobertura`, ranking por distancia de ORS).
-- Casos límite: ninguna elegible → 422 "No hay sucursales disponibles con stock dentro de la cobertura"; la más cercana sin stock → la siguiente más cercana con stock; con stock fuera de cobertura → no elegible (cobertura es hard).
+- Casos límite: ninguna elegible → 422 "No hay sucursales disponibles con stock dentro de la cobertura"; la más cercana sin stock → la siguiente más cercana con stock; con stock fuera de cobertura → no elegible (cobertura es hard). Si se evaluaron candidatas con stock parcial, el 422 informa los **faltantes de la mejor candidata** (la que menos productos debe y, a la vez, más unidades ofrece de esos productos; ver §20.3), no el mensaje genérico.
 - **El frontend NO pre-asigna sucursal** (se eliminó el espejo `asignacionSucursal.js`): el POST siempre asigna con las reglas reales; la respuesta trae la sucursal asignada.
 - Si el cliente envía `sucursalId`, se valida que sea elegible (cobertura + stock) y se respeta; si no, se elige automáticamente.
 
@@ -239,3 +239,21 @@ Regla de negocio, no entidad:
 - **Persistencia**: `Pedido.etaMinutos` (INTEGER NULL) + `Pedido.etaCalculadoEn` (DATE NULL) — migración `20261002000001`.
 - **Degradación**: si ORS falla, `etaMinutos` queda null y el pago sigue; el error se loguea. El frontend muestra "—" (T3).
 - **Recálculo**: si la sucursal cambia (reasignación automática por stock vencido al confirmar, o manual en T4), el ETA se recalcula con la nueva sucursal (la cocina se mantiene).
+
+### 20.3 Reasignación automática al confirmar el pago (corrección post-T4)
+
+- **Disparador**: al confirmar el pedido (`pendiente→confirmado`, el "pago"), `reservasDeStockVencidas` detecta que la reserva del pedido venció: el admin desactivó el producto (`disponible = false`), quitó su fila de `Stocks` o apagó un componente de un combo del pedido.
+- **Mismas reglas que la asignación inicial (D1)**: la reasignación delega en `seleccionarSucursal` — la **más cercana por ruta con stock suficiente, dentro de cobertura**, excluyendo la sucursal original (`exceptoSucursalId`: su reserva venció, ya no es elegible). El cliente no rearma el pedido.
+- **Atomicidad**: reponer reserva de la vieja + descontar en la nueva + cambio de `sucursalId` + historial ocurren en la MISMA transacción que la transición de estado; si algo falla, el pedido queda `pendiente` con su sucursal y stock originales.
+- **Ninguna elegible → 409 `StockInsuficienteError`**: el pago se corta, el pedido queda `pendiente` y el cliente puede cancelarlo (se repone el stock). **No existe un estado "pagado sin sucursal"**: el pago simulado ES la transición `pendiente→confirmado`, así que nunca se confirma un pedido sin una sucursal que pueda prepararlo. No se agregaron estados ni reembolsos.
+- **Mensaje al cliente**: los faltantes de la mejor candidata en cobertura (el máximo realmente entregable; desempate: menos productos faltantes, luego más unidades). Si no se evaluó ninguna candidata (cobertura vacía o snapshot sin coordenadas de pedidos previos a T0), se informa qué productos perdieron su reserva. El detalle estructurado viaja en `error.faltantes` (tests/logs), no en el texto al cliente: no se exponen nombres de sucursales, distancias ni stock interno.
+- **ETA**: se recalcula con la nueva sucursal (§20.2).
+- **Corrección (post-T4)**: la reasignación elegía por "menor carga de pedidos pendientes" entre TODAS las sucursales activas, sin cobertura ni distancia, y podía enviar el pedido a una sucursal fuera del radio (caso real: Vergara 3430, Hurlingham → sucursal Palermo, con sucursal Oeste disponible a <5 km). Eso violaba §6 y D1; `asignacion_sucursal.js` se eliminó por quedar sin uso.
+
+### 20.4 Reasignación manual por el administrador (T4)
+
+- **Endpoint**: `PATCH /api/pedidos/:id/sucursal` (solo ADMIN; estados `pendiente`, `confirmado`, `en_preparacion`). Regla de §6: el admin reasigna como excepción operativa, siempre dentro de las reglas.
+- **Validaciones** (service `reasignacion_service`, en transacción): misma sucursal → 400; no existe o inactiva → 404; fuera de cobertura (≤ `COBERTURA_RADIO_MAX_KM` por ruta desde las coords del snapshot) → 422; snapshot sin coordenadas → 422; stock insuficiente → 409. La transferencia de la reserva (reponer vieja + descontar nueva) es atómica con el cambio de `sucursalId`.
+- **Trazabilidad**: registro en `PedidoEstadoHistorial` con observación "Reasignado de X a Y por admin Z" (sin cambio de estado, sin tabla nueva).
+- **ETA**: recalculado con la nueva sucursal; si ORS falla, el pedido queda reasignado sin ETA (degradación, igual que §20.2).
+- **Frontend**: botón "Reasignar sucursal" en el panel admin de pedidos; el cliente ve el aviso en el detalle y un badge en la lista.
