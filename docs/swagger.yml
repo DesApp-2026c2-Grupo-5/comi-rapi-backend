@@ -1963,6 +1963,72 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
 
+  /pedidos/{id}/sucursal:
+    patch:
+      tags:
+        - Pedidos
+      summary: Reasigna el pedido a otra sucursal (T4, solo ADMIN)
+      description: >-
+        Reasignación manual de sucursal por el administrador. Valida que el
+        pedido esté en pendiente, confirmado o en_preparacion; que la nueva
+        sucursal esté activa, tenga stock suficiente (transfiere la reserva
+        atómicamente) y esté dentro de la cobertura (≤5 km por ruta).
+        Recalcula el ETA y registra la trazabilidad en el historial.
+      operationId: pedidosReasignarSucursal
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sucursalId]
+              properties:
+                sucursalId:
+                  type: integer
+                  description: ID de la sucursal destino
+      responses:
+        '200':
+          description: Pedido reasignado (con sucursal y ETA actualizados)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pedido'
+        '400':
+          description: Misma sucursal o sucursalId faltante
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: El pedido no está en un estado reasignable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Pedido o sucursal no encontrados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '409':
+          description: La sucursal destino no tiene stock suficiente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '422':
+          description: La sucursal destino está fuera de cobertura
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
   /sucursales:
     get:
       tags:
