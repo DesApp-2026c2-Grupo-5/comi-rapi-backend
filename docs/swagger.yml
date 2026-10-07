@@ -10,13 +10,16 @@ info:
 
     | Rol | Email | Contraseña |
     |---|---|---|
+    | SUPERADMINISTRADOR | `superadmin@test.com` | `123456` |
     | ADMINISTRADOR | `admin@test.com` | `123456` |
     | CLIENTE | `cliente@test.com` | `123456` |
 
     ### Roles y alcance
 
-    - **ADMINISTRADOR**: gestiona usuarios, categorías, productos, sucursales
-      e imágenes, y avanza los pedidos (preparación, envío, entrega).
+    - **SUPERADMINISTRADOR**: métricas globales (`/api/superadmin/resumen`),
+      gestión de usuarios y CRUD de sucursales (decisión corporativa).
+    - **ADMINISTRADOR**: gestiona categorías, productos e imágenes, y avanza
+      los pedidos (preparación, envío, entrega) de su sucursal asignada.
     - **CLIENTE**: registra pedidos, confirma o cancela los propios, administra
       sus direcciones y consulta sus pedidos.
     - **Sin sesión**: solo acceso al catálogo público (GET de categorías,
@@ -51,7 +54,11 @@ tags:
   - name: Autenticacion
     description: Registro, login, logout y sesión
   - name: Usuarios
-    description: Usuarios (solo administrador)
+    description: Usuarios (lectura para admin y superadmin; alta/edición solo superadmin)
+  - name: Superadmin
+    description: >-
+      Panel del SUPERADMINISTRADOR: métricas agregadas de todo el negocio
+      (pedidos, ventas por sucursal, serie de 30 días y operación)
   - name: Categorias
     description: ABM de categorías de productos
   - name: Productos
@@ -100,6 +107,7 @@ components:
       enum:
         - CLIENTE
         - ADMINISTRADOR
+        - SUPERADMINISTRADOR
     TipoProducto:
       type: string
       enum:
@@ -179,6 +187,143 @@ components:
         updatedAt:
           type: string
           format: date-time
+
+    UsuarioCrear:
+      type: object
+      description: Alta de usuario desde el panel (solo SUPERADMINISTRADOR)
+      required:
+        - nombre
+        - email
+        - password
+        - rol
+      properties:
+        nombre:
+          type: string
+        apellido:
+          type: string
+          nullable: true
+        email:
+          type: string
+        telefono:
+          type: string
+          nullable: true
+        password:
+          type: string
+          format: password
+        rol:
+          $ref: '#/components/schemas/RolUsuario'
+        sucursalId:
+          type: integer
+          nullable: true
+          description: Obligatoria si rol = ADMINISTRADOR
+        activo:
+          type: boolean
+          default: true
+
+    UsuarioActualizar:
+      type: object
+      description: Edición de usuario desde el panel (solo SUPERADMINISTRADOR; campos parciales)
+      properties:
+        nombre:
+          type: string
+        apellido:
+          type: string
+          nullable: true
+        email:
+          type: string
+        telefono:
+          type: string
+          nullable: true
+        password:
+          type: string
+          format: password
+          description: Solo si se quiere cambiarla
+        rol:
+          $ref: '#/components/schemas/RolUsuario'
+        sucursalId:
+          type: integer
+          nullable: true
+          description: Obligatoria si rol = ADMINISTRADOR
+        activo:
+          type: boolean
+
+    ResumenSuperadmin:
+      type: object
+      description: Métricas agregadas del panel del SUPERADMINISTRADOR
+      properties:
+        pedidos:
+          type: object
+          properties:
+            total:
+              type: integer
+              description: Todos los pedidos, cualquier estado
+            vendidos:
+              type: integer
+              description: Pedidos sin contar pendientes ni cancelados
+            pendientes:
+              type: integer
+            ingresos:
+              type: number
+              description: Suma de total de los pedidos vendidos
+        porEstado:
+          type: array
+          items:
+            type: object
+            properties:
+              estado:
+                type: string
+                description: Nombre del EstadoPedido (ej. entregado)
+              cantidad:
+                type: integer
+              ingresos:
+                type: number
+                description: 0 para pendiente/cancelado
+        porSucursal:
+          type: array
+          description: Solo sucursales activas; las sin ventas van en 0
+          items:
+            type: object
+            properties:
+              sucursalId:
+                type: integer
+              sucursal:
+                type: string
+                description: Nombre de la sucursal
+              cantidad:
+                type: integer
+              ingresos:
+                type: number
+        porDia:
+          type: array
+          description: Serie de los últimos 30 días (solo ventas), fecha local YYYY-MM-DD
+          items:
+            type: object
+            properties:
+              dia:
+                type: string
+                format: date
+              cantidad:
+                type: integer
+              ingresos:
+                type: number
+        operacion:
+          type: object
+          description: Totales de catálogo, locales y plantel
+          properties:
+            categorias:
+              type: integer
+            productos:
+              type: integer
+            combos:
+              type: integer
+            promocionesActivas:
+              type: integer
+            sucursalesActivas:
+              type: integer
+            clientes:
+              type: integer
+            administradores:
+              type: integer
 
     Categoria:
       type: object
@@ -1494,10 +1639,27 @@ paths:
       tags:
         - Usuarios
       summary: Lista todos los usuarios
-      description: Solo administradores. Sin paginación.
+      description: Administradores y superadministradores. Sin paginación.
       operationId: usuariosIndex
       security:
         - cookieAuth: []
+      parameters:
+        - name: rol
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - CLIENTE
+              - ADMINISTRADOR
+              - SUPERADMINISTRADOR
+          description: 'Filtra por rol (roles gestionables: CLIENTE, ADMINISTRADOR o SUPERADMINISTRADOR)'
+        - name: buscar
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Busca por nombre, apellido o email (insensible a mayúsculas)
       responses:
         '200':
           description: Listado de usuarios
@@ -1517,13 +1679,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
+    post:
+      tags:
+        - Usuarios
+      summary: Crea un usuario (cliente, administrador o superadmin)
+      description: >-
+        Solo superadministradores. Un administrador requiere sucursalId; el
+        rol SUPERADMINISTRADOR es gestionable por API.
+      operationId: usuariosCreate
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioCrear'
+      responses:
+        '201':
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaUsuario'
+        '400':
+          description: Datos inválidos (o email ya registrado)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
 
   /usuarios/{id}:
     get:
       tags:
         - Usuarios
       summary: Obtiene un usuario por id
-      description: Solo administradores.
+      description: Administradores y superadministradores.
       operationId: usuariosShow
       security:
         - cookieAuth: []
@@ -1557,6 +1760,92 @@ paths:
                 properties:
                   message:
                     type: string
+    put:
+      tags:
+        - Usuarios
+      summary: Edita un usuario (cliente, administrador o superadmin)
+      description: >-
+        Solo superadministradores. No permite editar ni el rol ni la sucursal
+        de la propia cuenta de SUPERADMINISTRADOR en uso. El rol
+        SUPERADMINISTRADOR es gestionable por API.
+      operationId: usuariosUpdate
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsuarioActualizar'
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaUsuario'
+        '400':
+          description: Datos inválidos o conflicto de rol/sucursal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /superadmin/resumen:
+    get:
+      tags:
+        - Superadmin
+      summary: Resumen global de métricas
+      description: >-
+        Solo SUPERADMINISTRADOR. Agregados calculados en la base (COUNT/SUM/
+        GROUP BY): pedidos totales y vendidos, ventas por sucursal activa,
+        pedidos por estado, la serie de los últimos 30 días y los totales de
+        operación (catálogo, locales y plantel). No expone datos individuales.
+      operationId: superadminResumen
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Resumen agregado del negocio
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumenSuperadmin'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado (requiere rol SUPERADMINISTRADOR)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
 
   /categorias:
     get:
@@ -1584,7 +1873,7 @@ paths:
     post:
       tags:
         - Categorias
-      summary: Crea una categoría (solo ADMINISTRADOR)
+      summary: Crea una categoría (solo SUPERADMINISTRADOR)
       operationId: categoriasCreate
       security:
         - cookieAuth: []
@@ -1639,7 +1928,7 @@ paths:
     put:
       tags:
         - Categorias
-      summary: Actualiza una categoría (solo ADMINISTRADOR)
+      summary: Actualiza una categoría (solo SUPERADMINISTRADOR)
       operationId: categoriasUpdate
       security:
         - cookieAuth: []
@@ -1674,7 +1963,7 @@ paths:
     delete:
       tags:
         - Categorias
-      summary: Elimina una categoría (baja lógica, solo ADMINISTRADOR)
+      summary: Elimina una categoría (baja lógica, solo SUPERADMINISTRADOR)
       description: Marca activa=false.
       operationId: categoriasDestroy
       security:
@@ -1712,7 +2001,7 @@ paths:
     post:
       tags:
         - Productos
-      summary: Crea un producto (solo ADMINISTRADOR)
+      summary: Crea un producto (solo SUPERADMINISTRADOR)
       operationId: productosCreate
       security:
         - cookieAuth: []
@@ -1767,7 +2056,7 @@ paths:
     put:
       tags:
         - Productos
-      summary: Actualiza un producto (solo ADMINISTRADOR)
+      summary: Actualiza un producto (solo SUPERADMINISTRADOR)
       operationId: productosUpdate
       security:
         - cookieAuth: []
@@ -1802,7 +2091,7 @@ paths:
     delete:
       tags:
         - Productos
-      summary: Elimina un producto (baja lógica, solo ADMINISTRADOR)
+      summary: Elimina un producto (baja lógica, solo SUPERADMINISTRADOR)
       description: Marca activo=false.
       operationId: productosDestroy
       security:
@@ -1873,8 +2162,10 @@ paths:
         - Pedidos
       summary: Lista pedidos
       description: >-
-        Un CLIENTE ve sus propios pedidos; un ADMINISTRADOR ve todos y puede
-        filtrar por sucursal con ?sucursalId=.
+        Un CLIENTE ve sus propios pedidos. Un ADMINISTRADOR ve solo los pedidos
+        de su sucursal asignada (sin sucursal recibe 403); no puede ampliarlo a
+        otro local. El SUPERADMINISTRADOR tiene visión global: ve todos los
+        pedidos (apoya el detalle de un cliente en su panel).
       operationId: pedidosIndex
       security:
         - cookieAuth: []
@@ -1882,7 +2173,8 @@ paths:
         - name: sucursalId
           in: query
           required: false
-          description: Solo tiene efecto para administradores
+          description: Para un CLIENTE filtra su propio historial; para un
+            ADMINISTRADOR se ignora (siempre ve su sucursal asignada).
           schema:
             type: integer
       responses:
@@ -1904,7 +2196,9 @@ paths:
       tags:
         - Pedidos
       summary: Obtiene un pedido por id
-      description: Un CLIENTE solo puede ver sus propios pedidos.
+      description: >-
+        Un CLIENTE solo puede ver sus propios pedidos; un ADMINISTRADOR, los de
+        su sucursal; el SUPERADMINISTRADOR tiene visión global.
       operationId: pedidosShow
       security:
         - cookieAuth: []
@@ -2060,7 +2354,7 @@ paths:
       tags:
         - Sucursales
       summary: Lista sucursales (público)
-      description: Por defecto solo sucursales activas. Con activa=false y sesión de administrador se incluyen las inactivas.
+      description: Por defecto solo sucursales activas. Con activa=false y sesión de administrador o superadministrador se incluyen las inactivas.
       operationId: sucursalesIndex
       parameters:
         - name: activa
@@ -2081,7 +2375,7 @@ paths:
     post:
       tags:
         - Sucursales
-      summary: Crea una sucursal (solo ADMINISTRADOR)
+      summary: Crea una sucursal (solo SUPERADMINISTRADOR)
       operationId: sucursalesCreate
       security:
         - cookieAuth: []
@@ -2150,7 +2444,7 @@ paths:
     put:
       tags:
         - Sucursales
-      summary: Actualiza una sucursal (solo ADMINISTRADOR)
+      summary: Actualiza una sucursal (solo SUPERADMINISTRADOR)
       operationId: sucursalesUpdate
       security:
         - cookieAuth: []
@@ -2201,7 +2495,7 @@ paths:
     delete:
       tags:
         - Sucursales
-      summary: Elimina una sucursal (baja lógica, solo ADMINISTRADOR)
+      summary: Elimina una sucursal (baja lógica, solo SUPERADMINISTRADOR)
       description: Marca activa=false.
       operationId: sucursalesDestroy
       security:
@@ -2229,8 +2523,9 @@ paths:
         - Direcciones
       summary: Lista direcciones
       description: >-
-        Un CLIENTE ve sus direcciones activas. Un ADMINISTRADOR ve todas y
-        puede filtrar por usuarioId y activa.
+        Un CLIENTE ve sus direcciones activas. Un ADMINISTRADOR o un
+        SUPERADMINISTRADOR ve las de cualquier usuario (apoya el detalle de
+        cliente) filtrando por usuarioId y activa.
       operationId: direccionesIndex
       security:
         - cookieAuth: []
@@ -2238,13 +2533,13 @@ paths:
         - name: usuarioId
           in: query
           required: false
-          description: Solo administradores
+          description: Solo administradores y superadministradores
           schema:
             type: integer
         - name: activa
           in: query
           required: false
-          description: Solo administradores (por defecto solo activas)
+          description: Solo administradores y superadministradores (por defecto solo activas)
           schema:
             type: string
             enum:
@@ -2350,7 +2645,7 @@ paths:
       tags:
         - Direcciones
       summary: Obtiene una dirección por id
-      description: Solo el dueño o un administrador.
+      description: Solo el dueño, un administrador o un superadministrador.
       operationId: direccionesShow
       security:
         - cookieAuth: []
@@ -2495,7 +2790,7 @@ paths:
     post:
       tags:
         - Imagenes
-      summary: Sube una imagen de producto (solo ADMINISTRADOR)
+      summary: Sube una imagen de producto (solo SUPERADMINISTRADOR)
       description: Multipart, campo imagen. Solo JPG, PNG o WEBP, máximo 5 MB.
       operationId: imagenesUploadProducto
       security:
@@ -2537,7 +2832,7 @@ paths:
     post:
       tags:
         - Imagenes
-      summary: Sube una imagen de categoría (solo ADMINISTRADOR)
+      summary: Sube una imagen de categoría (solo SUPERADMINISTRADOR)
       description: Multipart, campo imagen. Solo JPG, PNG o WEBP, máximo 5 MB.
       operationId: imagenesUploadCategoria
       security:

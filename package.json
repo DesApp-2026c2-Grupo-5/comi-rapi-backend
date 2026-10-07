@@ -24,6 +24,7 @@
     "test:tiempo-real": "node test/tiempo-real/protocolo.js",
     "limpiar:pruebas": "node scripts/limpiar-pedidos-de-prueba.js",
     "limpiar:tokens": "node scripts/limpiar-tokens-expirados.js",
+    "crear:superadmin": "node scripts/crear-superadmin.js",
     "heroku-postbuild": "run-s build db:migrate"
   },
   "nodemonConfig": {

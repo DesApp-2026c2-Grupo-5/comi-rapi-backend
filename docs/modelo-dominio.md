@@ -63,20 +63,21 @@ El dominio cubre:
 
 ### 5.1 Usuario
 
-| Atributo          | Tipo / Notas                     |
-| ----------------- | -------------------------------- |
-| `id`              | PK                               |
-| `nombre`          |                                  |
-| `apellido`        |                                  |
-| `email`           | único                            |
-| `password`        | hash (posterior)                 |
-| `telefono`        |                                  |
-| `rol`             | enum: `CLIENTE`, `ADMINISTRADOR` |
-| `activo`          | booleano                         |
-| `fechaNacimiento` | `DATEONLY`, opcional             |
-| `fotoPerfilUrl`   | STRING, opcional                 |
-| `createdAt`       |                                  |
-| `updatedAt`       |                                  |
+| Atributo          | Tipo / Notas                                              |
+| ----------------- | --------------------------------------------------------- |
+| `id`              | PK                                                        |
+| `nombre`          |                                                           |
+| `apellido`        |                                                           |
+| `email`           | único                                                     |
+| `password`        | hash (posterior)                                          |
+| `telefono`        |                                                           |
+| `rol`             | enum: `CLIENTE`, `ADMINISTRADOR`, `SUPERADMINISTRADOR`    |
+| `activo`          | booleano                                                  |
+| `fechaNacimiento` | `DATEONLY`, opcional                                      |
+| `fotoPerfilUrl`   | STRING, opcional                                          |
+| `sucursalId`      | INTEGER, FK opcional → `Sucursal.id` (solo ADMINISTRADOR) |
+| `createdAt`       |                                                           |
+| `updatedAt`       |                                                           |
 
 `edad` es un atributo derivado/calculado a partir de `fechaNacimiento`; **no** se persiste.
 
@@ -84,7 +85,8 @@ Reglas:
 
 - `email` debe ser único.
 - `password` se almacenará posteriormente como hash.
-- `rol` admite actualmente `CLIENTE` y `ADMINISTRADOR`. No agregar `REPARTIDOR` todavía (Propuesta 2 como evolución futura).
+- `rol` admite `CLIENTE`, `ADMINISTRADOR` y `SUPERADMINISTRADOR`. No agregar `REPARTIDOR` todavía (Propuesta 2 como evolución futura).
+- La sucursal no se guarda en `Usuario`: se asigna al `Pedido` como regla de negocio (proximidad + disponibilidad de stock), con reasignación manual del administrador como excepción operativa.
 
 Relaciones:
 
@@ -496,6 +498,7 @@ Usuario 1:N Direccion
 Usuario 1:N Pedido
 
 Sucursal 1:1 Direccion
+Sucursal 1:N Usuario              (sucursal asignada al ADMINISTRADOR)
 
 Categoria 1:N Producto
 
@@ -531,6 +534,7 @@ Pedido N:N Promocion
 | --------------------- | --------------------- | ------------ | --------------------------------- |
 | Usuario               | Direccion             | 1:N          | `Direccion.usuarioId`             |
 | Sucursal              | Direccion             | 1:1          | `Direccion.sucursalId`            |
+| Sucursal              | Usuario               | 1:N          | `Usuario.sucursalId`              |
 | Usuario               | Pedido                | 1:N          | `Pedido.usuarioId`                |
 | Categoria             | Producto              | 1:N          | `Producto.categoriaId`            |
 | Producto              | ProductoOpcionGrupo   | 1:N          | `ProductoOpcionGrupo.productoId`  |
@@ -646,9 +650,9 @@ La arquitectura futura podrá incorporar, por ejemplo:
 
 | Entidad                 | Responsabilidad                    | Relaciones principales                                                                                                  |
 | ----------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `Usuario`               | Actor autenticado                  | 1:N `Direccion`, 1:N `Pedido`                                                                                           |
+| `Usuario`               | Actor autenticado                  | 1:N `Direccion`, 1:N `Pedido`, N:1 `Sucursal` (opcional, solo ADMINISTRADOR)                                            |
 | `Direccion`             | Dirección de usuario o sucursal    | N:1 `Usuario` (opcional), 1:1 `Sucursal` (opcional)                                                                     |
-| `Sucursal`              | Local físico                       | 1:1 `Direccion`, 1:N `Stock`, 1:N `Pedido`                                                                              |
+| `Sucursal`              | Local físico                       | 1:1 `Direccion`, 1:N `Stock`, 1:N `Pedido`, 1:N `Usuario` (administradores)                                             |
 | `Categoria`             | Agrupar productos                  | 1:N `Producto`                                                                                                          |
 | `Producto`              | Artículo vendible (normal o combo) | N:1 `Categoria`, 1:N `ProductoOpcionGrupo`, 1:N `ComboComponente`, 1:N `Stock`, 1:N `PedidoItem`                        |
 | `ComboComponente`       | Composición de combo               | N:1 `Producto` (combo), N:1 `Producto` (componente)                                                                     |
