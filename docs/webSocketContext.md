@@ -74,32 +74,33 @@ Flujo:
 
 ## 5. Rooms y autorización
 
-| Room          | Quién entra                                                             |
-| ------------- | ----------------------------------------------------------------------- |
-| `admins`      | Automática al conectar, solo si `usuario.rol === 'ADMINISTRADOR'`       |
-| `pedido:{id}` | Solo por suscripción explícita **y** autorización verificada en backend |
+| Room            | Quién entra                                                                            |
+| --------------- | -------------------------------------------------------------------------------------- |
+| `admins`        | Automática al conectar, solo si `usuario.rol === 'SUPERADMINISTRADOR'`                 |
+| `sucursal:{id}` | Automática al conectar, solo si `usuario.rol === 'ADMINISTRADOR'` y tiene `sucursalId` |
+| `pedido:{id}`   | Solo por suscripción explícita **y** autorización verificada en backend                |
 
-Un cliente **no** puede suscribirse a un pedido ajeno. La autorización se aplica en servidor, en `autorizarPedido` (`lib/realtime/conexion.js`), y aplica la misma regla que ya usa `GET /api/pedidos/:id` (`lib/controllers/pedido_controller.js:303-306`):
+Un cliente **no** puede suscribirse a un pedido ajeno. La autorización se aplica en servidor, en `autorizarPedido` (`lib/realtime/conexion.js`), y aplica la misma regla que ya usa `GET /api/pedidos/:id` (`lib/controllers/pedido_controller.js`):
 
 - El pedido no existe → `"Pedido no encontrado"`
-- No es el dueño y no es admin → `"Acceso denegado"`
+- No es el dueño, no es admin de la sucursal del pedido y no es SUPERADMINISTRADOR → `"Acceso denegado"`
 - En otro caso → entra a la room
 
 El cliente nunca decide a qué room pertenece: solo pide, y el backend responde con un ack.
 
 ### 5.1 El frontend solo se suscribe a pedidos de cliente
 
-En `PedidoContext.jsx` el admin **no** emite `suscribir_pedido`: ya entra a `admins` automáticamente y recibe por ahí todo. Suscribirse a cada `pedido:{id}` sería redundante.
+En `PedidoContext.jsx` el admin **no** emite `suscribir_pedido`: entra automáticamente a `sucursal:{id}` de su local y recibe por ahí sus pedidos. Suscribirse a cada `pedido:{id}` sería redundante.
 
 ## 6. Eventos
 
 Payloads mínimos, definidos en `lib/realtime/eventos.js`.
 
-| Evento               | Dirección        | Payload              | Destino                      |
-| -------------------- | ---------------- | -------------------- | ---------------------------- |
-| `suscribir_pedido`   | cliente → server | `{ pedidoId }` + ack | —                            |
-| `desuscribir_pedido` | cliente → server | `{ pedidoId }` + ack | —                            |
-| `pedido_actualizado` | server → cliente | `{ pedidoId }`       | `admins` **y** `pedido:{id}` |
+| Evento               | Dirección        | Payload              | Destino                                       |
+| -------------------- | ---------------- | -------------------- | --------------------------------------------- |
+| `suscribir_pedido`   | cliente → server | `{ pedidoId }` + ack | —                                             |
+| `desuscribir_pedido` | cliente → server | `{ pedidoId }` + ack | —                                             |
+| `pedido_actualizado` | server → cliente | `{ pedidoId }`       | `admins`, `pedido:{id}` **y** `sucursal:{id}` |
 
 Solo hay **un** evento de servidor. No existe `pedido_creado`, y es deliberado.
 
@@ -111,9 +112,14 @@ Decisión del 2026-09-28: se eliminó `pedido_creado`. El admin se entera recié
 
 Para el cliente el evento tampoco hacía falta: su propio `POST /api/pedidos` ya le devuelve el pedido creado.
 
-### 6.2 Por qué `pedido_actualizado` va también a `admins`
+### 6.2 Por qué `pedido_actualizado` va también a rooms de personal
 
-El panel de administración no se suscribe a rooms individuales. Como el frontend usa un único `PedidoContext` para ambos roles, si el evento fuera solo a `pedido:{id}` la lista del admin no se actualizaría al confirmarse el pago.
+El panel de administración no se suscribe a rooms individuales. Como el frontend
+usa un único `PedidoContext` para ambos roles, si el evento fuera solo a
+`pedido:{id}` la lista del admin no se actualizaría al confirmarse el pago.
+Con el rol jerárquico, cada responsable recibe el aviso por su room automática:
+el **ADMINISTRADOR** por `sucursal:{id}` (solo sus pedidos) y el
+**SUPERADMINISTRADOR** por `admins` (todos). Ninguno emite `suscribir_pedido`.
 
 ### 6.3 Consecuencia práctica
 

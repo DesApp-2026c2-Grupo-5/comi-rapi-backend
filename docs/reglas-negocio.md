@@ -7,7 +7,8 @@ Fuentes: `docs/enunciado.md`, `docs/modelo-dominio.md`, `docs/DER.md`, `AGENTS.m
 ## 1. Usuarios y roles
 
 - Existe una única entidad `Usuario`; `email` es único.
-- El modelo actual contempla únicamente los roles `CLIENTE` y `ADMINISTRADOR`.
+- El modelo contempla los roles `CLIENTE`, `ADMINISTRADOR` y `SUPERADMINISTRADOR`.
+- La sucursal no se almacena en `Usuario`: se asigna al `Pedido` según proximidad y disponibilidad de stock; el `ADMINISTRADOR` puede reasignarla manualmente como excepción operativa.
 - Las funcionalidades y entidades adicionales de Propuesta 2 no forman parte de la implementación actual y quedan fuera del modelo definido para esta etapa, sin plantearlo como una exclusión permanente de futuras ampliaciones.
 - El sistema nace con un administrador inicial; los administradores pueden crear otros administradores.
 - `Usuario` posee `fechaNacimiento` (atributo persistido). `edad` se obtiene a partir de `fechaNacimiento` y **no** se almacena como dato persistido.

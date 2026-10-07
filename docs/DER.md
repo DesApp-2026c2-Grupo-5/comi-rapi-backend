@@ -14,23 +14,25 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 
 ### 2.1 Usuario
 
-| Atributo          | Tipo de dato                       | Notas            |
-| ----------------- | ---------------------------------- | ---------------- |
-| `id`              | `INTEGER`                          | PK               |
-| `nombre`          | `STRING`                           |                  |
-| `apellido`        | `STRING`                           |                  |
-| `email`           | `STRING`                           | UNIQUE           |
-| `password`        | `STRING`                           | hash (posterior) |
-| `telefono`        | `STRING`                           |                  |
-| `rol`             | `ENUM('CLIENTE', 'ADMINISTRADOR')` |                  |
-| `activo`          | `BOOLEAN`                          |                  |
-| `fechaNacimiento` | `DATEONLY`                         | Opcional         |
-| `fotoPerfilUrl`   | `STRING`                           | Opcional         |
-| `createdAt`       | `DATE`                             |                  |
-| `updatedAt`       | `DATE`                             |                  |
+| Atributo          | Tipo de dato                                             | Notas                                            |
+| ----------------- | -------------------------------------------------------- | ------------------------------------------------ |
+| `id`              | `INTEGER`                                                | PK                                               |
+| `nombre`          | `STRING`                                                 |                                                  |
+| `apellido`        | `STRING`                                                 |                                                  |
+| `email`           | `STRING`                                                 | UNIQUE                                           |
+| `password`        | `STRING`                                                 | hash (posterior)                                 |
+| `telefono`        | `STRING`                                                 |                                                  |
+| `rol`             | `ENUM('CLIENTE', 'ADMINISTRADOR', 'SUPERADMINISTRADOR')` |                                                  |
+| `activo`          | `BOOLEAN`                                                |                                                  |
+| `fechaNacimiento` | `DATEONLY`                                               | Opcional                                         |
+| `fotoPerfilUrl`   | `STRING`                                                 | Opcional                                         |
+| `sucursalId`      | `INTEGER`                                                | FK opcional → `Sucursal.id` (solo ADMINISTRADOR) |
+| `createdAt`       | `DATE`                                                   |                                                  |
+| `updatedAt`       | `DATE`                                                   |                                                  |
 
 - PK: `id`
 - UNIQUE: `email`
+- FK opcional: `sucursalId → Sucursal.id`, `ON DELETE SET NULL`. Solo el ADMINISTRADOR tiene sucursal asignada (`CLIENTE` y `SUPERADMINISTRADOR` la dejan en `NULL`); lo garantiza el CHECK `chk_usuarios_sucursal_solo_admin`.
 - `edad` es un atributo derivado/calculado a partir de `fechaNacimiento`; **no** se persiste en la base de datos.
 
 ### 2.2 Direccion
@@ -353,7 +355,7 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 
 ## 3. Relaciones y cardinalidades
 
-A continuación se documentan las **24 relaciones únicas** del modelo.
+A continuación se documentan las **25 relaciones únicas** del modelo.
 
 ```
 Usuario 1:N Direccion
@@ -361,6 +363,7 @@ Usuario 1:N Pedido
 Usuario 1:N PasswordResetToken
 
 Sucursal 1:1 Direccion
+Sucursal 1:N Usuario              (sucursal asignada al ADMINISTRADOR)
 
 Categoria 1:N Producto
 
@@ -415,6 +418,7 @@ Pedido N:N Promocion              (mediante PedidoPromocion)
 | 22  | Producto              | PromocionProducto     | 1:N          | `PromocionProducto.productoId`    |
 | 23  | Pedido                | PedidoPromocion       | 1:N          | `PedidoPromocion.pedidoId`        |
 | 24  | Promocion             | PedidoPromocion       | 1:N          | `PedidoPromocion.promocionId`     |
+| 25  | Sucursal              | Usuario               | 1:N          | `Usuario.sucursalId`              |
 
 ## 4. Claves y restricciones
 
@@ -429,6 +433,7 @@ Pedido N:N Promocion              (mediante PedidoPromocion)
   - `PedidoPromocion (pedidoId, promocionId)`
   - `ParametroSistema.clave`
 - **CHECK**: `Direccion`: `CK_Direcciones_propietario` — exactamente uno de `usuarioId` / `sucursalId` debe estar informado (`("usuarioId" IS NOT NULL)::int + ("sucursalId" IS NOT NULL)::int = 1`). Una dirección pertenece a un usuario o a una sucursal, nunca a ambos ni a ninguno.
+- **CHECK**: `Usuario`: `chk_usuarios_sucursal_solo_admin` — `sucursalId` solo puede estar informado cuando `rol = 'ADMINISTRADOR'` (`"rol" = 'ADMINISTRADOR' OR "sucursalId" IS NULL`).
 - **Relaciones N:M resueltas por entidades asociativas**:
   - `Producto N:N OpcionGrupo` → `ProductoOpcionGrupo`
   - `Promocion N:N Producto` → `PromocionProducto`
@@ -479,6 +484,8 @@ erDiagram
 
     Sucursal ||--o{ Stock : "1:N"
     Producto ||--o{ Stock : "1:N"
+
+    Sucursal ||--o{ Usuario : "1:N (solo ADMINISTRADOR)"
 
     Sucursal ||--o{ Pedido : "1:N"
     EstadoPedido ||--o{ Pedido : "1:N"
