@@ -30,9 +30,9 @@
   "nodemonConfig": {
     "exec": "npm run dev",
     "watch": [
-      "lib/*",
-      "public/*"
+      "lib"
     ],
+    "ext": "js",
     "ignore": [
       "**/__tests__/**",
       "*.test.js",

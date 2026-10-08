@@ -59,6 +59,10 @@ tags:
     description: >-
       Panel del SUPERADMINISTRADOR: métricas agregadas de todo el negocio
       (pedidos, ventas por sucursal, serie de 30 días y operación)
+  - name: Parametros
+    description: >-
+      Parámetros de negocio (envío, cobertura, carrito, pedido y promociones).
+      Lectura pública; edición exclusiva del SUPERADMINISTRADOR.
   - name: Categorias
     description: ABM de categorías de productos
   - name: Productos
@@ -324,6 +328,51 @@ components:
               type: integer
             administradores:
               type: integer
+
+    Parametro:
+      type: object
+      description: >-
+        Definición de un parámetro de negocio con su valor vigente. El catálogo
+        es cerrado y lo define el backend; la base solo guarda el valor elegido
+        por el SUPERADMINISTRADOR.
+      properties:
+        clave:
+          type: string
+          example: costoEnvioFijo
+        valor:
+          type: number
+          description: Valor vigente (guardado o, si no hay fila, el por defecto)
+          example: 350
+        tipo:
+          type: string
+          enum:
+            - entero
+            - decimal
+        valorPorDefecto:
+          type: number
+          example: 350
+        grupo:
+          type: string
+          description: Agrupación para la UI
+          enum:
+            - envio
+            - cobertura
+            - carrito
+            - catalogo
+            - pedido
+            - promociones
+        unidad:
+          type: string
+          example: $
+        descripcion:
+          type: string
+        minimo:
+          type: number
+          example: 0
+        maximo:
+          type: number
+          description: Presente solo si el parámetro tiene tope
+          example: 100
 
     Categoria:
       type: object
@@ -1846,6 +1895,90 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
+
+  /superadmin/parametros:
+    put:
+      tags:
+        - Parametros
+      summary: Actualiza parámetros de negocio
+      description: >-
+        Solo SUPERADMINISTRADOR. El body es el mapa { clave: valor } de los
+        parámetros a cambiar; las claves que no se envían conservan su valor.
+        Se valida TODO el lote antes de escribir: si una clave o un valor es
+        inválido, no se guarda nada. Devuelve el catálogo actualizado.
+      operationId: parametrosActualizar
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: number
+              example:
+                costoEnvioFijo: 350
+                montoMinimoEnvioGratis: 10000
+      responses:
+        '200':
+          description: Catálogo de parámetros actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Parametro'
+        '400':
+          description: Clave desconocida o valor fuera de tipo/rango
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado (requiere rol SUPERADMINISTRADOR)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /parametros:
+    get:
+      tags:
+        - Parametros
+      summary: Lista los parámetros de negocio (público)
+      description: >-
+        Lectura pública: el catálogo no tiene datos sensibles y el frontend lo
+        usa para no duplicar reglas (límites del carrito, envío, etc.). Cada
+        ítem trae la definición (tipo, rango, grupo, unidad) y el valor vigente.
+      operationId: parametrosIndex
+      responses:
+        '200':
+          description: Catálogo de parámetros con su valor vigente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Parametro'
 
   /categorias:
     get:

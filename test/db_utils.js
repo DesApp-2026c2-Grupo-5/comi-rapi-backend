@@ -47,3 +47,33 @@ export async function crearUsuario({
     sucursalId,
   });
 }
+
+/**
+ * Carga parámetros de negocio en la base para aislar una suite de los valores
+ * por defecto del catálogo. Solo escribe las claves indicadas; las demás siguen
+ * cayendo al valor por defecto del catálogo.
+ *
+ * `cleanDb()` trunca `ParametrosSistema`, así que cada suite que necesite un
+ * valor distinto al de producción llama a esta función después de limpiar.
+ *
+ * @param {Object} valores - { clave: valor } (número o string).
+ */
+export async function crearParametros(valores = {}) {
+  const entradas = Object.entries(valores);
+  if (entradas.length === 0) return;
+  for (const [clave, valor] of entradas) {
+    // `clave` es UNIQUE (no PK): upsert por `clave` con findOrCreate.
+    const [fila, creada] = await db.ParametroSistema.findOrCreate({
+      where: { clave },
+      defaults: {
+        clave,
+        valor: String(valor),
+        descripcion: `Parámetro de prueba ${clave}`,
+      },
+    });
+    if (!creada && fila.valor !== String(valor)) {
+      fila.valor = String(valor);
+      await fila.save();
+    }
+  }
+}

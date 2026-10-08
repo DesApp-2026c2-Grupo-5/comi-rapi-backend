@@ -106,9 +106,30 @@ Regla de negocio, no entidad:
 
 ## 12. Parámetros del sistema
 
-- `ParametroSistema` guarda configuraciones generales mediante `clave` única, `valor` y `descripcion`.
-- No existen entidades específicas por parámetro.
-- Pendiente de definición: cálculo del tiempo estimado de entrega (ETA). Puede definirse como una regla dinámica a partir del estado y/o parámetros, sin requerir necesariamente persistencia.
+- `ParametroSistema` guarda configuraciones generales mediante `clave` única, `valor` y `descripcion` (DER §2.20 / modelo-dominio §5.17). No existen entidades específicas por parámetro.
+- **Catálogo cerrado (implementado)**: el contrato de los parámetros vive en `lib/services/parametros_service.js` (`PARAMETROS`): define por `clave` el `tipo` (`entero`/`decimal`), `valorPorDefecto`, `grupo`, `unidad`, `descripcion` y `minimo`/`maximo`. La tabla `ParametrosSistema` guarda `clave`+`valor`+`descripcion`; si falta una fila, se usa el `valorPorDefecto` del catálogo. Una clave fuera del catálogo se rechaza con `ParametroDesconocidoError` (HTTP 400): la tabla nunca queda con claves que el código no lee.
+- **Alcance global**: un único juego de parámetros para toda la aplicación (sin `sucursalId`).
+- **API**:
+  - `GET /api/parametros` — lectura **pública**: devuelve el catálogo con el valor vigente (el frontend lo usa para no duplicar reglas; el backend sigue siendo la autoridad).
+  - `PUT /api/superadmin/parametros` — edición **exclusiva del `SUPERADMINISTRADOR`** (`CLIENTE`/`ADMINISTRADOR` → 403). Recibe un mapa `{ clave: valor }`, valida **todo el lote antes de escribir** (si una clave o un valor es inválido no se guarda nada) y devuelve el catálogo actualizado.
+- **Validación** (`normalizarValor`): el valor debe ser numérico, respetar el `tipo` (`entero` no admite decimales) y caer dentro de `[minimo, maximo]`. Errores tipados: `ParametroDesconocidoError`, `ParametroInvalidoError` → HTTP 400.
+- **Parámetros y dónde se aplican**:
+
+  | Clave                                 | Grupo       | Por defecto | Aplica en                                                            |
+  | ------------------------------------- | ----------- | ----------- | -------------------------------------------------------------------- |
+  | `montoMinimoEnvioGratis`              | envio       | 10000       | `pedido_controller` (envío server-side)                              |
+  | `costoEnvioFijo`                      | envio       | 350         | `pedido_controller` (envío server-side)                              |
+  | `radioCoberturaKm`                    | cobertura   | 5           | `cobertura_service` (§16)                                            |
+  | `cantidadMaximaProductoCarrito`       | carrito     | 20          | frontend (tope de unidades por producto)                             |
+  | `minimoComponentesCombo`              | catalogo    | 2           | `combo` (§ del catálogo)                                             |
+  | `montoMinimoPedido`                   | pedido      | 2000        | `pedido_controller` (límites del pedido)                             |
+  | `montoMaximoPedido`                   | pedido      | 500000      | `pedido_controller` (límites del pedido)                             |
+  | `cantidadMaximaItemsPedido`           | pedido      | 50          | `pedido_controller` (límites del pedido)                             |
+  | `cantidadMaximaUnidadesProducto`      | pedido      | 20          | `pedido_controller` (límites del pedido)                             |
+  | `porcentajeMaximoDescuento`           | promociones | 50          | `promocion_controller` (§11)                                         |
+  | `cantidadMaximaPromocionesAplicables` | promociones | 3           | reservado: el motor aplica el mejor descuento por línea sin acumular |
+
+- **Pendiente de definición**: cálculo del tiempo estimado de entrega (ETA). Puede definirse como una regla dinámica a partir del estado y/o parámetros, sin requerir necesariamente persistencia.
 
 ## 13. Reglas pendientes de definición
 
@@ -161,10 +182,10 @@ Regla de negocio, no entidad:
   1. La dirección debe geocodificarse (Georef, con los datos obligatorios `calle`, `altura`, `provincia`, `localidad`). Los errores tipados de Georef (`DireccionNoEncontradaError`, `DireccionAmbiguaError`, `GeorefError`) se propagan: una dirección no geocodificable no es válida para delivery.
   2. La dirección debe pertenecer a la **zona geográfica de operación**: se valida contra la configuración genérica de `lib/config/cobertura-zonas.js` usando los datos territoriales normalizados de Georef (`normalizada.provincia`, `normalizada.departamento`, `normalizada.localidad`). Si no pertenece a ninguna zona, la dirección no es válida y NO se consultan sucursales ni rutas.
   3. Debe existir al menos una **sucursal activa** con dirección geolocalizada dentro de la distancia máxima, medida como **distancia real por ruta** (no línea recta). Las sucursales inactivas o sin coordenadas se ignoran.
-- **Distancia máxima**: 5 km inicial, configurable vía `COBERTURA_RADIO_MAX_KM` (bloque `cobertura` en `lib/config/config.js`). No hardcodeada.
+- **Distancia máxima**: parámetro de negocio `radioCoberturaKm` (§12), por defecto 5 km, editable por el SUPERADMINISTRADOR. No hardcodeada. (Antes vivía en `COBERTURA_RADIO_MAX_KM` / bloque `cobertura` de `lib/config/config.js`, ya eliminado.)
 - **Zonas de operación**: configuración genérica (estructura de datos, no lógica): cada zona define `provincias` (obligatorio) y listas opcionales de `departamentos`/`localidades`; comparación insensible a mayúsculas/minúsculas y acentos. Agregar o quitar zonas/partidos **no requiere modificar el servicio**: solo editar la configuración.
 - **Definición adoptada de AMBA** (documentada explícitamente): la documentación del proyecto no definía la zona de operación, por lo que se adopta la definición oficial del AMBA / Región Metropolitana de Buenos Aires (INDEC): **CABA + la totalidad de los 40 partidos bonaerenses** que la rodean. **Iteración 4: la configuración incluye ahora los 40 partidos completos** (antes solo el primer y segundo cordón): Almirante Brown, Avellaneda, Berazategui, Berisso, Brandsen, Campana, Cañuelas, Ensenada, Escobar, Esteban Echeverría, Exaltación de la Cruz, Ezeiza, Florencio Varela, General Las Heras, General Rodríguez, General San Martín, Hurlingham, Ituzaingó, José C. Paz, La Matanza, La Plata, Lanús, Lomas de Zamora, Luján, Malvinas Argentinas, Marcos Paz, Merlo, Moreno, Morón, Pilar, Presidente Perón, Quilmes, San Fernando, San Isidro, San Miguel, San Vicente, Tigre, Tres de Febrero, Vicente López y Zárate (nombres verificados contra los departamentos de Georef). Los partidos de la provincia **fuera** del AMBA (p. ej. Bahía Blanca, General Pueyrredón) siguen fuera de la zona: no se habilita la provincia completa.
-- **Zona habilita, sucursal decide (sin cambios en la iteración 4):** pertenecer a una zona **no garantiza** el alta de la dirección: sigue siendo obligatorio que exista una sucursal activa a ≤ `COBERTURA_RADIO_MAX_KM` (5 km) **por ruta**. Consecuencia visible de la ampliación: direcciones de partidos del tercer cordón (antes rechazadas con `DireccionFueraDeZonaError`) pasan a evaluarse por cobertura de sucursales; si no hay ninguna cerca, se rechazan con `DireccionSinCoberturaError` (mensaje distinto, mismo resultado operativo).
+- **Zona habilita, sucursal decide (sin cambios en la iteración 4):** pertenecer a una zona **no garantiza** el alta de la dirección: sigue siendo obligatorio que exista una sucursal activa a ≤ `radioCoberturaKm` (5 km) **por ruta**. Consecuencia visible de la ampliación: direcciones de partidos del tercer cordón (antes rechazadas con `DireccionFueraDeZonaError`) pasan a evaluarse por cobertura de sucursales; si no hay ninguna cerca, se rechazan con `DireccionSinCoberturaError` (mensaje distinto, mismo resultado operativo).
 - **API del servicio**:
   - `evaluarZona(normalizada, zonas)` → zona coincidente | null (función pura).
   - `obtenerSucursalesActivas()` → sucursales activas con dirección geolocalizada (de la BD).
@@ -172,7 +193,7 @@ Regla de negocio, no entidad:
   - `validarCoberturaDireccion({ direccion, sucursales = null })` → `{ dentroZona, zona, sucursal: { id, nombre, distanciaMetros } | null, coberturaDisponible, radioMaxKm, mensaje, coordenadas }`. La lista de sucursales puede inyectarse (útil para tests y reutilización); si no, se obtienen de la BD.
   - `validarCoberturaParaDelivery({ coordenadas, normalizada, sucursales })` → variante de validación del ABM: igual que `evaluarCoberturaCoordenadas`, pero lanza `DireccionFueraDeZonaError` / `DireccionSinCoberturaError` si la dirección no es válida para delivery.
 - **Resultado**: objeto detallado; **no** se lanza un error por regla de negocio incumplida (quien lo consuma decide cómo tratarlo). Los errores de infraestructura de Georef/ORS sí se propagan. La variante del ABM (`validarCoberturaParaDelivery`) sí lanza los errores tipados.
-- **Fuera de alcance actual**: frontend (el frontend no consume estas APIs directamente), endpoints de validación de pedido, ETA, costo de envío, asignación de sucursal por stock.
+- **Fuera de alcance actual**: frontend (el frontend no consume estas APIs directamente), endpoints de validación de pedido, ETA, asignación de sucursal por stock. (El costo de envío ya se aplica en `pedido_controller`, con los parámetros `costoEnvioFijo`/`montoMinimoEnvioGratis`, §12.)
 
 ## 17. ABM de Direccion integrado (geolocalización + cobertura)
 
