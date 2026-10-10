@@ -60,6 +60,24 @@ const sucursales = [
       codigoPostal: '1425',
     },
   },
+  // Sucursal extra dentro del radio de cobertura de la dirección demo del
+  // cliente (Av. Santa Fe 3700), para tener DOS sucursales en rango y poder
+  // probar el flujo de reasignación por falta de stock. Georef devuelve un
+  // único resultado para "Av. Las Heras 1800" (Comuna 2, Recoleta), sin ambigüedad.
+  // Distancias por ruta verificadas en vivo con ORS: Palermo 588 m, Recoleta
+  // 2.970 m (ambas dentro del radio de 5 km), Oeste 26.824 m (fuera).
+  {
+    nombre: 'Sucursal Recoleta',
+    telefono: '011-4820-5000',
+    horarios: 'Lun-Dom 10:00-23:00',
+    direccion: {
+      calle: 'Av. Las Heras',
+      altura: 1800,
+      provincia: 'Ciudad Autónoma de Buenos Aires',
+      localidad: 'Recoleta',
+      codigoPostal: '1425',
+    },
+  },
 ];
 
 module.exports = {

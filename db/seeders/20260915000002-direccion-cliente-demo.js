@@ -21,10 +21,12 @@ const { geocodificarDireccion } = require('./utils/utils-georef');
 // y no se inserta nada (sin coordenadas de respaldo).
 //
 // Cobertura (verificada en vivo con ORS al definir el seed, no validada acá):
-// Av. Santa Fe 3700 queda a ~2 km por ruta de Sucursal Palermo (Alto Palermo,
-// Av. Santa Fe 3253) y a ~18+ km por ruta de Sucursal Oeste (Plaza Oeste,
-// Morón): queda cubierta por UNA sola sucursal, para poder probar el flujo real
-// de una dirección de cliente dentro de cobertura.
+// Av. Santa Fe 3700 queda a 588 m por ruta de Sucursal Palermo (Alto Palermo,
+// Av. Santa Fe 3253) y a 2.970 m de Sucursal Recoleta (Av. Las Heras 1800): la
+// dirección demo queda cubierta por DOS sucursales, para poder probar el flujo
+// real de reasignación al pagar (si la más cercana no tiene stock, el pedido
+// pasa a la otra). Sucursal Oeste (Plaza Oeste, Morón) sigue a 26.824 m, fuera
+// del radio, y sirve para el caso contrario.
 
 const ALIAS = 'Casa';
 

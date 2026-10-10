@@ -22,6 +22,11 @@
 // - Oeste con la limonada en 0 pero todavía ofrecida: se ve "se ofrece pero no
 //   hay stock". Ningún combo la lleva, así que este caso no arrastra a los
 //   combos y los dos casos quedan independientes.
+// - Recoleta con las Papas Cheddar en 0: es la segunda sucursal en cobertura de
+//   la dirección demo del cliente, y es la que queda sin stock para disparar el
+//   caso de reasignación al pagar. Se eligió un producto que el único combo
+//   ("Combo Doble") no lleva, para que agotarlo en Recoleta no baje el combo ni
+//   se confunda con el caso de Palermo.
 //
 // La cantidad de un COMBO no se escribe: se calcula acá con la misma regla que
 // usa la aplicación, min(floor(cantidad del componente / cantidad que lleva la
@@ -41,6 +46,9 @@ const ajustesPorSucursal = {
   },
   'Sucursal Oeste': {
     'Limonada Natural': 0,
+  },
+  'Sucursal Recoleta': {
+    'Papas Cheddar': 0,
   },
 };
 
