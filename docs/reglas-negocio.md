@@ -156,19 +156,23 @@ Regla de negocio, no entidad:
 - **Configuración**: `GEOREF_BASE_URL`, `GEOREF_TIMEOUT_MS`, `GEOREF_MAX_RESULTADOS` (sin secretos). Bloque `georef` en `lib/config/config.js`.
 - **Fuera de alcance actual**: OSRM, cálculo de distancias/rutas, endpoints nuevos. La cobertura y el ABM integrado que consumen este servicio están implementados (ver §16 y §17).
 
-## 15. Cálculo de rutas (OpenRouteService)
+## 15. Cálculo de rutas (proveedor seleccionable: ORS por defecto, Geoapify alternativo)
 
-- **Servicio de routing**: `lib/services/routing_service.js` encapsula la comunicación con OpenRouteService (ORS) y el cálculo de distancia/duración. No contiene reglas de negocio ni integración con modelos/controllers. Solo este archivo conoce al proveedor: en el futuro puede reemplazarse por OSRM u otro sin modificar la lógica de negocio.
-- **Decisión de proveedor**: se evaluaron OSRM (autoalojado: mayor control pero agrega infraestructura/dataset/operación) y OpenRouteService (API externa con clave y cuotas, sin infraestructura propia). Se usa **OpenRouteService por ahora**, manteniendo la abstracción `RoutingService`.
-- **API del servicio**:
+- **Contrato de proveedor (A1-1/A1-2)**: `lib/services/routing_service.js` es un facade del proveedor activo; la implementación vive en `lib/services/providers/routing/` (uno por archivo: `ors.js`, `geoapify.js`) y se selecciona con `ROUTING_PROVIDER` (`ors` por defecto). Ningún proveedor contiene reglas de negocio ni integra modelos/controllers.
+- **Decisión de proveedor**: se evaluaron OSRM (autoalojado: mayor control pero agrega infraestructura/dataset/operación) y los servicios externos con clave y cuotas, sin infraestructura propia. Se usa **OpenRouteService por defecto** y se incorporó **Geoapify** detrás del mismo contrato (A1-2); el cambio y la vuelta son solo de variable de entorno (`ROUTING_PROVIDER=geoapify|ors`), sin deploy de código.
+- **API del servicio (contrato común)**:
   - `calcularRuta({ origen: { latitud, longitud }, destino: { latitud, longitud } })` → `{ distanciaMetros, duracionSegundos, geometria }`.
   - La geometría (polyline del trazado) se devuelve solo en la respuesta del servicio: no se persiste ni se integra con el frontend en esta etapa.
-- **Solicitud**: `GET {ORS_BASE_URL}/v2/directions/driving-car?start=lon,lat&end=lon,lat`. ORS usa orden `lon,lat` (inverso a Georef `lat,lon`); el servicio convierte internamente. La API key se envía por header `Authorization`, **no** en la URL.
-- **Errores tipados**:
-  - `OrsError`: HTTP 400/5xx, conexión/timeout, respuesta inválida/incompleta.
-  - `CredencialesInvalidasError`: API key ausente en config (sin llamar a ORS) o rechazada (401).
+  - La validación de entrada es compartida (`providers/routing/validacion.js`): coordenadas presentes, numéricas y en rango (lat ±90, lon ±180); fallan sin llamar a la API.
+- **Solicitud por proveedor**:
+  - ORS: `GET {ORS_BASE_URL}/v2/directions/{ORS_PROFILE}?start=lon,lat&end=lon,lat`. Orden `lon,lat` (inverso de Georef); key por header `Authorization`, **no** en la URL.
+  - Geoapify: `GET {GEOAPIFY_BASE_URL}/v1/routing?waypoints=lat,lon|lat,lon&mode=drive&apiKey=...`. Orden `lat,lon` (como Georef); key por query param `apiKey`. Resumen en `features[0].properties`: `distance` (metros) y `time` (segundos).
+- **Errores tipados (contrato compartido, `providers/routing/errors.js`)**:
+  - `RoutingError`: clase base del contrato (errores generales de cualquier proveedor: HTTP 400/5xx, conexión/timeout, respuesta inválida/incompleta). `error_handler` la traduce a 503.
+  - `OrsError` (extiende `RoutingError`): errores generales del proveedor ORS; se mantiene por compatibilidad.
+  - `CredencialesInvalidasError`: API key ausente en config (sin llamar a la API) o rechazada (401).
   - `LimiteSolicitudesError`: límite de solicitudes (429).
-  - `RutaInexistenteError`: ORS no encontró una ruta (404).
+  - `RutaInexistenteError`: el proveedor no encontró una ruta (404 en ORS; respuesta sin features en Geoapify).
 - **Validación de entrada**: coordenadas presentes, numéricas y en rango (lat ±90, lon ±180); fallan sin llamar a la API.
 - **Políticas**: un solo intento, sin retry ni cache (alcance académico); timeout configurable (`ORS_TIMEOUT_MS`).
 - **Configuración**: `ORS_API_KEY` (clave gratuita del dashboard de HeiGIT), `ORS_BASE_URL`, `ORS_TIMEOUT_MS`, `ORS_PROFILE` (`driving-car`). Bloque `ors` en `lib/config/config.js`. **La clave nunca se commitea**: los `.env` versionados la dejan vacía y la clave real va en `.env.local` (gitignored), que gana sobre ellos (mecanismo de override en `initializeEnv`).
