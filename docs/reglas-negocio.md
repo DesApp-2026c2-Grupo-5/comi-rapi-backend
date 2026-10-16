@@ -182,7 +182,8 @@ Regla de negocio, no entidad:
   - **Clave**: 4 coordenadas redondeadas (origen = SUCURSAL, destino = ENTREGA, semántica de `routing_service`) + `proveedor`. La lectura filtra SIEMPRE por el proveedor activo: las distancias de un proveedor jamás se reutilizan para otro.
   - **Sin TTL, sin DELETE**: la distancia entre dos coordenadas fijas no vence; si una dirección o sucursal cambia de coordenadas, las claves nuevas dejan inalcanzables a las filas viejas. Las bajas de entidades de negocio siguen siendo lógicas y no tocan el caché.
   - **Best-effort**: un fallo de escritura del caché solo emite un warning — nunca rompe la validación en vivo, que es la fuente de verdad.
-  - La lectura (selección de sucursal, ETA, reasignación) se incorpora en A1-4.
+  - **Lectura cache-first (A1-4)**: `sucursalesEnCobertura` (base de la selección T1, la reasignación T4 y la auto-reasignación al pagar) lee primero el caché del proveedor activo; los pares faltantes se calculan en vivo y se cachean (**lazy**, una llamada por par). El radio se aplica siempre con el parámetro VIGENTE. El ETA (`eta_service`) usa `obtenerOCalcularDistancia`: duración cacheada o, en su defecto, cálculo en vivo + auto-guardado. **Fail-closed**: si el proveedor falla para un par faltante, el error tipado se propaga — jamás se aproxima una distancia ni se asigna una sucursal arbitrariamente.
+  - **El alta/preview de direcciones sigue validando EN VIVO**: es el momento autoritativo de la regla y el principal calentador del caché.
 
 ## 16. Cobertura geográfica (reglas de cobertura)
 
@@ -259,14 +260,14 @@ Regla de negocio, no entidad:
 ### 20.1 Selección de sucursal (T1)
 
 - **Regla D1**: al crear un pedido, el backend selecciona **la sucursal más cercana por ruta que tenga stock suficiente, dentro de cobertura** (≤ `COBERTURA_RADIO_MAX_KM` km por ruta). Reemplaza la lógica anterior de "menor carga de pedidos pendientes" (válida según `enunciado.md:58` que deja la estrategia a criterio del grupo).
-- Elegible = activa ∧ stock suficiente (`faltantesDePedido`) ∧ dentro de cobertura (`sucursalesEnCobertura`, ranking por distancia de ORS).
+- Elegible = activa ∧ stock suficiente (`faltantesDePedido`) ∧ dentro de cobertura (`sucursalesEnCobertura`, ranking por distancia de ruta). **Desde A1-4 el ranking es cache-first**: las distancias salen del caché `DistanciasRutas` del proveedor activo y solo los pares faltantes se calculan en vivo (lazy, fail-closed — ver §15); las reglas no cambian, solo la fuente de la distancia.
 - Casos límite: ninguna elegible → 422 "No hay sucursales disponibles con stock dentro de la cobertura"; la más cercana sin stock → la siguiente más cercana con stock; con stock fuera de cobertura → no elegible (cobertura es hard). Si se evaluaron candidatas con stock parcial, el 422 informa los **faltantes de la mejor candidata** (la que menos productos debe y, a la vez, más unidades ofrece de esos productos; ver §20.3), no el mensaje genérico.
 - **El frontend NO pre-asigna sucursal** (se eliminó el espejo `asignacionSucursal.js`): el POST siempre asigna con las reglas reales; la respuesta trae la sucursal asignada.
 - Si el cliente envía `sucursalId`, se valida que sea elegible (cobertura + stock) y se respeta; si no, se elige automáticamente.
 
 ### 20.2 Tiempo estimado de entrega — ETA (T2)
 
-- **Fórmula**: `ETA = cocina (30 min fijos, config.pedidos.tiempoCocinaMin) + viaje (ORS duracionSegundos → minutos, redondeo hacia arriba)`.
+- **Fórmula**: `ETA = cocina (30 min fijos, config.pedidos.tiempoCocinaMin) + viaje (duración por ruta → minutos, redondeo hacia arriba)`. **Desde A1-4 la duración del viaje sale del caché de distancias** (`obtenerOCalcularDistancia`): si el par no está, se calcula en vivo y se guarda; el resto de la regla no cambia.
 - **Cuándo se calcula**: al confirmar el pedido (`pendiente→confirmado`), DESPUÉS de la transacción (ORS es un servicio externo; su latencia no bloquea el pago). Pedidos `pendientes` no tienen ETA.
 - **Persistencia**: `Pedido.etaMinutos` (INTEGER NULL) + `Pedido.etaCalculadoEn` (DATE NULL) — migración `20261002000001`.
 - **Degradación**: si ORS falla, `etaMinutos` queda null y el pago sigue; el error se loguea. El frontend muestra "—" (T3).
