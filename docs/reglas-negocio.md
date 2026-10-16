@@ -178,6 +178,12 @@ Regla de negocio, no entidad:
 - **Configuración**: `ORS_API_KEY` (clave gratuita del dashboard de HeiGIT), `ORS_BASE_URL`, `ORS_TIMEOUT_MS`, `ORS_PROFILE` (`driving-car`). Bloque `ors` en `lib/config/config.js`. **La clave nunca se commitea**: los `.env` versionados la dejan vacía y la clave real va en `.env.local` (gitignored), que gana sobre ellos (mecanismo de override en `initializeEnv`).
 - **Fuera de alcance actual**: ABM de `Direccion`, frontend, ETA, infraestructura Docker para OSRM, cache/colas. La cobertura que consume este servicio está implementada (ver §16).
 
+- **Caché de distancias por ruta (A1-3, `DistanciasRutas`)**: toda evaluación en vivo (`evaluarSucursales`, cobertura_service) persiste el resultado por par evaluado vía `distancias_service.guardarDistancias` (INSERT … ON CONFLICT DO UPDATE).
+  - **Clave**: 4 coordenadas redondeadas (origen = SUCURSAL, destino = ENTREGA, semántica de `routing_service`) + `proveedor`. La lectura filtra SIEMPRE por el proveedor activo: las distancias de un proveedor jamás se reutilizan para otro.
+  - **Sin TTL, sin DELETE**: la distancia entre dos coordenadas fijas no vence; si una dirección o sucursal cambia de coordenadas, las claves nuevas dejan inalcanzables a las filas viejas. Las bajas de entidades de negocio siguen siendo lógicas y no tocan el caché.
+  - **Best-effort**: un fallo de escritura del caché solo emite un warning — nunca rompe la validación en vivo, que es la fuente de verdad.
+  - La lectura (selección de sucursal, ETA, reasignación) se incorpora en A1-4.
+
 ## 16. Cobertura geográfica (reglas de cobertura)
 
 - **Servicio de reglas de negocio**: `lib/services/cobertura_service.js` determina si una dirección es válida para delivery. Reutiliza `geolocation_service` (dirección → coordenadas, Georef) y `routing_service` (coordenadas → distancia real por ruta, ORS) **sin duplicar su lógica**.
