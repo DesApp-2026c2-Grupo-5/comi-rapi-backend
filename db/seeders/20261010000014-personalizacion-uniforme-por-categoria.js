@@ -12,8 +12,8 @@
  *    elementos que existieran antes.
  *
  * Regla de uniformidad: todos los productos de una misma categoría comparten
- * exactamente el mismo set. Topes del modal cliente (extra 6, personalizar 7,
- * acompanar 3, condimento 2) respetados para que se vean todas las opciones.
+ * exactamente el mismo set. Cada elemento usa el rango de cantidad por defecto
+ * (mínimo 0, máximo 1) y el SUPERADMINISTRADOR lo ajusta desde el panel.
  */
 
 const CATALOGO = {

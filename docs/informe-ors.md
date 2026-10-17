@@ -62,12 +62,13 @@ No se modificaron: controllers, routes, modelos, migraciones, frontend, Swagger,
 ```bash
 # En .env.example / .env.development / .env.test (versionados, SIN clave real):
 ORS_API_KEY=
-ORS_BASE_URL=https://api.openrouteservice.org
+ORS_BASE_URL=https://api.heigit.org/openrouteservice
 ORS_TIMEOUT_MS=5000
 ORS_PROFILE=driving-car
 ```
 
-- **Mecanismo de override**: `initializeEnv` en `lib/config/config.js` carga primero `.env.<NODE_ENV>` y luego `.env.local` (gitignored, que gana). La **clave real** se obtiene gratis desde el dashboard de ORS (HeiGIT: https://openrouteservice.org/dev/#/signup) y se coloca en `.env.local` — **nunca en código ni commiteada**.
+- **Migración de proveedor (abr-2026)**: HeiGIT unificó sus APIs y deprecó `api.openrouteservice.org` en favor de `api.heigit.org/openrouteservice` (misma clave y misma cuota; la URL vieja se apaga definitivamente en nov-2026). El cambio impacta **solo** en `ORS_BASE_URL`; `routing_service` sigue armando `GET {ORS_BASE_URL}/v2/directions/...`.
+- **Mecanismo de override**: `initializeEnv` en `lib/config/config.js` carga primero `.env.<NODE_ENV>` y luego `.env.local` (gitignored, que gana). La **clave real** se obtiene gratis desde el dashboard de HeiGIT (https://account.heigit.org) y se coloca en `.env.local` — **nunca en código ni commiteada**.
 - Sin secretos en archivos versionables: los `.env` commiteados dejan `ORS_API_KEY` vacía.
 
 ## 7. Manejo de errores
