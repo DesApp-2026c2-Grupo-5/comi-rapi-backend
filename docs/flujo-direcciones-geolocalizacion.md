@@ -149,9 +149,9 @@ Preview (`POST /api/geo/preview`): siempre 200 con `{ estado: 'unica'|'ambigua'|
 
 ```bash
 GEOREF_BASE_URL=https://apis.datos.gob.ar/georef   GEOREF_TIMEOUT_MS=5000   GEOREF_MAX_RESULTADOS=10
-ORS_API_KEY=(en .env.local, gitignored)            ORS_BASE_URL=https://api.openrouteservice.org
+ORS_API_KEY=(en .env.local, gitignored)            ORS_BASE_URL=https://api.heigit.org/openrouteservice
 ORS_TIMEOUT_MS=5000                               ORS_PROFILE=driving-car
-COBERTURA_RADIO_MAX_KM=5                           # zonas: lib/config/cobertura-zonas.js
+radioCoberturaKm=5 (BD: ParametrosSistema)         # zonas: lib/config/cobertura-zonas.js
 ```
 
 ## 9. Seeds y pruebas
