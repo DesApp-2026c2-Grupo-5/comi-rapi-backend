@@ -22,10 +22,11 @@
 // - Oeste con la limonada en 0 pero todavía ofrecida: se ve "se ofrece pero no
 //   hay stock". Ningún combo la lleva, así que este caso no arrastra a los
 //   combos y los dos casos quedan independientes.
-// - Recoleta con las Papas Cheddar en 0: es la segunda sucursal en cobertura de
-//   la dirección demo del cliente, y es la que queda sin stock para disparar el
-//   caso de reasignación al pagar. Se eligió un producto que el único combo
-//   ("Combo Doble") no lleva, para que agotarlo en Recoleta no baje el combo ni
+// - Vergara con las Papas Cheddar en 0: es la segunda sucursal en cobertura de
+//   la dirección "Casa" del cliente (AV GDOR VERGARA 1593, a 2.717 m por ruta),
+//   y es la que queda sin stock para disparar el caso de reasignación al pagar
+//   o al reasignar manualmente. Se eligió un producto que el único combo
+//   ("Combo Doble") no lleva, para que agotarlo en Vergara no baje el combo ni
 //   se confunda con el caso de Palermo.
 //
 // La cantidad de un COMBO no se escribe: se calcula acá con la misma regla que
@@ -47,7 +48,7 @@ const ajustesPorSucursal = {
   'Sucursal Oeste': {
     'Limonada Natural': 0,
   },
-  'Sucursal Recoleta': {
+  'Sucursal Vergara': {
     'Papas Cheddar': 0,
   },
 };
