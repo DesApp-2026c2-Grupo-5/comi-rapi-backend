@@ -93,11 +93,12 @@ async function crearPedido(queryInterface, datos) {
        ("usuarioId","sucursalId","fechaHora","estadoId","costoEnvio","total",
         "medioPago","observacion","calle","altura","ciudad","codigoPostal",
         "referencia","latitud","longitud","etaMinutos","etaCalculadoEn",
-        "createdAt","updatedAt")
+        "horaEstimadaLlegada","createdAt","updatedAt")
      VALUES
        (:usuarioId,:sucursalId,:fechaHora,:estadoId,:costoEnvio,:total,
         :medioPago,:observacion,:calle,:altura,:ciudad,:codigoPostal,
-        :referencia,:latitud,:longitud,:etaMinutos,:etaCalculadoEn,NOW(),NOW())
+        :referencia,:latitud,:longitud,:etaMinutos,:etaCalculadoEn,
+        :horaEstimadaLlegada,NOW(),NOW())
      RETURNING id`,
     {
       replacements: {
@@ -118,6 +119,7 @@ async function crearPedido(queryInterface, datos) {
         longitud: datos.longitud || null,
         etaMinutos: datos.etaMinutos || null,
         etaCalculadoEn: datos.etaCalculadoEn || null,
+        horaEstimadaLlegada: datos.horaEstimadaLlegada || null,
       },
     }
   );
@@ -228,7 +230,8 @@ module.exports = {
       {
         // 2. En camino (Palermo entrega en "Trabajo", Av. Santa Fe 3700, a
         //    588 m). ETA visible: 30 de cocina + 1 de viaje ≈ 31 min,
-        //    calculado al pasar a en_camino (hace 35 min).
+        //    calculado al pasar a en_camino (hace 35 min). La hora absoluta de
+        //    llegada queda ~35 min después del en_camino.
         sucursalId: sucursal.palermo,
         estadoId: estado.en_camino,
         fechaHora: new Date(ahora - 5 * 60 * MIN),
@@ -237,6 +240,7 @@ module.exports = {
         direccion: trabajo,
         etaMinutos: 31,
         etaCalculadoEn: new Date(ahora - 35 * MIN),
+        horaEstimadaLlegada: new Date(ahora - 35 * MIN + 5 * MIN),
         items: [linea('Pizza Muzzarella', 1)],
         historial: [
           'pendiente',
@@ -300,6 +304,7 @@ module.exports = {
         longitud: pedido.direccion.longitud,
         etaMinutos: pedido.etaMinutos,
         etaCalculadoEn: pedido.etaCalculadoEn,
+        horaEstimadaLlegada: pedido.horaEstimadaLlegada,
       });
       await queryInterface.bulkInsert(
         'PedidoItems',

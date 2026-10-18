@@ -213,6 +213,14 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 | `latitud`         | `DECIMAL(10,7)` |       |
 | `longitud`        | `DECIMAL(10,7)` |       |
 
+Tiempo de entrega:
+
+| Atributo              | Tipo de dato | Notas                                                          |
+| --------------------- | ------------ | -------------------------------------------------------------- |
+| `etaMinutos`          | `INTEGER`    | T2: cocina + viaje (minutos). NULL si no fue confirmado.       |
+| `etaCalculadoEn`      | `DATE`       | T2: timestamp del cálculo.                                     |
+| `horaEstimadaLlegada` | `DATE`       | A6: hora absoluta al pasar a `en_camino`. Ancla del countdown. |
+
 - PK: `id`
 - FK: `usuarioId → Usuario.id`
 - FK: `sucursalId → Sucursal.id`

@@ -272,6 +272,7 @@ Regla de negocio, no entidad:
 - **Persistencia**: `Pedido.etaMinutos` (INTEGER NULL) + `Pedido.etaCalculadoEn` (DATE NULL) — migración `20261002000001`.
 - **Degradación**: si ORS falla, `etaMinutos` queda null y el pago sigue; el error se loguea. El frontend muestra "—" (T3).
 - **Recálculo**: si la sucursal cambia (reasignación automática por stock vencido al confirmar, o manual en T4), el ETA se recalcula con la nueva sucursal (la cocina se mantiene).
+- **Hora estimada de llegada (A6)**: al pasar a `en_camino` se persiste `Pedido.horaEstimadaLlegada` (DATE NULL, migración `20261018000001`) — **ahora + duración del viaje** desde el caché de distancias (`obtenerOCalcularDistancia`, fail-closed). Es el ancla del "quedan X min" que ve el cliente: la duración sale del caché (o se calcula lazy si el par no existe). Degrada a null igual que el ETA: el paso a `en_camino` NUNCA se bloquea por una falla del proveedor. Solo visible en `en_camino` (no en `listo_para_entregar` ni estados finales).
 
 ### 20.3 Reasignación automática al confirmar el pago (corrección post-T4)
 
