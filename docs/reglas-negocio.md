@@ -155,6 +155,7 @@ Regla de negocio, no entidad:
 - **Políticas**: un solo intento sin retry (ToS de Georef), timeout configurable (`GEOREF_TIMEOUT_MS`), `User-Agent` de identificación del backend.
 - **Configuración**: `GEOREF_BASE_URL`, `GEOREF_TIMEOUT_MS`, `GEOREF_MAX_RESULTADOS` (sin secretos). Bloque `georef` en `lib/config/config.js`.
 - **Fuera de alcance actual**: OSRM, cálculo de distancias/rutas, endpoints nuevos. La cobertura y el ABM integrado que consumen este servicio están implementados (ver §16 y §17).
+- **Bug de datos conocido en Georef (verificado 18-oct-2026)**: en **AV GDOR VERGARA, Hurlingham**, las alturas **1800–2400** y **3000–3200** geocodifican ~3,4 km al norte de su ubicación real (todas caen en `-34.593x`, cuando deberían estar entre `-34.617` y `-34.604`). Esto provoca "fuera de cobertura" incorrectos desde la Sucursal Oeste (la ruta real desde esas direcciones sería ~2,5–3,5 km, dentro del radio de 5 km; pero como Georef entrega coords erróneas, ORS calcula 5,1 km). **No es un bug de la app ni del routing** — es un vacío de segmentación en la base de direcciones de Georef Argentina. Las alturas 1593–1598 y 2600–2800 geocodifican correctamente. Reportar a datos.gob.ar si afecta la demo.
 
 ## 15. Cálculo de rutas (proveedor seleccionable: ORS por defecto, Geoapify alternativo)
 
