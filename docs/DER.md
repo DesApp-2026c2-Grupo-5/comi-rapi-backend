@@ -213,6 +213,14 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 | `latitud`         | `DECIMAL(10,7)` |       |
 | `longitud`        | `DECIMAL(10,7)` |       |
 
+Tiempo de entrega:
+
+| Atributo              | Tipo de dato | Notas                                                          |
+| --------------------- | ------------ | -------------------------------------------------------------- |
+| `etaMinutos`          | `INTEGER`    | T2: cocina + viaje (minutos). NULL si no fue confirmado.       |
+| `etaCalculadoEn`      | `DATE`       | T2: timestamp del cálculo.                                     |
+| `horaEstimadaLlegada` | `DATE`       | A6: hora absoluta al pasar a `en_camino`. Ancla del countdown. |
+
 - PK: `id`
 - FK: `usuarioId → Usuario.id`
 - FK: `sucursalId → Sucursal.id`
@@ -352,6 +360,26 @@ Snapshot de dirección (fuente histórica de la dirección de entrega):
 
 - PK: `id`
 - UNIQUE: `clave`
+
+### 2.21 DistanciaRuta
+
+Caché de distancias por ruta (A1-3). **Dato derivado y recomputable, no una entidad de negocio**: cada fila es el resultado de una llamada real al proveedor de routing para un par fijo de coordenadas. La lectura filtra siempre por el proveedor activo; sin TTL y sin DELETE de invalidación (coordenadas nuevas → claves nuevas; las filas viejas quedan inalcanzables).
+
+| Atributo           | Tipo de dato    | Notas                                                                   |
+| ------------------ | --------------- | ----------------------------------------------------------------------- |
+| `id`               | `INTEGER`       | PK                                                                      |
+| `origenLatitud`    | `DECIMAL(10,7)` | Coordenadas de la SUCURSAL (semántica de `routing_service`)             |
+| `origenLongitud`   | `DECIMAL(10,7)` | Coordenadas de la SUCURSAL                                              |
+| `destinoLatitud`   | `DECIMAL(10,7)` | Coordenadas de ENTREGA                                                  |
+| `destinoLongitud`  | `DECIMAL(10,7)` | Coordenadas de ENTREGA                                                  |
+| `sucursalId`       | `INTEGER`       | FK → `Sucursales` (`ON DELETE SET NULL`), solo metadato de trazabilidad |
+| `distanciaMetros`  | `INTEGER`       | Distancia por ruta del proveedor                                        |
+| `duracionSegundos` | `INTEGER`       | Duración por ruta del proveedor                                         |
+| `proveedor`        | `STRING(16)`    | Proveedor que calculó (`ors`/`geoapify`)                                |
+| `calculadoEn`      | `DATE`          | Momento del cálculo                                                     |
+
+- PK: `id`
+- UNIQUE: (`origenLatitud`, `origenLongitud`, `destinoLatitud`, `destinoLongitud`, `proveedor`) — coordenadas redondeadas a 6 decimales por `distancias_service.redondearCoord`
 
 ## 3. Relaciones y cardinalidades
 

@@ -38,6 +38,10 @@ npm run db:migrate
 # 6. Cargar los seeders (development)
 $env:NODE_ENV = "development"
 npm run db:seed
+
+# 7. Crear el SUPERADMINISTRADOR demo (no hay vía web ni seeder para roles
+#    privilegiados; idempotente, defaults superadmin@test.com / 123456)
+npm run crear:superadmin
 ```
 
 > En PowerShell no usar `&&`; encadenar con `;` o ejecutar en pasos separados.
