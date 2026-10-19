@@ -16,6 +16,12 @@
  *   - NO toca los usuarios, sus direcciones ni sus sesiones: los tests las
  *     reutilizan para no chocar con el rate limiter de auth (20 req / 15 min).
  *   - NO toca los pedidos de ejemplo de `cliente@test.com`.
+ *   - NO repone el stock que esos pedidos habían descontado: distinguir una
+ *     reserva aún activa de un descuento ya repuesto (cancelación) o consumido
+ *     (entregado) exige el historial de estados, y equivocarse infla el stock
+ *     de desarrollo en silencio. Si un E2E se corrido muchas veces y algún
+ *     producto quedó sin stock, se repone a mano (panel de stock o
+ *     `UPDATE "Stocks" SET cantidad = <n> ...`).
  *
  * Uso: `npm run limpiar:pruebas`
  *      `node scripts/limpiar-pedidos-de-prueba.js --dry-run`

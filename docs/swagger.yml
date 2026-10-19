@@ -1053,6 +1053,67 @@ components:
             url:
               type: string
 
+    # ---------- Lo que más compró un cliente ----------
+    RankingItemProducto:
+      type: object
+      description: >-
+        Producto del ranking. El nombre sale del catálogo actual; si el producto
+        ya no existe se usa el nombre histórico que conserva el PedidoItem, para
+        que sus unidades no desaparezcan.
+      properties:
+        productoId:
+          type: integer
+          example: 12
+        nombre:
+          type: string
+          example: Muzzarella
+        categoriaId:
+          type: integer
+          nullable: true
+          description: null si el producto quedó sin categoría
+        categoria:
+          type: string
+          example: Pizzas
+        unidades:
+          type: integer
+          description: Suma de cantidades en pedidos no cancelados
+          example: 12
+    RankingItemCategoria:
+      type: object
+      properties:
+        categoriaId:
+          type: integer
+          nullable: true
+          example: 3
+        nombre:
+          type: string
+          example: Pizzas
+        unidades:
+          type: integer
+          description: >-
+            Suma de unidades de todos los productos de esa categoría que compró
+            el cliente, no sólo los del top de productos.
+          example: 25
+    LoQueMasComprado:
+      type: object
+      properties:
+        productos:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/RankingItemProducto'
+        categorias:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/RankingItemCategoria'
+        totalUnidades:
+          type: integer
+          description: >-
+            Unidades de todos los productos comprados, incluidos los que quedaron
+            fuera del top.
+          example: 21
+
     # ---------- Wrappers de respuesta ----------
     RespuestaUsuarioPublico:
       type: object
@@ -1076,6 +1137,14 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/Usuario'
+    RespuestaLoQueMasComprado:
+      type: object
+      description: >-
+        Formato de GET /api/usuarios/{id}/mas-comprados (carece del wrapper
+        success)
+      properties:
+        data:
+          $ref: '#/components/schemas/LoQueMasComprado'
     RespuestaCategoria:
       type: object
       properties:
@@ -1855,6 +1924,54 @@ paths:
                 $ref: '#/components/schemas/RespuestaError'
         '404':
           description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /usuarios/{id}/mas-comprados:
+    get:
+      tags:
+        - Usuarios
+      summary: Productos y categorías que más compró un cliente
+      description: >-
+        Administradores y superadministradores. Suma las unidades de los PedidoItem
+        de los pedidos que NO están cancelados (un pedido cancelado no fue una
+        compra). El administrador sólo suma los pedidos de su sucursal y sólo
+        puede consultar a clientes que hayan comprado en ella; si no, responde
+        404 como en GET /usuarios/{id}. El superadministrador suma todas las
+        sucursales. Cada ranking trae como máximo 5 filas.
+      operationId: usuariosMasComprados
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Ranking de compras del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaLoQueMasComprado'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: >-
+            Usuario no encontrado, no es cliente o nunca compró en la sucursal
+            del administrador
           content:
             application/json:
               schema:

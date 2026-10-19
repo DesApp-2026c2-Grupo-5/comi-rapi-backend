@@ -1,6 +1,6 @@
-# WebSocket — canal de tiempo real para pedidos
+# WebSocket — canal de tiempo real para pedidos, catálogo, parámetros y stock
 
-Fecha: 2026-09-28
+Fecha: 2026-09-28 (original) · 2026-10-19 (ampliación a catálogo, parámetros y stock)
 Archivo: `comi-rapi-backend/docs/webSocketContext.md`
 Estado: **documento vivo** — se actualiza al cerrar cada parte de la implementación.
 
@@ -24,8 +24,9 @@ Consecuencias directas:
 | 2     | Emisiones en `create` y `cambiarEstado` + tests de los casos 1 a 6                                  | **Hecho** |
 | 3     | Frontend: servicio de socket + reemplazo del polling de 3 s                                         | **Hecho** |
 | 4     | Reconexión y verificación end-to-end de los 7 casos                                                 | **Hecho** |
+| 5     | Ampliación: `catalogo_actualizado`, `parametros_actualizados`, `stock_actualizado`                  | **Hecho** |
 
-**Estado actual: implementación completa y verificada.** El backend emite, el frontend escucha, y el polling de 3 s ya no existe. Verificado en navegador real (sección 9.2).
+**Estado actual: implementación completa y verificada.** El backend emite, el frontend escucha, y el polling de 3 s ya no existe. Verificado en navegador real (sección 9.2). La ampliación (parte 5) agregó tres eventos con el mismo principio: REST manda, el socket solo avisa.
 
 ## 3. Arquitectura
 
@@ -41,14 +42,14 @@ Browser ──REST──► Express ──► Controllers ──► PostgreSQL
 
 ### 3.1 Mapa de archivos
 
-| Archivo                      | Responsabilidad                                                                                                |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `lib/realtime/index.js`      | Singleton `io`. `configurarSocketIO(server)`, `obtenerIO()`, `emitirPedidoActualizado(id)`, `cerrarSocketIO()` |
-| `lib/realtime/conexion.js`   | `configurarConexion(io)`: autenticación del handshake, ingreso a rooms, handlers de suscripción                |
-| `lib/realtime/eventos.js`    | `EVENTOS`, `ROOM_ADMINS`, `roomPedido(id)`. Sin lógica                                                         |
-| `bin/www.js:22-23`           | Crea el servidor HTTP y le adjunta Socket.IO                                                                   |
-| `bin/www.js:36`              | `server.listen(port)` (antes era `app.listen`)                                                                 |
-| `lib/middlewares/auth.js:24` | `resolverUsuarioDeSesion(sesion)` — reusado por REST y por el socket                                           |
+| Archivo                      | Responsabilidad                                                                                                                                                                                                  |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/realtime/index.js`      | Singleton `io`. `configurarSocketIO(server)`, `obtenerIO()`, `cerrarSocketIO()` y los emisores: `emitirPedidoActualizado`, `emitirCatalogoActualizado`, `emitirParametrosActualizados`, `emitirStockActualizado` |
+| `lib/realtime/conexion.js`   | `configurarConexion(io)`: autenticación del handshake, ingreso a rooms, handlers de suscripción                                                                                                                  |
+| `lib/realtime/eventos.js`    | `EVENTOS`, `ROOM_ADMINS`, `roomPedido(id)`, `roomSucursal(id)`. Sin lógica                                                                                                                                       |
+| `bin/www.js:22-23`           | Crea el servidor HTTP y le adjunta Socket.IO                                                                                                                                                                     |
+| `bin/www.js:36`              | `server.listen(port)` (antes era `app.listen`)                                                                                                                                                                   |
+| `lib/middlewares/auth.js:24` | `resolverUsuarioDeSesion(sesion)` — reusado por REST y por el socket                                                                                                                                             |
 
 > `lib/realtime/` **no** va dentro de `lib/models/`: `lib/models/index.js:29-42` auto-descubre todo `.js` de esa carpeta y le invoca `init()`.
 
@@ -96,13 +97,16 @@ En `PedidoContext.jsx` el admin **no** emite `suscribir_pedido`: entra automáti
 
 Payloads mínimos, definidos en `lib/realtime/eventos.js`.
 
-| Evento               | Dirección        | Payload              | Destino                                       |
-| -------------------- | ---------------- | -------------------- | --------------------------------------------- |
-| `suscribir_pedido`   | cliente → server | `{ pedidoId }` + ack | —                                             |
-| `desuscribir_pedido` | cliente → server | `{ pedidoId }` + ack | —                                             |
-| `pedido_actualizado` | server → cliente | `{ pedidoId }`       | `admins`, `pedido:{id}` **y** `sucursal:{id}` |
+| Evento                    | Dirección        | Payload                       | Destino                                       |
+| ------------------------- | ---------------- | ----------------------------- | --------------------------------------------- |
+| `suscribir_pedido`        | cliente → server | `{ pedidoId }` + ack          | —                                             |
+| `desuscribir_pedido`      | cliente → server | `{ pedidoId }` + ack          | —                                             |
+| `pedido_actualizado`      | server → cliente | `{ pedidoId }`                | `admins`, `pedido:{id}` **y** `sucursal:{id}` |
+| `catalogo_actualizado`    | server → cliente | `{ tipo, id, accion }`        | broadcast a todos los conectados              |
+| `parametros_actualizados` | server → cliente | `{}`                          | broadcast a todos los conectados              |
+| `stock_actualizado`       | server → cliente | `{ sucursalId, productoIds }` | **solo** `sucursal:{id}`                      |
 
-Solo hay **un** evento de servidor. No existe `pedido_creado`, y es deliberado.
+No existe `pedido_creado`, y es deliberado (sección 6.1).
 
 ### 6.1 Por qué no hay evento "pedido creado"
 
@@ -129,28 +133,74 @@ el **ADMINISTRADOR** por `sucursal:{id}` (solo sus pedidos) y el
 | El cliente confirma el pago             | Sí, con `pedido_actualizado` |
 | El admin avanza el estado               | Ya lo está haciendo          |
 
+### 6.4 `catalogo_actualizado` y `parametros_actualizados` (broadcast)
+
+Se emiten desde los controllers de producto, categoría y promoción (alta, baja
+y edición) y desde el de parámetros. El payload de catálogo identifica la
+entidad: `{ tipo: 'producto'|'categoria'|'promocion', id, accion: 'creado'|'actualizado'|'eliminado' }`.
+
+Son **broadcast**: no hay rooms de catálogo. Cualquier vista conectada recarga
+por REST lo que muestra (catálogo del cliente, listas del panel). En modo
+edición (`EditarProducto` y compañía) el listener filtra por `tipo` + `id` de
+la entidad abierta: resetear un formulario por un cambio ajeno perdería la
+edición en curso.
+
+### 6.5 `stock_actualizado`: exclusivo de la sucursal
+
+Se emite **solo** a `roomSucursal(id)` — nunca a la room global `admins` ni a
+clientes. Solo el administrador de ese local ve la pantalla de stock, y la
+aislación por sucursal hace que un admin no deba enterarse del stock ajeno.
+
+Fuentes de emisión (todas post-commit):
+
+| Origen                                        | Sucursal(es) avisada(s)                                                          |
+| --------------------------------------------- | -------------------------------------------------------------------------------- |
+| `pedido_controller.create` (descuento)        | la elegida para el pedido                                                        |
+| `pedido_controller.cambiarEstado`             | la del pedido; si hubo reasignación por reserva vencida, la vieja **y** la nueva |
+| `pedido_controller.cambiarEstado` (cancel)    | la del pedido                                                                    |
+| `pedido_controller.reasignarSucursal`         | la vieja **y** la nueva                                                          |
+| `producto_controller` (alta/edición de combo) | sucursal(es) cuya fila de combo cambió                                           |
+| `stock_controller` (alta/ajuste/baja)         | la sucursal del ajuste                                                           |
+
+El `productoIds` del payload es **orientativo** (los ids tocados
+directamente); el frontend recarga la tabla entera de su sucursal, que es más
+simple y siempre correcto.
+
+### 6.6 Límite conocido: sin sesión no hay tiempo real
+
+El handshake rechaza anónimos (`conexion.js` → `next(new Error('No autorizado'))`). Las vistas públicas (Inicio, Catálogo, Detalle) solo abren el
+socket con sesión vigente: para un visitante anónimo el catálogo se actualiza
+con la recarga normal de la página.
+
 ## 7. Orden de emisión
 
 Regla inviolable: **se emite después de que la operación en PostgreSQL haya terminado correctamente**.
 
 ```
 1. Validar
-2. Guardar / actualizar en transacción
+2. Guardar / actualizar en transacción (la transacción también retorna las filas tocadas)
 3. Commit
-4. Re-leer el pedido (findByPk)
-5. Emitir el evento
-6. Responder el HTTP
+4. Emitir los eventos de esa operación
+5. Responder el HTTP
 ```
 
-Si PostgreSQL falla, no hay commit, no hay re-lectura y **no se emite nada**. Un cliente nunca recibe la notificación de un pedido que no existe.
+Si PostgreSQL falla, no hay commit y **no se emite nada**. Un cliente nunca recibe la notificación de un dato que no existe. Los controllers no necesitan `try/catch` para emitir: los emisores de `lib/realtime/index.js` son no-op seguros si el servidor no está inicializado.
 
-Puntos de emisión, **solo uno**, en `lib/controllers/pedido_controller.js`:
+Mapa completo de emisiones:
 
-| Función         | Emisor                                    | Condición                                                      |
-| --------------- | ----------------------------------------- | -------------------------------------------------------------- |
-| `cambiarEstado` | `emitirPedidoActualizado(actualizado.id)` | Después del `findByPk` que relee el pedido con el estado nuevo |
+| Controller              | Función               | Emisor(es) post-commit                                                                                 |
+| ----------------------- | --------------------- | ------------------------------------------------------------------------------------------------------ |
+| `pedido_controller`     | `create`              | `stock_actualizado` si el pedido tocó stock (ej. combos); **nunca** `pedido_actualizado`               |
+| `pedido_controller`     | `cambiarEstado`       | `pedido_actualizado`; `stock_actualizado` por cada sucursal cuyo stock cambió (vencidas y cancelación) |
+| `pedido_controller`     | `reasignarSucursal`   | `pedido_actualizado`; `stock_actualizado` para la sucursal vieja y la nueva                            |
+| `producto_controller`   | create/update/destroy | `catalogo_actualizado` (+ `stock_actualizado` por sucursal si cambió un combo)                         |
+| `categoria_controller`  | create/update/destroy | `catalogo_actualizado`                                                                                 |
+| `promocion_controller`  | create/update/destroy | `catalogo_actualizado`                                                                                 |
+| `promocion_controller`  | asignar/quitar        | `catalogo_actualizado`                                                                                 |
+| `stock_controller`      | create/update/destroy | `stock_actualizado` de esa sucursal                                                                    |
+| `parametros_controller` | update                | `parametros_actualizados`                                                                              |
 
-`create` no emite nada (ver sección 6.1). Ninguna otra ruta emite: cambiar la sucursal, las promociones o el catálogo no notifican pedidos.
+La transacción de pedido devuelve lo que cambió (`id`, `sucursalId`, `filasStock` / `avisos[]`), y la emisión arma los payloads de `stock_actualizado` a partir de eso, en vez de releer la base. Cambiar la sucursal, las promociones o el catálogo **no** notifican pedidos: son eventos distintos con propósitos distintos.
 
 ## 8. Reconexión
 
@@ -164,25 +214,51 @@ Como el socket es solo un aviso, una desconexión prolongada no puede dejar dato
 
 ## 8.1 Cómo se cierra el ciclo en el frontend
 
-`src/context/PedidoContext.jsx` (frontend), en un solo `useEffect`:
+Hay dos patrones, según quién es dueño del ciclo del socket:
+
+**1. Contextos dueños del socket** — `PedidoContext.jsx` y `ParametrosContext.jsx`:
 
 ```
 instancia.on('connect',            alConectar)      // re-suscribe + refresca
 instancia.on('pedido_actualizado', alCambiarPedido) // llega al admin y al dueño
 ```
 
-Los dos handlers llaman a `refrescarPedidos()`, que re-listea por REST y actualiza tres cosas: la lista, `pedidoActual` (la pantalla de confirmación, que vive solo en memoria) y las notificaciones de cambio de estado.
+`refrescarPedidos()` re-listea por REST y actualiza tres cosas: la lista, `pedidoActual` (la pantalla de confirmación, que vive solo en memoria) y las notificaciones de cambio de estado.
 
 Dos detalles de implementación:
 
 - La dependencia del efecto es un **string de ids ordenados** (`idsPedidos`), no el array `pedidos`. Así el efecto corre solo cuando cambia el conjunto de pedidos —por ejemplo al crear uno nuevo, que hay que suscribir— y no en cada cambio de estado.
 - El cleanup usa `off()` para los tres listeners y **no** desconecta el socket. Desconectar corría en cada re-ejecución del efecto; la desconexión real se dispara en un efecto aparte, cuando `emailSesion` queda vacío (logout).
 
+**2. Vistas con listeners propios** — catálogo, listas del panel, `GestionStock`, `PanelSuperadmin`, `Editar*`:
+
+```
+useEffect(() => {
+  if (!conectado) return;  // hydrated && (isAuthenticated | user)
+  socket.on('connect',            alConectar);            // solo re-sincroniza por REST
+  socket.on('catalogo_actualizado', alCatalogoCambiado);  // recarga la lista
+  return () => {
+    socket.off('connect',            alConectar);
+    socket.off('catalogo_actualizado', alCatalogoCambiado);
+  };
+}, [conectado, ...]);
+```
+
+Reglas del patrón:
+
+- **Gate:** solo registran con sesión resuelta (`hydrated` + `isAuthenticated` o `user`). Sin ella el socket está desconectado y los handlers no aportan nada.
+- **Sin `alConectar()` inmediato:** el useEffect de montaje original ya hizo la carga inicial; hacerlo al registrar duplicaría el primer fetch. La resincronización en `connect` cubre los cambios perdidos durante una reconexión.
+- **Sin `desconectarSocket()`:** el ciclo del socket es de `PedidoContext` (o `ParametrosContext`). `desconectarSocket` es un cierre duro con `removeAllListeners()`, no un refcount: una vista que lo llame al desmontar mataría los listeners de todos los demás.
+- **`GestionStock` filtra por sucursal:** descarta `stock_actualizado` de otra sucursal.
+- **`ListaProductos` filtra por sucursal** y solo actúa en modo solo-lectura.
+- **`Editar*` filtra por tipo + id** de la entidad abierta, para no resetear el formulario por un cambio ajeno (el `useEffect([producto])` de `FormularioProducto` haría `reset()`).
+- **`PanelSuperadmin`** escucha `pedido_actualizado` y reconsulta `obtenerResumen()` (sección 9.5).
+
 ## 9. Pruebas
 
 | Caso | Qué verifica                                                             | Dónde                                       |
 | ---- | ------------------------------------------------------------------------ | ------------------------------------------- |
-| 1    | Crear un pedido no emite nada (nace `pendiente`)                         | `lib/realtime/conexion.test.js` — **verde** |
+| 1    | Crear un pedido no emite `pedido_actualizado` (nace `pendiente`)         | `lib/realtime/conexion.test.js` — **verde** |
 | 2    | Cliente confirma → admin recibe `pedido_actualizado` con solo `pedidoId` | **verde**                                   |
 | 3    | Varios admins conectados reciben sin suscribirse                         | **verde**                                   |
 | 4    | Dos clientes con pedidos distintos → solo el dueño recibe                | **verde**                                   |
@@ -190,7 +266,7 @@ Dos detalles de implementación:
 | 6    | Falla la BD → no se emite el evento                                      | **verde**                                   |
 | 7    | Reconexión: id nuevo, rooms perdidas, re-suscripción, sin duplicados     | **verde** (6 tests)                         |
 
-Estado: 25 tests en `lib/realtime/conexion.test.js` + 123 preexistentes = **148/148, 12 suites**.
+Estado: 38 suites, **586/586 tests en verde** (`npm test`). Los tests de realtime (`lib/realtime/conexion.test.js`) siguen verdes con la ampliación: los emisores nuevos son no-op sin servidor, así que ningún controller test se vuelve flaky.
 
 El caso 5 se comprobó dos veces: en los tests y a mano, con el backend de desarrollo levantado.
 
@@ -236,6 +312,8 @@ npm run test:tiempo-real   # requiere el backend levantado en :3000
 | 8. Reconexión                                       | cambia el `socket.id`; hay que re-suscribirse       |
 | 9. Re-suscribirse de más no duplica el aviso        | las rooms son un conjunto, no una lista             |
 
+La suite crea un pedido base (estado `pendiente`) apenas para conocer el `sucursalId` de la asignación, y con esa sucursal provisiona su ADMINISTRADOR: un admin sin sucursal es rechazado por `requiereSucursal`/la autorización de estados cuando avanza un pedido.
+
 **Navegador, en el frontend** (`scripts/verificar-tiempo-real.js`):
 
 ```bash
@@ -243,7 +321,9 @@ npm run test:tiempo-real   # requiere backend (:3000) y frontend (:5173)
 # la primera vez: npx playwright install chromium
 ```
 
-Verifica lo que los tests del backend no pueden ver: que la UI real escuche el socket, que el polling haya desaparecido y que las vistas se actualicen solas.
+Verifica lo que los tests del backend no pueden ver: que la UI real escuche el socket, que el polling haya desaparecido y que las vistas se actualicen solas. Además del flujo de pedidos (el cliente ve `en preparación` / `entregado` / `cancelado` sin recargar y los KPIs del superadmin cambian solos), cubre el caso 10 de la ampliación en dos escenarios (ver 9.6): un superadmin renombra un producto por REST y **el cliente y la tabla de gestión lo ven en el lugar** — sin recargar la página, sin el spinner de carga y sin re-pedir la colección entera —, y un pedido del cliente descuenta stock con **la fila de `/admin/stock` bajando de N a N-1 con la tabla viva**. Y, al restaurar los nombres, el canal se verifica en ambos sentidos.
+
+**Los roles no salen del registro público.** El endpoint de registro siempre crea CLIENTE (`validarRegistro` ignora `body.rol`), así que ambos E2E crean —o reparan, si quedaron mal— su ADMINISTRADOR y su SUPERADMINISTRADOR con `scripts/crear-usuario-de-prueba.js <email> <password> <ROL> [sucursalId]`, que fija el rol en la DB y sigue con el login normal. Es idempotente (upsert) y recibe el `sucursalId` del pedido base cuando el rol es de gestión.
 
 **Los dos scripts limpian al terminar.** Los tests crean pedidos por la API, que no tiene `DELETE /api/pedidos`, y el listado del admin devuelve todos los pedidos: sin limpieza el panel se llenaba de ~90 pedidos de prueba. Al terminar, cada script invoca `scripts/limpiar-pedidos-de-prueba.js` (`npm run limpiar:pruebas`), que borra los pedidos de los usuarios de prueba y sus dependientes (`PedidoItems`, `PedidoEstadoHistorials`, `PedidoPromociones`) en una transacción.
 
@@ -251,10 +331,12 @@ El script borra emails `%@test.com` **menos** `cliente@test.com` y `admin@test.c
 
 Toma la configuración de `lib/config/config.js`, así que respeta `NODE_ENV`: con `NODE_ENV=test` limpia `SQL_TEST_DATABASE` y nunca la base de desarrollo. Eso no era gratis: la primera versión leía `.env.development` a propósito, con lo cual `NODE_ENV=test node scripts/limpiar-pedidos-de-prueba.js` habría borrado los datos de desarrollo creyendo estar en la de test. Tiene su propio test en `scripts/limpiar-pedidos-de-prueba.test.js`, que comprueba sobre la base de test que el dry-run no borra nada, que se van los pedidos de prueba con sus tres tablas hijas, y que los usuarios protegidos siguen con los suyos.
 
-Dos detalles de este script que costaron encontrar:
+Detalles de estas suites que costaron encontrar:
 
 - Los estados se leen de los `.badge` y no del texto de la página. Las etiquetas de estado también están en el desplegable de filtros, así que buscar "En preparación" en el `innerText` daba un OK falso aunque la lista no se hubiera actualizado. Los casos donde el cliente no debe recibir nada usan un segundo usuario de verdad, no dos sockets del mismo usuario: con dos sockets del mismo cliente la autorización no se ejercita y el test pasa por inercia.
 - Se registra una petición a `/api/pedidos` por evento en vez de esperar un texto, porque el refetch ocurre aunque la vista no muestre el cambio.
+- Los pedidos mandan `direccionId` (Dirección persistida con coordenadas); el payload textual `direccionEntrega` es solo retro-compatibilidad. Con provincia "Buenos Aires" el `direccion_service` exige partido, con "Ciudad Autónoma de Buenos Aires" no: los E2E usan CABA para no depender de ese paso extra.
+- La limpieza borra pedidos pero **no repone el stock** que esos pedidos descontaron: tras varias corridas seguidas un producto se queda en 0 y el create responde "no hay stock suficiente". La limpieza no lo repone a propósito (borrar pedidos no implica saber cuánto stock había), pero **el script ya no depende de adivinar cuál tiene**: recorre el catálogo hasta encontrar un producto con stock para el pedido base, y en la sección 10 sube a 10 y restaura después la cantidad del producto que mide. Si _ninguno_ tiene stock sale con un error que dice cómo reponerlo (panel de stock o un `UPDATE "Stocks"`).
 
 ### 9.3 Límite conocido: un pedido creado en otra pestaña
 
@@ -274,6 +356,39 @@ La receta para reusar una sesión sin pasar por `/api/auth/login` (que está rat
 
 Además, el CSRF es double-submit: el token que se manda en el header tiene que ser **exactamente** el de la cookie vigente, así que hay que re-leer la cookie `csrf-token` de cada `Set-Cookie` antes de construir la siguiente petición.
 
+### 9.5 Reportes del superadmin: sin evento propio
+
+Los KPIs del panel (`obtenerResumen`) se actualizan por `pedido_actualizado`, no por un evento de reportes dedicado: cada vez que un pedido cambia de estado, `PanelSuperadmin` reconsulta el resumen por REST. Mismo principio, menos eventos.
+
+Decisión de la ampliación (2026-10-19): se eliminó la métrica `pendientes` del resumen (backend `metricas_service.js` + tarjeta en el panel). Los pedidos pendientes no representan ventas, y sacarla simplificó `resumenDePedidos` (una sola consulta de estados en vez de dos).
+
+### 9.6 El catálogo se actualiza en el lugar, no re-cargando la sección
+
+Regla común a todo el catálogo (`ListaProductos`, `ListaCategorias`, `ListaPromociones`, `Catalogo`, `Inicio`, `DetalleProducto`):
+
+> **El socket avisa, REST manda, y el estado local se parchea sin volver a montar la vista.**
+
+Ante `catalogo_actualizado {tipo, id, accion}` cada vista relee **solo la entidad afectada** por su endpoint de detalle (`GET /api/productos/:id`, `/api/categorias/:id`, `/api/promociones/:id`) y la aplica al estado que ya tiene:
+
+- `creado` o `actualizado` → se fusiona en la posición que ya ocupaba (`fusionarPorId`, en `src/utils/catalogoRealtime.js`); si es nueva, entra ordenada por `nombre ASC`.
+- `eliminado` → `quitarPorId`. En las tablas de gestión (que muestran también inactivas) la categoría/promoción en vez de borrarse se marca `activa: false`, que es lo que hace el soft delete del backend.
+
+Es el mismo patrón que ya usaba `GestionStock` con el stock, y el que usaba `ParametrosContext` con los parámetros: **aplicar la respuesta del mutador al estado local** en vez de re-cargar la colección.
+
+Lo que quedó descartado, y por qué:
+
+| Alternativa                             | Problema                                                                                                                                       |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cargar()` / `cargarCatalogo()` entero  | spinner en toda la sección, parpadeo de la grilla y reordenamiento por diferencia de colación                                                  |
+| Reordenar la lista después del merge    | movería filas que el usuario ya estaba mirando; con `localeCompare(..., 'es')` el orden del backend no siempre coincide con el de `Array.sort` |
+| Enviar el objeto completo por el socket | viola la restricción 9 de la sección 11: los eventos solo transportan identificadores                                                          |
+
+**Única excepción: el nombre de una categoría.** Si cambia, cambia el nombre de categoría de _todos_ sus productos, así que no se puede parchear una fila con el dato viejo: ahí la vista hace un refresh silencioso de la colección entera (`cargarProductos({ silencioso: true })`), que pide la lista pero **sin spinner y sin recargar la página**.
+
+Comprobado en navegador (sección 9 de `scripts/verificar-tiempo-real.js`): la tabla de gestión relee sólo el producto editado, **no** re-pide la colección, no se re-enciende el `.spinner-border` y `performance.getEntriesByType('navigation')` sigue en 1 (hubo un solo `goto`, cero recargas).
+
+El **stock** sigue la misma idea con otro evento (`stock_actualizado {sucursalId, productoIds}`, room de la sucursal, sin datos: restricción 9): `GestionStock` relee sólo `GET /api/stock/:sucursalId/:productoId` por cada id notificado y fusiona la fila (sección 10 del E2E: cantidad N→N-1, tabla viva, cero spinners, cero pedidos a la colección `/api/stock`). El `PUT /api/stock` de un guardado manual hace lo mismo: se aplica la fila que devuelve el backend, sin `cargar()`.
+
 ## 10. Verificación manual
 
 ```bash
@@ -290,28 +405,37 @@ npm run dev                     # http://localhost:5173
 
 Para ver el tráfico en el navegador: pestaña **Network** → filtro **WS** → conexión `socket.io`. En `Messages` se ven los eventos recibidos con su payload.
 
-Para confirmar que el polling desapareció: en Network, filtrar `pedidos` y dejar la página quieta. No debe aparecer ninguna petición repetida; solo las ones que dispara un evento.
+Para confirmar que el polling desapareció: en Network, filtrar `pedidos` y dejar la página quieta. No debe aparecer ninguna petición repetida; solo las que dispara un evento.
 
 ## 10.1 Archivos del frontend
 
-| Archivo                         | Responsabilidad                                                                             |
-| ------------------------------- | ------------------------------------------------------------------------------------------- |
-| `src/services/socket.js`        | Instancia única, `conectarSocket`, `desconectarSocket`, `suscribirPedido`, `EVENTOS_SOCKET` |
-| `src/context/PedidoContext.jsx` | Effect que escucha los eventos y llama a `refrescarPedidos()`                               |
-| `.env`                          | `VITE_SOCKET_URL` (además de `VITE_API_URL`)                                                |
-| `package.json`                  | `socket.io-client@^4.8.4`                                                                   |
+| Archivo                                                            | Responsabilidad                                                                                             |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `src/services/socket.js`                                           | Instancia única, `conectarSocket`, `desconectarSocket`, `suscribirPedido`, `EVENTOS_SOCKET` (los 4 eventos) |
+| `src/utils/catalogoRealtime.js`                                    | Merge en el lugar: `fusionarPorId`, `quitarPorId`, orden por `nombre ASC` (ver 9.6)                         |
+| `src/context/PedidoContext.jsx`                                    | Dueño del socket; effect que escucha `pedido_actualizado` y llama a `refrescarPedidos()`                    |
+| `src/context/ParametrosContext.jsx`                                | Dueño del socket en vistas sin pedidos; escucha `parametros_actualizados`                                   |
+| `src/pages/cliente/{Inicio,Catalogo,DetalleProducto}.jsx`          | Listeners de `catalogo_actualizado` (+ `stock_actualizado` en Catálogo) con sesión                          |
+| `src/components/admin/Lista{Productos,Categorias,Promociones}.jsx` | Listas del panel; aplican el cambio en el lugar (ver 9.6)                                                   |
+| `src/pages/admin/GestionStock.jsx`                                 | `stock_actualizado` filtrado por sucursal; el guardado también se aplica en el lugar                        |
+| `src/components/superadmin/PanelSuperadmin.jsx`                    | `pedido_actualizado` → reconsulta el resumen                                                                |
+| `src/pages/superadmin/Editar{Producto,Categoria,Promocion}.jsx`    | `catalogo_actualizado` filtrado por tipo + id                                                               |
+| `.env`                                                             | `VITE_SOCKET_URL` (además de `VITE_API_URL`)                                                                |
+| `package.json`                                                     | `socket.io-client@^4.8.4`                                                                                   |
 
 `socket.js` es un **singleton a propósito**: `conectarSocket()` devuelve siempre la misma instancia si ya está viva. En desarrollo, el Strict Mode de React monta dos veces los efectos, y sin singleton se abrirían dos conexiones con dos juegos de listeners.
 
 ## 11. Restricciones
 
-1. Nunca enviar el objeto `Pedido` por el socket: solo `pedidoId`.
+1. Nunca enviar el objeto `Pedido` por el socket: solo `pedidoId` (y payloads mínimos en los demás eventos).
 2. No emitir antes del commit.
 3. No reemplazar la API REST ni agregar endpoints para "compensar" al socket.
 4. No agregar JWT: la autenticación es la sesión existente.
 5. No cambiar las rutas REST, el CRUD ni la protección CSRF.
 6. No modificar la autorización: se reusa la de `pedido_controller.js`.
 7. No emitir desde `lib/models/`.
+8. `stock_actualizado` jamás sale de la room de su sucursal: ni a `admins` ni a clientes.
+9. Ningún evento nuevo transporta datos: solo identificadores y la mínima seña para filtrar.
 
 ## 12. Ver también
 

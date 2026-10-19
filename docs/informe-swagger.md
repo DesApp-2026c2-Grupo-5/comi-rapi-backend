@@ -8,7 +8,7 @@
 
 La especificación documenta la API de **comi-rapi-backend**:
 
-- **21 paths** / 47 schemas.
+- **31 paths** / 56 schemas.
 - **Server base:** `http://localhost:3000/api`.
 - **UI interactiva:** `GET /api/docs` (Swagger UI vía `swagger-ui-express`).
 - **Seguridad:** dos esquemas montados en cascada (`allOf`):
@@ -21,7 +21,7 @@ La especificación documenta la API de **comi-rapi-backend**:
 | ----------- | ------------------------------------------------------------------------------- |
 | Salud       | `GET /health`                                                                   |
 | Auth        | `/auth/csrf-token`, `/auth/registro`, `/auth/login`, `/auth/logout`, `/auth/me` |
-| Usuarios    | `/usuarios`, `/usuarios/{id}`                                                   |
+| Usuarios    | `/usuarios`, `/usuarios/{id}`, `/usuarios/{id}/mas-comprados`                   |
 | Categorías  | `/categorias`, `/categorias/{id}`                                               |
 | Productos   | `/productos`, `/productos/{id}`                                                 |
 | Pedidos     | `/pedidos`, `/pedidos/{id}`, `/pedidos/{id}/estado`                             |
@@ -52,7 +52,7 @@ Con la sesión de `admin@test.com` activa se puede:
 
 - **Gestionar catálogo:** `POST /categorias`, `POST /productos`, `PUT` y `DELETE` de ambos (baja lógica) — con cuerpo de ejemplo precargado en el swagger.
 - **Gestionar sucursales:** `POST /sucursales` y sus `PUT`/`DELETE`.
-- **Administrar usuarios:** `GET /usuarios` y `GET /usuarios/{id}` (solo admin).
+- **Administrar usuarios:** `GET /usuarios`, `GET /usuarios/{id}` y `GET /usuarios/{id}/mas-comprados` (ranking acotado a su sucursal).
 - **Subir imágenes:** `POST /imagenes/upload` y `POST /imagenes/upload/categoria` (multipart, campo `imagen`, JPG/PNG/WEBP, máx. 5 MB).
 - **Pedidos:** ver todos con `GET /pedidos` (opcional `?sucursalId=`), ver uno con `GET /pedidos/{id}`, y **avanzar el estado** con `PATCH /pedidos/{id}/estado`: `confirmado → en_preparacion → listo_para_entregar → en_camino → entregado`.
 

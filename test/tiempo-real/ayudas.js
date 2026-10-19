@@ -23,9 +23,16 @@ const COOKIE_SESION = 'comirapi.sid';
  * Emails fijos: si el usuario ya existe, se reutiliza iniciando sesión.
  * `cliente2` existe para poder probar el aislamiento entre dos clientes de
  * verdad: con dos sockets del mismo usuario la autorización no se ejercita.
+ *
+ * El registro público siempre crea CLIENTE, así que el admin de gestión se
+ * crea/promueve con scripts/crear-usuario-de-prueba.js (ver `sesionDe`).
  */
 const USUARIOS = {
-  admin: { email: 'ws-e2e-admin@test.com', rol: 'ADMINISTRADOR' },
+  admin: {
+    email: 'ws-e2e-admin@test.com',
+    rol: 'ADMINISTRADOR',
+    viaScript: true,
+  },
   cliente: { email: 'ws-e2e-cliente@test.com', rol: 'CLIENTE' },
   cliente2: { email: 'ws-e2e-cliente2@test.com', rol: 'CLIENTE' },
 };
@@ -47,9 +54,11 @@ const ARCHIVO_SESIONES = path.join(__dirname, '.sesiones.json');
 const DIRECCION = {
   calle: 'Av. Corrientes',
   altura: 1234,
-  provincia: 'Buenos Aires',
+  // Con "Buenos Aires" el service exige el partido (departamento); con CABA no.
+  // Mismo dato que usan los tests del backend (GEO_CABA / DATOS_CABA).
+  provincia: 'Ciudad Autónoma de Buenos Aires',
   localidad: 'CABA',
-  codigoPostal: 'C1043',
+  codigoPostal: '1043',
   referencia: 'Puerta 2, timbre 3',
   alias: 'Casa',
 };
@@ -112,8 +121,20 @@ const crearClienteREST = (cookieInicial = {}) => {
   };
 };
 
-/** Devuelve el cliente REST del rol indicado, con una sesión válida. */
-const sesionDe = async (rol) => {
+/**
+ * Devuelve el cliente REST del rol indicado, con una sesión válida.
+ *
+ * La cache se valida con `/api/auth/me`: un sid guardado de cuando el usuario
+ * tenía otro rol ya no sirve. Los roles de gestión no se pueden registrar por
+ * la API (el registro público siempre crea CLIENTE): se crean con
+ * scripts/crear-usuario-de-prueba.js y luego se entra por login.
+ *
+ * `sucursalId` aplica solo a ADMINISTRADOR: tiene que ser la del local que
+ * opera el pedido de prueba, si no `requiereSucursal`/la autorización de
+ * estados lo rechazan.
+ */
+const sesionDe = async (rol, sucursalId) => {
+  const { email, rol: rolUsuario, viaScript } = USUARIOS[rol];
   const cache = leerCache();
   if (cache[rol]?.sid) {
     const cliente = crearClienteREST({
@@ -121,41 +142,63 @@ const sesionDe = async (rol) => {
       [CSRF_COOKIE]: crypto.randomBytes(32).toString('hex'),
     });
     // La sesión puede haber vencido: se comprueba antes de confiar en la cache.
-    const prueba = await cliente.get('/api/productos');
-    if (prueba.status === 200) return cliente;
+    const me = await cliente.get('/api/auth/me');
+    const datos = me.body && me.body.data;
+    const rolOk = me.status === 200 && datos && datos.rol === rolUsuario;
+    const sucursalOk =
+      !sucursalId || (datos && Number(datos.sucursalId) === Number(sucursalId));
+    if (rolOk && sucursalOk) return cliente;
   }
 
-  const { email, rol: rolUsuario } = USUARIOS[rol];
-  const cliente = crearClienteREST({
-    [CSRF_COOKIE]: crypto.randomBytes(32).toString('hex'),
-  });
-
-  const registro = await cliente.post('/api/auth/registro', {
-    nombre: 'Verificacion WS',
-    email,
-    password: '123456',
-    rol: rolUsuario,
-  });
-
-  // El registro ya deja sesión iniciada. Si el usuario existía de una corrida
-  // anterior, hay que iniciar sesión explícitamente.
-  if (!cliente.sid) {
-    const login = await cliente.post('/api/auth/login', {
+  let registroStatus = '(sin registro)';
+  if (viaScript) {
+    const script = path.join(
+      __dirname,
+      '..',
+      '..',
+      'scripts',
+      'crear-usuario-de-prueba.js'
+    );
+    const args = [script, email, '123456', rolUsuario];
+    if (sucursalId) args.push(String(sucursalId));
+    execFileSync(process.execPath, args, {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } else {
+    const registroCliente = crearClienteREST({
+      [CSRF_COOKIE]: crypto.randomBytes(32).toString('hex'),
+    });
+    const registro = await registroCliente.post('/api/auth/registro', {
+      nombre: 'Verificacion WS',
       email,
       password: '123456',
+      rol: rolUsuario,
     });
-    if (!cliente.sid) {
-      const detalle =
-        registro.status === 429 || login.status === 429
-          ? 'Se trippedó el rate limiter de auth (20 req / 15 min). Esperá ' +
-            'unos minutos o borrá test/tiempo-real/.sesiones.json.'
-          : `registro ${registro.status} / login ${login.status}`;
-      throw new Error(`No se pudo obtener una sesión de ${rol}: ${detalle}`);
+    registroStatus = registro.status;
+    if (registroCliente.sid) {
+      guardarCache({ ...cache, [rol]: { sid: registroCliente.sid, email } });
+      return registroCliente;
     }
   }
 
-  const guardado = { ...cache, [rol]: { sid: cliente.sid, email } };
-  guardarCache(guardado);
+  const cliente = crearClienteREST({
+    [CSRF_COOKIE]: crypto.randomBytes(32).toString('hex'),
+  });
+  const login = await cliente.post('/api/auth/login', {
+    email,
+    password: '123456',
+  });
+  if (!cliente.sid) {
+    const detalle =
+      registroStatus === 429 || login.status === 429
+        ? 'Se trippedó el rate limiter de auth (20 req / 15 min). Esperá ' +
+          'unos minutos o borrá test/tiempo-real/.sesiones.json.'
+        : `registro ${registroStatus} / login ${login.status}`;
+    throw new Error(`No se pudo obtener una sesión de ${rol}: ${detalle}`);
+  }
+
+  guardarCache({ ...leerCache(), [rol]: { sid: cliente.sid, email } });
   return cliente;
 };
 

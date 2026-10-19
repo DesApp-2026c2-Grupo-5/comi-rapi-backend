@@ -43,7 +43,6 @@ const abrir = async (sid, opciones) => {
     'Canal de tiempo real — verificación end-to-end'
   );
 
-  const admin = await sesionDe('admin');
   const cliente = await sesionDe('cliente');
   const cliente2 = await sesionDe('cliente2');
   const productoId = (await cliente.get('/api/productos')).body.data[0].id;
@@ -62,9 +61,13 @@ const abrir = async (sid, opciones) => {
     referencia: direccion.referencia,
   };
 
+  // El backend resuelve las coordenadas del snapshot desde la Dirección
+  // persistida (`direccionId`), igual que payloadBackend en el frontend: el
+  // payload textual solo es retro-compatibilidad.
   const nuevoPedido = () =>
     cliente.post('/api/pedidos', {
       productos: [{ productoId, cantidad: 1 }],
+      direccionId: direccion.id,
       direccionEntrega,
     });
 
@@ -86,6 +89,19 @@ const abrir = async (sid, opciones) => {
     }
     return id;
   };
+
+  // El ADMINISTRADOR tiene que ser del local al que se asigna el pedido (si no
+  // `requiereSucursal`/la autorización de estados lo rechazan). Un pedido base
+  // revela la sucursal; con ella se crea (o se repara) el usuario de prueba.
+  const base = await nuevoPedido();
+  if (base.status !== 201 || !base.body.data?.sucursalId) {
+    throw new Error(
+      `No se pudo crear el pedido base: HTTP ${base.status} ${JSON.stringify(
+        base.body
+      )}`
+    );
+  }
+  const admin = await sesionDe('admin', base.body.data.sucursalId);
 
   // ------------------------------------------------------------------ caso 1
   reporte.seccion('1. Crear un pedido no notifica a nadie');

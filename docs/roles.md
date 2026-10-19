@@ -39,25 +39,25 @@ Definidos en `lib/middlewares/auth.js`:
 
 Fuente: `lib/routes/*.js`.
 
-| Módulo / ruta                                                            | Público             | CLIENTE         | ADMINISTRADOR                                 | SUPERADMINISTRADOR                 |
-| ------------------------------------------------------------------------ | ------------------- | --------------- | --------------------------------------------- | ---------------------------------- |
-| `GET /api/health`                                                        | ✔                   | ✔               | ✔                                             | ✔                                  |
-| `POST /api/auth/login`, `GET /api/auth/csrf-token`                       | ✔                   | ✔               | ✔                                             | ✔                                  |
-| `GET /api/auth/me`, `POST /api/auth/logout`                              | —                   | ✔               | ✔                                             | ✔                                  |
-| `GET /api/categorias(/:id)`, `/productos`, `/sucursales`, `/promociones` | ✔ (sesión opcional) | ✔               | ✔                                             | ✔                                  |
-| `GET /api/geo/*`, `GET /api/docs`                                        | ✔                   | ✔               | ✔                                             | ✔                                  |
-| `GET /api/direcciones(/:id)` (ver direcciones)                           | —                   | ✔               | ✔ (de un cliente, en su detalle)              | ✔ (de un cliente, en su detalle)   |
-| `POST/PUT/DELETE /api/direcciones`                                       | —                   | ✔               | —                                             | —                                  |
-| `/api/perfil` (todas)                                                    | —                   | ✔               | —                                             | —                                  |
-| `/api/pedidos` POST, PATCH estado                                        | —                   | ✔               | ✔ (requiere sucursal)                         | —                                  |
-| `/api/pedidos` GET, `/:id` (ver pedidos)                                 | —                   | ✔ (los propios) | ✔ (solo de su sucursal)                       | ✔ (visión global)                  |
-| `POST/PUT/DELETE /api/categorias`, `/productos`, `/promociones`          | —                   | —               | —                                             | ✔                                  |
-| `POST/PUT/DELETE /api/sucursales` (CRUD)                                 | —                   | —               | —                                             | ✔                                  |
-| `/api/imagenes` (upload / recuperar)                                     | recuperar parcial   | —               | —                                             | ✔                                  |
-| `/api/stock` (todas)                                                     | —                   | —               | ✔ (requiere + acota a su sucursal)            | —                                  |
-| `GET /api/usuarios(/:id)` (listar/ver)                                   | —                   | —               | ✔ (solo CLIENTE con ≥1 pedido en su sucursal) | ✔ (todos los usuarios registrados) |
-| `POST /api/usuarios`, `PUT /api/usuarios/:id` (crear/editar)             | —                   | —               | —                                             | ✔                                  |
-| `GET /api/superadmin/resumen`                                            | —                   | —               | —                                             | ✔                                  |
+| Módulo / ruta                                                                  | Público             | CLIENTE         | ADMINISTRADOR                                                                 | SUPERADMINISTRADOR                                                       |
+| ------------------------------------------------------------------------------ | ------------------- | --------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `GET /api/health`                                                              | ✔                   | ✔               | ✔                                                                             | ✔                                                                        |
+| `POST /api/auth/login`, `GET /api/auth/csrf-token`                             | ✔                   | ✔               | ✔                                                                             | ✔                                                                        |
+| `GET /api/auth/me`, `POST /api/auth/logout`                                    | —                   | ✔               | ✔                                                                             | ✔                                                                        |
+| `GET /api/categorias(/:id)`, `/productos`, `/sucursales`, `/promociones`       | ✔ (sesión opcional) | ✔               | ✔                                                                             | ✔                                                                        |
+| `GET /api/geo/*`, `GET /api/docs`                                              | ✔                   | ✔               | ✔                                                                             | ✔                                                                        |
+| `GET /api/direcciones(/:id)` (ver direcciones)                                 | —                   | ✔               | ✔ (de un cliente, en su detalle)                                              | ✔ (de un cliente, en su detalle)                                         |
+| `POST/PUT/DELETE /api/direcciones`                                             | —                   | ✔               | —                                                                             | —                                                                        |
+| `/api/perfil` (todas)                                                          | —                   | ✔               | —                                                                             | —                                                                        |
+| `/api/pedidos` POST, PATCH estado                                              | —                   | ✔               | ✔ (requiere sucursal)                                                         | —                                                                        |
+| `/api/pedidos` GET, `/:id` (ver pedidos)                                       | —                   | ✔ (los propios) | ✔ (solo de su sucursal)                                                       | ✔ (visión global)                                                        |
+| `POST/PUT/DELETE /api/categorias`, `/productos`, `/promociones`                | —                   | —               | —                                                                             | ✔                                                                        |
+| `POST/PUT/DELETE /api/sucursales` (CRUD)                                       | —                   | —               | —                                                                             | ✔                                                                        |
+| `/api/imagenes` (upload / recuperar)                                           | recuperar parcial   | —               | —                                                                             | ✔                                                                        |
+| `/api/stock` (todas)                                                           | —                   | —               | ✔ (requiere + acota a su sucursal)                                            | —                                                                        |
+| `GET /api/usuarios(/:id)` y `GET /api/usuarios/:id/mas-comprados` (listar/ver) | —                   | —               | ✔ (solo CLIENTE con ≥1 pedido en su sucursal; el ranking acota a su sucursal) | ✔ (todos los usuarios registrados; el ranking suma todas las sucursales) |
+| `POST /api/usuarios`, `PUT /api/usuarios/:id` (crear/editar)                   | —                   | —               | —                                                                             | ✔                                                                        |
+| `GET /api/superadmin/resumen`                                                  | —                   | —               | —                                                                             | ✔                                                                        |
 
 Nota: el `SUPERADMINISTRADOR` **no** opera pedidos individuales ni stock por API; su panel se apoya en agregados globales calculados en base de datos (`COUNT`/`SUM`/`GROUP BY`) y, para el detalle de un cliente, consulta en lectura sus pedidos y direcciones. El catálogo sí lo edita él por API: es único y corporativo, y el admin solo controla su disponibilidad por sucursal desde el stock. La personalización (ingredientes y recetas) es hoy mock de frontend, sin endpoint propio.
 
@@ -75,14 +75,14 @@ Nota: el `SUPERADMINISTRADOR` **no** opera pedidos individuales ni stock por API
 - Escritura de su sucursal: stock (cantidades y disponibilidad por producto). El CRUD de catálogo (productos, categorías, promociones, imágenes) no es suyo: lo edita el SUPERADMINISTRADOR. El admin ve los listados de catálogo en **solo lectura** y, desde Productos, activa/desactiva la disponibilidad de cada ítem en su sucursal (alternativa directa al toggle del stock).
 - Pedidos: opera los de su sucursal (estado pendiente → confirmado → en preparación → ...).
 - **Sin sucursal asignada queda bloqueado** para operar recursos acotados (`requiereSucursal`), y nunca accede a sucursales ajenas (`acotarASucursalPropia`).
-- Lista usuarios a través de `/api/usuarios` (panel de clientes): ve solo los `CLIENTE` que hicieron al menos un pedido en su sucursal; el detalle de un usuario sigue la misma regla.
+- Lista usuarios a través de `/api/usuarios` (panel de clientes): ve solo los `CLIENTE` que hicieron al menos un pedido en su sucursal; el detalle de un usuario sigue la misma regla. El ranking de productos y categorías más comprados de ese detalle también acota las unidades a los pedidos de su sucursal (los cancelados no suman).
 - No administra sucursales: el CRUD es del SUPERADMINISTRADOR.
 
 ### SUPERADMINISTRADOR
 
 - Ve el resumen agregado del negocio con filtros (`GET /api/superadmin/resumen`): totales, por sucursal, por estado, serie de 30 días, por operación.
 - Gestiona usuarios administrativos: crea y edita `ADMINISTRADOR` (con sucursal asignada) y `SUPERADMINISTRADOR`. El panel no crea ni edita clientes.
-- En su panel de clientes ve el mismo detalle que el admin: direcciones (con cobertura) y últimos pedidos de cualquier CLIENTE, en solo lectura.
+- En su panel de clientes ve el mismo detalle que el admin: direcciones (con cobertura), últimos pedidos y el ranking de productos y categorías más comprados de cualquier CLIENTE, en solo lectura. A diferencia del admin, el ranking suma los pedidos de todas las sucursales.
 - Ve todos los usuarios registrados a través de `GET /api/usuarios` (sin la acotación por sucursal del admin), con filtros por `rol` y `buscar`. El panel de Clientes filtra `rol=CLIENTE`.
 - Gestiona las sucursales (CRUD completo: crear, editar, dar de baja) — decisión corporativa.
 - Gestiona el catálogo completo (CRUD de productos, combos, categorías, promociones y subida de imágenes) — decisión corporativa: el catálogo vale para todas las sucursales.
