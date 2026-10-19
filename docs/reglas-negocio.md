@@ -155,24 +155,36 @@ Regla de negocio, no entidad:
 - **Políticas**: un solo intento sin retry (ToS de Georef), timeout configurable (`GEOREF_TIMEOUT_MS`), `User-Agent` de identificación del backend.
 - **Configuración**: `GEOREF_BASE_URL`, `GEOREF_TIMEOUT_MS`, `GEOREF_MAX_RESULTADOS` (sin secretos). Bloque `georef` en `lib/config/config.js`.
 - **Fuera de alcance actual**: OSRM, cálculo de distancias/rutas, endpoints nuevos. La cobertura y el ABM integrado que consumen este servicio están implementados (ver §16 y §17).
+- **Bug de datos conocido en Georef (verificado 18-oct-2026)**: en **AV GDOR VERGARA, Hurlingham**, las alturas **1800–2400** y **3000–3200** geocodifican ~3,4 km al norte de su ubicación real (todas caen en `-34.593x`, cuando deberían estar entre `-34.617` y `-34.604`). Esto provoca "fuera de cobertura" incorrectos desde la Sucursal Oeste (la ruta real desde esas direcciones sería ~2,5–3,5 km, dentro del radio de 5 km; pero como Georef entrega coords erróneas, ORS calcula 5,1 km). **No es un bug de la app ni del routing** — es un vacío de segmentación en la base de direcciones de Georef Argentina. Las alturas 1593–1598 y 2600–2800 geocodifican correctamente. Reportar a datos.gob.ar si afecta la demo.
 
-## 15. Cálculo de rutas (OpenRouteService)
+## 15. Cálculo de rutas (proveedor seleccionable: ORS por defecto, Geoapify alternativo)
 
-- **Servicio de routing**: `lib/services/routing_service.js` encapsula la comunicación con OpenRouteService (ORS) y el cálculo de distancia/duración. No contiene reglas de negocio ni integración con modelos/controllers. Solo este archivo conoce al proveedor: en el futuro puede reemplazarse por OSRM u otro sin modificar la lógica de negocio.
-- **Decisión de proveedor**: se evaluaron OSRM (autoalojado: mayor control pero agrega infraestructura/dataset/operación) y OpenRouteService (API externa con clave y cuotas, sin infraestructura propia). Se usa **OpenRouteService por ahora**, manteniendo la abstracción `RoutingService`.
-- **API del servicio**:
+- **Contrato de proveedor (A1-1/A1-2)**: `lib/services/routing_service.js` es un facade del proveedor activo; la implementación vive en `lib/services/providers/routing/` (uno por archivo: `ors.js`, `geoapify.js`) y se selecciona con `ROUTING_PROVIDER` (`ors` por defecto). Ningún proveedor contiene reglas de negocio ni integra modelos/controllers.
+- **Decisión de proveedor**: se evaluaron OSRM (autoalojado: mayor control pero agrega infraestructura/dataset/operación) y los servicios externos con clave y cuotas, sin infraestructura propia. Se usa **OpenRouteService por defecto** y se incorporó **Geoapify** detrás del mismo contrato (A1-2); el cambio y la vuelta son solo de variable de entorno (`ROUTING_PROVIDER=geoapify|ors`), sin deploy de código.
+- **API del servicio (contrato común)**:
   - `calcularRuta({ origen: { latitud, longitud }, destino: { latitud, longitud } })` → `{ distanciaMetros, duracionSegundos, geometria }`.
   - La geometría (polyline del trazado) se devuelve solo en la respuesta del servicio: no se persiste ni se integra con el frontend en esta etapa.
-- **Solicitud**: `GET {ORS_BASE_URL}/v2/directions/driving-car?start=lon,lat&end=lon,lat`. ORS usa orden `lon,lat` (inverso a Georef `lat,lon`); el servicio convierte internamente. La API key se envía por header `Authorization`, **no** en la URL.
-- **Errores tipados**:
-  - `OrsError`: HTTP 400/5xx, conexión/timeout, respuesta inválida/incompleta.
-  - `CredencialesInvalidasError`: API key ausente en config (sin llamar a ORS) o rechazada (401).
+  - La validación de entrada es compartida (`providers/routing/validacion.js`): coordenadas presentes, numéricas y en rango (lat ±90, lon ±180); fallan sin llamar a la API.
+- **Solicitud por proveedor**:
+  - ORS: `GET {ORS_BASE_URL}/v2/directions/{ORS_PROFILE}?start=lon,lat&end=lon,lat`. Orden `lon,lat` (inverso de Georef); key por header `Authorization`, **no** en la URL.
+  - Geoapify: `GET {GEOAPIFY_BASE_URL}/v1/routing?waypoints=lat,lon|lat,lon&mode=drive&apiKey=...`. Orden `lat,lon` (como Georef); key por query param `apiKey`. Resumen en `features[0].properties`: `distance` (metros) y `time` (segundos).
+- **Errores tipados (contrato compartido, `providers/routing/errors.js`)**:
+  - `RoutingError`: clase base del contrato (errores generales de cualquier proveedor: HTTP 400/5xx, conexión/timeout, respuesta inválida/incompleta). `error_handler` la traduce a 503.
+  - `OrsError` (extiende `RoutingError`): errores generales del proveedor ORS; se mantiene por compatibilidad.
+  - `CredencialesInvalidasError`: API key ausente en config (sin llamar a la API) o rechazada (401).
   - `LimiteSolicitudesError`: límite de solicitudes (429).
-  - `RutaInexistenteError`: ORS no encontró una ruta (404).
+  - `RutaInexistenteError`: el proveedor no encontró una ruta (404 en ORS; respuesta sin features en Geoapify).
 - **Validación de entrada**: coordenadas presentes, numéricas y en rango (lat ±90, lon ±180); fallan sin llamar a la API.
 - **Políticas**: un solo intento, sin retry ni cache (alcance académico); timeout configurable (`ORS_TIMEOUT_MS`).
 - **Configuración**: `ORS_API_KEY` (clave gratuita del dashboard de HeiGIT), `ORS_BASE_URL`, `ORS_TIMEOUT_MS`, `ORS_PROFILE` (`driving-car`). Bloque `ors` en `lib/config/config.js`. **La clave nunca se commitea**: los `.env` versionados la dejan vacía y la clave real va en `.env.local` (gitignored), que gana sobre ellos (mecanismo de override en `initializeEnv`).
 - **Fuera de alcance actual**: ABM de `Direccion`, frontend, ETA, infraestructura Docker para OSRM, cache/colas. La cobertura que consume este servicio está implementada (ver §16).
+
+- **Caché de distancias por ruta (A1-3, `DistanciasRutas`)**: toda evaluación en vivo (`evaluarSucursales`, cobertura_service) persiste el resultado por par evaluado vía `distancias_service.guardarDistancias` (INSERT … ON CONFLICT DO UPDATE).
+  - **Clave**: 4 coordenadas redondeadas (origen = SUCURSAL, destino = ENTREGA, semántica de `routing_service`) + `proveedor`. La lectura filtra SIEMPRE por el proveedor activo: las distancias de un proveedor jamás se reutilizan para otro.
+  - **Sin TTL, sin DELETE**: la distancia entre dos coordenadas fijas no vence; si una dirección o sucursal cambia de coordenadas, las claves nuevas dejan inalcanzables a las filas viejas. Las bajas de entidades de negocio siguen siendo lógicas y no tocan el caché.
+  - **Best-effort**: un fallo de escritura del caché solo emite un warning — nunca rompe la validación en vivo, que es la fuente de verdad.
+  - **Lectura cache-first (A1-4)**: `sucursalesEnCobertura` (base de la selección T1, la reasignación T4 y la auto-reasignación al pagar) lee primero el caché del proveedor activo; los pares faltantes se calculan en vivo y se cachean (**lazy**, una llamada por par). El radio se aplica siempre con el parámetro VIGENTE. El ETA (`eta_service`) usa `obtenerOCalcularDistancia`: duración cacheada o, en su defecto, cálculo en vivo + auto-guardado. **Fail-closed**: si el proveedor falla para un par faltante, el error tipado se propaga — jamás se aproxima una distancia ni se asigna una sucursal arbitrariamente.
+  - **El alta/preview de direcciones sigue validando EN VIVO**: es el momento autoritativo de la regla y el principal calentador del caché.
 
 ## 16. Cobertura geográfica (reglas de cobertura)
 
@@ -249,18 +261,19 @@ Regla de negocio, no entidad:
 ### 20.1 Selección de sucursal (T1)
 
 - **Regla D1**: al crear un pedido, el backend selecciona **la sucursal más cercana por ruta que tenga stock suficiente, dentro de cobertura** (≤ `COBERTURA_RADIO_MAX_KM` km por ruta). Reemplaza la lógica anterior de "menor carga de pedidos pendientes" (válida según `enunciado.md:58` que deja la estrategia a criterio del grupo).
-- Elegible = activa ∧ stock suficiente (`faltantesDePedido`) ∧ dentro de cobertura (`sucursalesEnCobertura`, ranking por distancia de ORS).
+- Elegible = activa ∧ stock suficiente (`faltantesDePedido`) ∧ dentro de cobertura (`sucursalesEnCobertura`, ranking por distancia de ruta). **Desde A1-4 el ranking es cache-first**: las distancias salen del caché `DistanciasRutas` del proveedor activo y solo los pares faltantes se calculan en vivo (lazy, fail-closed — ver §15); las reglas no cambian, solo la fuente de la distancia.
 - Casos límite: ninguna elegible → 422 "No hay sucursales disponibles con stock dentro de la cobertura"; la más cercana sin stock → la siguiente más cercana con stock; con stock fuera de cobertura → no elegible (cobertura es hard). Si se evaluaron candidatas con stock parcial, el 422 informa los **faltantes de la mejor candidata** (la que menos productos debe y, a la vez, más unidades ofrece de esos productos; ver §20.3), no el mensaje genérico.
 - **El frontend NO pre-asigna sucursal** (se eliminó el espejo `asignacionSucursal.js`): el POST siempre asigna con las reglas reales; la respuesta trae la sucursal asignada.
 - Si el cliente envía `sucursalId`, se valida que sea elegible (cobertura + stock) y se respeta; si no, se elige automáticamente.
 
 ### 20.2 Tiempo estimado de entrega — ETA (T2)
 
-- **Fórmula**: `ETA = cocina (30 min fijos, config.pedidos.tiempoCocinaMin) + viaje (ORS duracionSegundos → minutos, redondeo hacia arriba)`.
+- **Fórmula**: `ETA = cocina (30 min fijos, config.pedidos.tiempoCocinaMin) + viaje (duración por ruta → minutos, redondeo hacia arriba)`. **Desde A1-4 la duración del viaje sale del caché de distancias** (`obtenerOCalcularDistancia`): si el par no está, se calcula en vivo y se guarda; el resto de la regla no cambia.
 - **Cuándo se calcula**: al confirmar el pedido (`pendiente→confirmado`), DESPUÉS de la transacción (ORS es un servicio externo; su latencia no bloquea el pago). Pedidos `pendientes` no tienen ETA.
 - **Persistencia**: `Pedido.etaMinutos` (INTEGER NULL) + `Pedido.etaCalculadoEn` (DATE NULL) — migración `20261002000001`.
 - **Degradación**: si ORS falla, `etaMinutos` queda null y el pago sigue; el error se loguea. El frontend muestra "—" (T3).
 - **Recálculo**: si la sucursal cambia (reasignación automática por stock vencido al confirmar, o manual en T4), el ETA se recalcula con la nueva sucursal (la cocina se mantiene).
+- **Hora estimada de llegada (A6)**: al pasar a `en_camino` se persiste `Pedido.horaEstimadaLlegada` (DATE NULL, migración `20261018000001`) — **ahora + duración del viaje** desde el caché de distancias (`obtenerOCalcularDistancia`, fail-closed). Es el ancla del "quedan X min" que ve el cliente: la duración sale del caché (o se calcula lazy si el par no existe). Degrada a null igual que el ETA: el paso a `en_camino` NUNCA se bloquea por una falla del proveedor. Solo visible en `en_camino` (no en `listo_para_entregar` ni estados finales).
 
 ### 20.3 Reasignación automática al confirmar el pago (corrección post-T4)
 

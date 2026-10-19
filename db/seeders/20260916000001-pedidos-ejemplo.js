@@ -4,6 +4,13 @@
 // Usa los clientes, productos, sucursales y estados que ya existen en la base.
 // Idempotente: marca los pedidos con observacion='SEED-EJEMPLO' y borra los
 // anteriores con esa marca antes de insertar, así se puede re-ejecutar.
+//
+// Semántica T0: cada pedido copia el snapshot de ENTREGA con coordenadas de la
+// Dirección real del cliente (latitud/longitud), como hace la app al pedir.
+// Coherencia con cobertura: los pedidos de Oeste entregan en la dirección
+// "Casa" (AV GDOR VERGARA 1593, a 1,6 km de Oeste y 2,7 km de Vergara) y los
+// de Palermo en "Trabajo" (Av. Santa Fe 3700, a 588 m). Los estados con ETA
+// visible (confirmado, en_camino) llevan etaMinutos/etaCalculadoEn.
 
 const MARCA = 'SEED-EJEMPLO';
 const MIN = 60 * 1000;
@@ -24,29 +31,29 @@ async function buscarId(queryInterface, tabla, columna, valor) {
 }
 
 /**
- * Dirección activa del cliente, para usarla como snapshot de entrega.
+ * Dirección activa del cliente por alias, para usarla como snapshot de entrega.
  *
  * Los pedidos guardan una COPIA de la dirección en el momento del pedido
  * (columnas sueltas en `Pedidos`), no una referencia a `Direcciones`. Por eso
- * los pedidos sin dirección propia usan la que tiene el cliente cargada, que es
- * lo que hace la app al elegir una dirección en el carrito.
+ * los pedidos usan las que tiene el cliente cargadas, que es lo que hace la app
+ * al elegir una dirección en el carrito. Incluye latitud/longitud (T0).
  *
  * Ojo con los nombres: `Direcciones` tiene `provincia`/`localidad` y el snapshot
  * tiene `ciudad`. Se mapea `localidad` -> `ciudad`, igual que `payloadBackend` en
  * el frontend.
  */
-async function buscarDireccionCliente(queryInterface, usuarioId) {
+async function buscarDireccionCliente(queryInterface, usuarioId, alias) {
   const [filas] = await queryInterface.sequelize.query(
-    `SELECT "calle", "altura", "localidad", "codigoPostal", "referencia"
+    `SELECT "calle", "altura", "localidad", "codigoPostal", "referencia",
+            "latitud", "longitud"
        FROM "Direcciones"
-      WHERE "usuarioId" = :usuarioId AND "activa" = TRUE
-      ORDER BY id ASC
+      WHERE "usuarioId" = :usuarioId AND "activa" = TRUE AND "alias" = :alias
       LIMIT 1`,
-    { replacements: { usuarioId } }
+    { replacements: { usuarioId, alias } }
   );
   if (!filas.length) {
     throw new Error(
-      'Seeder de pedidos: el cliente no tiene ninguna dirección activa. ' +
+      `Seeder de pedidos: el cliente no tiene la dirección "${alias}". ` +
         'Ejecutar antes 20260915000002-direccion-cliente-demo.'
     );
   }
@@ -57,6 +64,8 @@ async function buscarDireccionCliente(queryInterface, usuarioId) {
     ciudad: d.localidad,
     codigoPostal: d.codigoPostal,
     referencia: d.referencia,
+    latitud: d.latitud,
+    longitud: d.longitud,
   };
 }
 
@@ -83,11 +92,13 @@ async function crearPedido(queryInterface, datos) {
     `INSERT INTO "Pedidos"
        ("usuarioId","sucursalId","fechaHora","estadoId","costoEnvio","total",
         "medioPago","observacion","calle","altura","ciudad","codigoPostal",
-        "referencia","createdAt","updatedAt")
+        "referencia","latitud","longitud","etaMinutos","etaCalculadoEn",
+        "horaEstimadaLlegada","createdAt","updatedAt")
      VALUES
        (:usuarioId,:sucursalId,:fechaHora,:estadoId,:costoEnvio,:total,
         :medioPago,:observacion,:calle,:altura,:ciudad,:codigoPostal,
-        :referencia,NOW(),NOW())
+        :referencia,:latitud,:longitud,:etaMinutos,:etaCalculadoEn,
+        :horaEstimadaLlegada,NOW(),NOW())
      RETURNING id`,
     {
       replacements: {
@@ -104,6 +115,11 @@ async function crearPedido(queryInterface, datos) {
         ciudad: datos.ciudad || null,
         codigoPostal: datos.codigoPostal || null,
         referencia: datos.referencia || null,
+        latitud: datos.latitud || null,
+        longitud: datos.longitud || null,
+        etaMinutos: datos.etaMinutos || null,
+        etaCalculadoEn: datos.etaCalculadoEn || null,
+        horaEstimadaLlegada: datos.horaEstimadaLlegada || null,
       },
     }
   );
@@ -171,9 +187,15 @@ module.exports = {
     });
 
     const ahora = Date.now();
-    const direccionCliente = await buscarDireccionCliente(
+    const casa = await buscarDireccionCliente(
       queryInterface,
-      usuarioId
+      usuarioId,
+      'Casa'
+    );
+    const trabajo = await buscarDireccionCliente(
+      queryInterface,
+      usuarioId,
+      'Trabajo'
     );
 
     // Recién ahora, con todo resuelto, se limpia la corrida anterior.
@@ -181,12 +203,14 @@ module.exports = {
 
     const pedidos = [
       {
-        // 1. Entregado con historial completo
+        // 1. Entregado con historial completo. Oeste entrega en "Casa"
+        //    (Vergara 1593, a 1,6 km por ruta).
         sucursalId: sucursal.oeste,
         estadoId: estado.entregado,
         fechaHora: new Date(ahora - 2 * 24 * 60 * MIN),
         costoEnvio: 0,
         medioPago: 'MERCADO_PAGO',
+        direccion: casa,
         items: [
           linea('Hamburguesa Clásica', 2),
           linea('Papas Fritas Grandes', 1),
@@ -204,12 +228,19 @@ module.exports = {
         })),
       },
       {
-        // 2. En camino
+        // 2. En camino (Palermo entrega en "Trabajo", Av. Santa Fe 3700, a
+        //    588 m). ETA visible: 30 de cocina + 1 de viaje ≈ 31 min,
+        //    calculado al pasar a en_camino (hace 35 min). La hora absoluta de
+        //    llegada queda ~35 min después del en_camino.
         sucursalId: sucursal.palermo,
         estadoId: estado.en_camino,
         fechaHora: new Date(ahora - 5 * 60 * MIN),
         costoEnvio: 500,
         medioPago: 'TARJETA',
+        direccion: trabajo,
+        etaMinutos: 31,
+        etaCalculadoEn: new Date(ahora - 35 * MIN),
+        horaEstimadaLlegada: new Date(ahora - 35 * MIN + 5 * MIN),
         items: [linea('Pizza Muzzarella', 1)],
         historial: [
           'pendiente',
@@ -223,29 +254,29 @@ module.exports = {
         })),
       },
       {
-        // 3. Pendiente con dirección propia: el snapshot es una COPIA, así que
-        //    un pedido viejo puede tener una dirección que el cliente ya no usa
-        //    (p. ej. la casa anterior). Por eso este NO usa la del cliente.
+        // 3. Pendiente en Oeste hacia "Casa": es el pedido listo para probar
+        //    la reasignación manual o automática hacia Sucursal Vergara
+        //    (2,7 km, también en cobertura).
         sucursalId: sucursal.oeste,
         estadoId: estado.pendiente,
         fechaHora: new Date(ahora - 30 * MIN),
         costoEnvio: 500,
         medioPago: null,
-        calle: 'Av. Siempreviva',
-        altura: 1234,
-        ciudad: 'Capital Federal',
-        codigoPostal: '1406',
-        referencia: 'Casa verde',
+        direccion: casa,
         items: [linea('Combo Doble', 1)],
         historial: [{ estado: 'pendiente', minutos: 0 }],
       },
       {
-        // 4. Confirmado
+        // 4. Confirmado en Palermo hacia "Trabajo". ETA visible desde la
+        //    confirmación (hace 5 min).
         sucursalId: sucursal.palermo,
         estadoId: estado.confirmado,
         fechaHora: new Date(ahora - 60 * MIN),
         costoEnvio: 0,
         medioPago: null,
+        direccion: trabajo,
+        etaMinutos: 31,
+        etaCalculadoEn: new Date(ahora - 55 * MIN),
         items: [linea('Pizza Muzzarella', 1), linea('Papas Fritas Grandes', 2)],
         historial: [
           { estado: 'pendiente', minutos: 0 },
@@ -264,12 +295,16 @@ module.exports = {
         costoEnvio: pedido.costoEnvio,
         total: totalItems + pedido.costoEnvio,
         medioPago: pedido.medioPago,
-        // `??` y no `||`: un pedido con dirección propia la gana siempre.
-        calle: pedido.calle ?? direccionCliente.calle,
-        altura: pedido.altura ?? direccionCliente.altura,
-        ciudad: pedido.ciudad ?? direccionCliente.ciudad,
-        codigoPostal: pedido.codigoPostal ?? direccionCliente.codigoPostal,
-        referencia: pedido.referencia ?? direccionCliente.referencia,
+        calle: pedido.direccion.calle,
+        altura: pedido.direccion.altura,
+        ciudad: pedido.direccion.ciudad,
+        codigoPostal: pedido.direccion.codigoPostal,
+        referencia: pedido.direccion.referencia,
+        latitud: pedido.direccion.latitud,
+        longitud: pedido.direccion.longitud,
+        etaMinutos: pedido.etaMinutos,
+        etaCalculadoEn: pedido.etaCalculadoEn,
+        horaEstimadaLlegada: pedido.horaEstimadaLlegada,
       });
       await queryInterface.bulkInsert(
         'PedidoItems',
