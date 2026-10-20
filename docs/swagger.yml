@@ -57,8 +57,13 @@ tags:
     description: Usuarios (lectura para admin y superadmin; alta/edición solo superadmin)
   - name: Superadmin
     description: >-
-      Panel del SUPERADMINISTRADOR: métricas agregadas de todo el negocio
-      (pedidos, ventas por sucursal, serie de 30 días y operación)
+      Panel del SUPERADMINISTRADOR: m\u00e9tricas agregadas de todo el negocio
+      (pedidos, ventas por sucursal, serie de 30 d\u00edas y operaci\u00f3n)
+  - name: Reportes
+    description: >-
+      Reportes agregados del negocio por per\u00edodo. La venta/facturaci\u00f3n se
+      calcula solo con pedidos entregados. El ADMINISTRADOR ve su sucursal; el
+      SUPERADMINISTRADOR ve todo o filtra por sucursal.
   - name: Parametros
     description: >-
       Parámetros de negocio (envío, cobertura, carrito, pedido y promociones).
@@ -263,12 +268,12 @@ components:
               description: Todos los pedidos, cualquier estado
             vendidos:
               type: integer
-              description: Pedidos sin contar pendientes ni cancelados
+              description: Pedidos entregados (unico estado que cuenta como venta)
             pendientes:
               type: integer
             ingresos:
               type: number
-              description: Suma de total de los pedidos vendidos
+              description: Suma de total de los pedidos entregados
         porEstado:
           type: array
           items:
@@ -281,7 +286,7 @@ components:
                 type: integer
               ingresos:
                 type: number
-                description: 0 para pendiente/cancelado
+                description: Solo suma en el estado entregado; 0 en el resto
         porSucursal:
           type: array
           description: Solo sucursales activas; las sin ventas van en 0
@@ -329,6 +334,295 @@ components:
             administradores:
               type: integer
 
+    ReporteNegocio:
+      type: object
+      description: >-
+        Reporte agregado de un per\u00edodo. `resumen`, `porEstado`, `porSucursal`,
+        `productos`, `promociones` y `clientes` consideran solo pedidos
+        entregados para venta/facturaci\u00f3n. Fechas y horas se calculan en
+        America/Argentina/Buenos_Aires.
+      properties:
+        periodo:
+          type: object
+          properties:
+            desde:
+              type: string
+              format: date
+            hasta:
+              type: string
+              format: date
+            sucursalId:
+              type: integer
+              nullable: true
+              description: null cuando el alcance es global
+            sucursal:
+              type: string
+              nullable: true
+        resumen:
+          type: object
+          properties:
+            pedidos:
+              type: integer
+              description: Todos los pedidos del per\u00edodo, cualquier estado
+            entregados:
+              type: integer
+            facturacion:
+              type: number
+              description: Suma de total de los pedidos entregados
+            ticketPromedio:
+              type: number
+            anterior:
+              type: object
+              description: Mismo per\u00edodo inmediatamente anterior
+              properties:
+                desde:
+                  type: string
+                  format: date
+                hasta:
+                  type: string
+                  format: date
+                pedidos:
+                  type: integer
+                entregados:
+                  type: integer
+                facturacion:
+                  type: number
+                ticketPromedio:
+                  type: number
+                variacionFacturacion:
+                  type: number
+                  nullable: true
+                  description: Porcentaje; null si el per\u00edodo anterior no factur\u00f3
+                variacionPedidos:
+                  type: number
+                  nullable: true
+        porDia:
+          type: array
+          description: Un elemento por d\u00eda del per\u00edodo, incluidos los d\u00edas sin pedidos
+          items:
+            type: object
+            properties:
+              dia:
+                type: string
+                format: date
+              pedidos:
+                type: integer
+              entregados:
+                type: integer
+              facturacion:
+                type: number
+        porEstado:
+          type: array
+          description: Todos los estados configurados, ordenados por `orden`
+          items:
+            type: object
+            properties:
+              estado:
+                type: string
+              cantidad:
+                type: integer
+              importe:
+                type: number
+                description: Solo suma en entregado
+        porSucursal:
+          type: array
+          description: Sucursales activas (o la filtrada); las sin pedidos van en 0
+          items:
+            type: object
+            properties:
+              sucursalId:
+                type: integer
+              sucursal:
+                type: string
+              pedidos:
+                type: integer
+              entregados:
+                type: integer
+              facturacion:
+                type: number
+              cancelados:
+                type: integer
+        productos:
+          type: object
+          properties:
+            masVendidos:
+              type: array
+              description: Top 10 por unidades
+              items:
+                $ref: '#/components/schemas/ProductoReporte'
+            mayorFacturacion:
+              type: array
+              description: Top 10 por facturaci\u00f3n
+              items:
+                $ref: '#/components/schemas/ProductoReporte'
+            menosVendido:
+              description: Producto con menos unidades vendidas (null si no hubo ventas)
+              nullable: true
+              allOf:
+                - $ref: '#/components/schemas/ProductoReporte'
+        stock:
+          type: object
+          properties:
+            umbralCritico:
+              type: integer
+              nullable: true
+              description: null si `stockCriticoUmbral` es 0 (desactivado)
+            sinStock:
+              type: array
+              items:
+                $ref: '#/components/schemas/StockReporte'
+            critico:
+              type: array
+              description: Solo si el umbral est\u00e1 activo (cantidad <= umbral)
+              items:
+                $ref: '#/components/schemas/StockReporte'
+        franjaHoraria:
+          type: array
+          description: 24 franjas horarias (0-23) en hora del negocio
+          items:
+            type: object
+            properties:
+              hora:
+                type: integer
+              pedidos:
+                type: integer
+        porDiaSemana:
+          type: array
+          description: 7 d\u00edas (0=domingo) en hora del negocio
+          items:
+            type: object
+            properties:
+              dia:
+                type: integer
+              nombre:
+                type: string
+              pedidos:
+                type: integer
+        cancelaciones:
+          type: object
+          properties:
+            cantidad:
+              type: integer
+            porcentaje:
+              type: number
+              description: Sobre el total de pedidos del per\u00edodo
+            pedidosTotales:
+              type: integer
+            porSucursal:
+              type: array
+              items:
+                type: object
+                properties:
+                  sucursalId:
+                    type: integer
+                  sucursal:
+                    type: string
+                  cantidad:
+                    type: integer
+                  pedidos:
+                    type: integer
+                  porcentaje:
+                    type: number
+            porDia:
+              type: array
+              items:
+                type: object
+                properties:
+                  dia:
+                    type: string
+                    format: date
+                  cantidad:
+                    type: integer
+        promociones:
+          type: object
+          properties:
+            pedidosConPromocion:
+              type: integer
+              description: Pedidos entregados distintos que usaron al menos una promo
+            facturacionConPromocion:
+              type: number
+            descuentoTotal:
+              type: number
+            porPromocion:
+              type: array
+              items:
+                type: object
+                properties:
+                  promocionId:
+                    type: integer
+                  nombre:
+                    type: string
+                  pedidos:
+                    type: integer
+                  descuento:
+                    type: number
+                  facturacion:
+                    type: number
+        clientes:
+          type: object
+          properties:
+            nuevos:
+              type: integer
+              description: Usuarios CLIENTE creados en el per\u00edodo
+            conPedidos:
+              type: integer
+              description: Clientes distintos con pedidos entregados
+            recurrentes:
+              type: integer
+              description: Clientes con 2 o m\u00e1s pedidos entregados
+            ticketPromedio:
+              type: number
+            top:
+              type: array
+              description: Top 10 clientes por facturaci\u00f3n
+              items:
+                type: object
+                properties:
+                  usuarioId:
+                    type: integer
+                  nombre:
+                    type: string
+                  email:
+                    type: string
+                    nullable: true
+                  pedidos:
+                    type: integer
+                  facturacion:
+                    type: number
+
+    ProductoReporte:
+      type: object
+      properties:
+        productoId:
+          type: integer
+        nombre:
+          type: string
+        categoria:
+          type: string
+          nullable: true
+        unidades:
+          type: integer
+        facturacion:
+          type: number
+
+    StockReporte:
+      type: object
+      properties:
+        sucursalId:
+          type: integer
+        sucursal:
+          type: string
+          nullable: true
+        productoId:
+          type: integer
+        producto:
+          type: string
+          nullable: true
+        cantidad:
+          type: integer
+        disponible:
+          type: boolean
+
     Parametro:
       type: object
       description: >-
@@ -361,6 +655,7 @@ components:
             - catalogo
             - pedido
             - promociones
+            - stock
         unidad:
           type: string
           example: $
@@ -1979,6 +2274,83 @@ paths:
                 properties:
                   message:
                     type: string
+
+  /reportes:
+    get:
+      tags:
+        - Reportes
+      summary: Reportes agregados del negocio
+      description: >-
+        Solo ADMINISTRADOR y SUPERADMINISTRADOR. Sin `desde`/`hasta` usa los
+        ultimos 30 dias (incluyendo hoy). La venta/facturacion se calcula solo
+        con pedidos entregados y el importe es `Pedido.total`. Un ADMINISTRADOR
+        queda acotado a su sucursal (ignora `sucursalId`); sin sucursal
+        asignada recibe 403. El SUPERADMINISTRADOR ve todo o filtra por
+        `sucursalId`.
+      operationId: reportesIndex
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: desde
+          in: query
+          required: false
+          description: Fecha inicial inclusive (YYYY-MM-DD). Debe enviarse junto con `hasta`.
+          schema:
+            type: string
+            format: date
+        - name: hasta
+          in: query
+          required: false
+          description: Fecha final inclusive (YYYY-MM-DD). Debe enviarse junto con `desde`.
+          schema:
+            type: string
+            format: date
+        - name: sucursalId
+          in: query
+          required: false
+          description: >-
+            Solo SUPERADMINISTRADOR. Filtra el reporte a una sucursal. Si no se
+            envia, el alcance es global. El ADMINISTRADOR no puede usarlo.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Reporte agregado del periodo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/ReporteNegocio'
+        '400':
+          description: Periodo o sucursalId invalido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol no permitido o administrador sin sucursal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: La sucursal filtrada no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
 
   /superadmin/resumen:
     get:

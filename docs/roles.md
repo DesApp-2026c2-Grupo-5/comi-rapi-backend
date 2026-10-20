@@ -58,6 +58,7 @@ Fuente: `lib/routes/*.js`.
 | `GET /api/usuarios(/:id)` y `GET /api/usuarios/:id/mas-comprados` (listar/ver) | —                   | —               | ✔ (solo CLIENTE con ≥1 pedido en su sucursal; el ranking acota a su sucursal) | ✔ (todos los usuarios registrados; el ranking suma todas las sucursales) |
 | `POST /api/usuarios`, `PUT /api/usuarios/:id` (crear/editar)                   | —                   | —               | —                                                                             | ✔                                                                        |
 | `GET /api/superadmin/resumen`                                                  | —                   | —               | —                                                                             | ✔                                                                        |
+| `GET /api/reportes`                                                            | —                   | —               | ✔ (solo su sucursal; sin sucursal 403)                                        | ✔ (global o filtrado por `sucursalId`)                                   |
 
 Nota: el `SUPERADMINISTRADOR` **no** opera pedidos individuales ni stock por API; su panel se apoya en agregados globales calculados en base de datos (`COUNT`/`SUM`/`GROUP BY`) y, para el detalle de un cliente, consulta en lectura sus pedidos y direcciones. El catálogo sí lo edita él por API: es único y corporativo, y el admin solo controla su disponibilidad por sucursal desde el stock. La personalización (ingredientes y recetas) es hoy mock de frontend, sin endpoint propio.
 
@@ -77,10 +78,12 @@ Nota: el `SUPERADMINISTRADOR` **no** opera pedidos individuales ni stock por API
 - **Sin sucursal asignada queda bloqueado** para operar recursos acotados (`requiereSucursal`), y nunca accede a sucursales ajenas (`acotarASucursalPropia`).
 - Lista usuarios a través de `/api/usuarios` (panel de clientes): ve solo los `CLIENTE` que hicieron al menos un pedido en su sucursal; el detalle de un usuario sigue la misma regla. El ranking de productos y categorías más comprados de ese detalle también acota las unidades a los pedidos de su sucursal (los cancelados no suman).
 - No administra sucursales: el CRUD es del SUPERADMINISTRADOR.
+- Consulta reportes de su sucursal (`GET /api/reportes`) desde su dashboard, sin poder filtrar por otra sucursal. Sin sucursal asignada recibe 403.
 
 ### SUPERADMINISTRADOR
 
 - Ve el resumen agregado del negocio con filtros (`GET /api/superadmin/resumen`): totales, por sucursal, por estado, serie de 30 días, por operación.
+- Consulta reportes globales o filtrados por sucursal (`GET /api/reportes`) desde `/superadmin/panel`. La venta/facturación considera solo pedidos entregados.
 - Gestiona usuarios administrativos: crea y edita `ADMINISTRADOR` (con sucursal asignada) y `SUPERADMINISTRADOR`. El panel no crea ni edita clientes.
 - En su panel de clientes ve el mismo detalle que el admin: direcciones (con cobertura), últimos pedidos y el ranking de productos y categorías más comprados de cualquier CLIENTE, en solo lectura. A diferencia del admin, el ranking suma los pedidos de todas las sucursales.
 - Ve todos los usuarios registrados a través de `GET /api/usuarios` (sin la acotación por sucursal del admin), con filtros por `rol` y `buscar`. El panel de Clientes filtra `rol=CLIENTE`.
@@ -123,18 +126,19 @@ Una vez existente el primer superadmin, se pueden crear más `SUPERADMINISTRADOR
 
 ### Rutas protegidas por rol (`src/routes/AppRoutes.jsx`)
 
-- Grupo `requiredRole="CLIENTE"`, grupo `requiredRole="ADMINISTRADOR"` (dashboard, pedidos, stock, clientes y el catálogo en solo lectura: `/admin/productos`, `/admin/categorias`, `/admin/promociones`) y grupo `requiredRole="SUPERADMINISTRADOR"` (`/superadmin/panel`, `/superadmin/administradores`, `/superadmin/sucursales`, `/superadmin/sucursal/nuevo`, `/superadmin/sucursal/editar/:id` y el CRUD del catálogo: `/superadmin/productos`(+`/producto/{nuevo,nuevo-combo,editar/:id}`), `/superadmin/categorias`(+`/categoria/{nuevo,editar/:id}`), `/superadmin/personalizacion`(+`/nuevo`, `/editar/:id`) y `/superadmin/promociones`(+`/promocion/{nuevo,editar/:id}`)).
+- Grupo `requiredRole="CLIENTE"`, grupo `requiredRole="ADMINISTRADOR"` (dashboard con reportes, pedidos, stock, clientes y el catálogo en solo lectura: `/admin/productos`, `/admin/categorias`, `/admin/promociones`) y grupo `requiredRole="SUPERADMINISTRADOR"` (`/superadmin/panel` con reportes, `/superadmin/administradores`, `/superadmin/sucursales`, `/superadmin/sucursal/nuevo`, `/superadmin/sucursal/editar/:id` y el CRUD del catálogo: `/superadmin/productos`(+`/producto/{nuevo,nuevo-combo,editar/:id}`), `/superadmin/categorias`(+`/categoria/{nuevo,editar/:id}`), `/superadmin/personalizacion`(+`/nuevo`, `/editar/:id`) y `/superadmin/promociones`(+`/promocion/{nuevo,editar/:id}`)). `/admin/reportes` y `/superadmin/reportes` quedan como alias de las mismas pantallas.
 - Roles definidos en `ROLES` (`CLIENTE`, `ADMIN`, `SUPERADMIN`) en `src/constants.js` y `AuthContext` expone `isAdmin`, `isSuperadmin`, `isCliente`.
 
 ### Navegación por rol
 
 - `Navbar.jsx`: menú distinto según rol (`menuCliente`, `menuAdmin`, `menuSuperadmin` — Panel, Administradores, Clientes, Catálogo y Sucursales). El admin conserva el desplegable "Catálogo" (listados en SOLO LECTURA con disponibilidad por sucursal en Productos) y no tiene "Sucursales": queda con Dashboard, Pedidos, Catálogo, Stock y Clientes.
-- `NavInferior.jsx` / `useMuestraNavInferior.js`: la barra inferior se muestra para CLIENTE, ADMIN y SUPERADMIN. El admin lleva Inicio, Pedidos, Catálogo (hoja en solo lectura) y Stock; el superadmin Panel, Administradores, Clientes, la hoja "Catálogo" (abre los CRUD) y Sucursales.
+- `NavInferior.jsx` / `useMuestraNavInferior.js`: la barra inferior se muestra para CLIENTE, ADMIN y SUPERADMIN. El admin lleva Inicio, Pedidos, Catálogo (hoja en solo lectura), Stock y Clientes; el superadmin Panel, Administradores, Clientes, la hoja "Catálogo" (abre los CRUD) y Sucursales.
 - `rutas.js` (`esRutaDeAdmin`): rutas bajo `/admin` **y** `/superadmin` no muestran el footer de cliente.
 
 ### Panel SUPERADMIN
 
-- `/superadmin/panel` → `components/superadmin/PanelSuperadmin.jsx`: tarjetas (total, vendidos, pendientes, ingresos), tablas por sucursal, por estado, serie de 30 días y por operación.
+- `/superadmin/panel` y `/admin/dashboard` → `components/reportes/ReporteNegocio.jsx`: pantalla compartida de reportes con presets y rango de fechas, KPIs con variación, evolución de facturación, franja horaria, día de la semana, sucursales, productos (incluido el menos vendido), cancelaciones y promociones. El superadmin puede filtrar por sucursal y ve la cantidad de clientes nuevos del período (sin listarlos); el admin queda acotado a su sucursal y ve además los productos sin stock. No se muestran pedidos por estado.
+- `/superadmin/reportes` y `/admin/reportes` quedan como alias de las mismas pantallas.
 - `/superadmin/administradores` → `components/superadmin/GestionAdministradores.jsx`: listado de ADMINISTRADOR y SUPERADMINISTRADOR, alta/edición con modal (selector de rol, sucursal para admin, toggle de activo).
 - `/superadmin/clientes` → `components/admin/ListaClientes.jsx` (prop `todos`): lista todos los CLIENTES registrados; `/superadmin/clientes/:id` → `pages/superadmin/DetalleCliente.jsx` (detalle de cliente como el del admin).
 - `/superadmin/sucursales` y `/superadmin/sucursal/{nuevo,editar/:id}` → `pages/superadmin/GestionSucursales.jsx` y `EditarSucursal.jsx` (movidas desde el panel admin): CRUD completo de sucursales.
@@ -163,6 +167,6 @@ Más detalle en `docs/webSocketContext.md`.
 | Ver pedidos (detalle)                                               | ✔ (propios) | ✔ (sucursal)  | ✔ (visión global)                            |
 | Ver detalle de un cliente (datos, direcciones, últimos pedidos)     | —           | ✔             | ✔                                            |
 | CRUD de sucursales                                                  | —           | —             | ✔                                            |
-| Resumen global / métricas                                           | —           | —             | ✔                                            |
+| Reportes / métricas (dashboard y panel)                             | —           | ✔ (sucursal)  | ✔ (global o filtrado)                        |
 | Crear/editar usuarios                                               | —           | —             | ✔ (ADMIN y SUPERADMIN; CLIENTE solo por API) |
 | Crear SUPERADMINISTRADOR                                            | —           | —             | ✔ (panel o API; el primero por script)       |

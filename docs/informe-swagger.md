@@ -8,7 +8,7 @@
 
 La especificación documenta la API de **comi-rapi-backend**:
 
-- **31 paths** / 56 schemas.
+- **32 paths** / 59 schemas.
 - **Server base:** `http://localhost:3000/api`.
 - **UI interactiva:** `GET /api/docs` (Swagger UI vía `swagger-ui-express`).
 - **Seguridad:** dos esquemas montados en cascada (`allOf`):
@@ -22,6 +22,7 @@ La especificación documenta la API de **comi-rapi-backend**:
 | Salud       | `GET /health`                                                                   |
 | Auth        | `/auth/csrf-token`, `/auth/registro`, `/auth/login`, `/auth/logout`, `/auth/me` |
 | Usuarios    | `/usuarios`, `/usuarios/{id}`, `/usuarios/{id}/mas-comprados`                   |
+| Reportes    | `/reportes`                                                                     |
 | Categorías  | `/categorias`, `/categorias/{id}`                                               |
 | Productos   | `/productos`, `/productos/{id}`                                                 |
 | Pedidos     | `/pedidos`, `/pedidos/{id}`, `/pedidos/{id}/estado`                             |
@@ -55,6 +56,7 @@ Con la sesión de `admin@test.com` activa se puede:
 - **Administrar usuarios:** `GET /usuarios`, `GET /usuarios/{id}` y `GET /usuarios/{id}/mas-comprados` (ranking acotado a su sucursal).
 - **Subir imágenes:** `POST /imagenes/upload` y `POST /imagenes/upload/categoria` (multipart, campo `imagen`, JPG/PNG/WEBP, máx. 5 MB).
 - **Pedidos:** ver todos con `GET /pedidos` (opcional `?sucursalId=`), ver uno con `GET /pedidos/{id}`, y **avanzar el estado** con `PATCH /pedidos/{id}/estado`: `confirmado → en_preparacion → listo_para_entregar → en_camino → entregado`.
+- **Reportes:** `GET /reportes` con `?desde=YYYY-MM-DD&hasta=YYYY-MM-DD` (sin fechas, últimos 30 días). Un administrador ve solo su sucursal.
 
 Ejemplo de avance de pedido:
 
