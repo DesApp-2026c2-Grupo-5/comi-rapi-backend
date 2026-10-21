@@ -143,7 +143,7 @@ Una vez existente el primer superadmin, se pueden crear más `SUPERADMINISTRADOR
 ### Navegación por rol
 
 - `Navbar.jsx`: menú distinto según rol (`menuCliente`, `menuAdmin`, `menuSuperadmin` — Panel, Administradores, Clientes, Catálogo y Sucursales). El admin conserva el desplegable "Catálogo" (listados en SOLO LECTURA con disponibilidad por sucursal en Productos) y no tiene "Sucursales": queda con Dashboard, Pedidos, Catálogo, Stock y Clientes. El superadmin, con contexto elegido, suma "Pedidos (sucursal)" y "Stock (sucursal)" y ve el **selector de sucursal de contexto** (solo activas; "Dejar de operar" limpia el contexto) junto al badge de sucursal.
-- `NavInferior.jsx` / `useMuestraNavInferior.js`: la barra inferior se muestra para CLIENTE, ADMIN y SUPERADMIN. El admin lleva Inicio, Pedidos, Catálogo (hoja en solo lectura), Stock y Clientes; el superadmin Panel, Administradores, Clientes, la hoja "Catálogo" (abre los CRUD) y Sucursales.
+- `NavInferior.jsx` / `useMuestraNavInferior.js`: la barra inferior se muestra para CLIENTE, ADMIN y SUPERADMIN. El admin lleva Inicio, Pedidos, Catálogo (hoja en solo lectura), Stock y Clientes; el superadmin Panel, **Sucursal** (hoja: elige su sucursal de contexto y entra a los pedidos/stock de esa sucursal — en pantalla chica el menú superior queda oculto), Administradores, la hoja "Catálogo" (abre los CRUD) y la hoja "Negocio" (parámetros, sucursales y clientes).
 - `rutas.js` (`esRutaDeAdmin`): rutas bajo `/admin` **y** `/superadmin` no muestran el footer de cliente.
 
 ### Panel SUPERADMIN

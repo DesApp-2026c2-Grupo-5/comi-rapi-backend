@@ -22,6 +22,8 @@ Con contexto, el superadmin avanza/cancela estados y opera el stock de esa sucur
 
 En el canal realtime, el handshake une al superadmin con contexto también a la room de esa sucursal: ve stock y pedidos de su contexto en vivo. Al cambiar el contexto, el frontend reconecta el socket (las rooms se resuelven al conectar).
 
+En pantallas chicas el menú superior queda oculto por el colapsable (no hay hamburguesa: la barra inferior lo reemplaza), así que la barra inferior del superadmin suma la hoja **"Sucursal"**: desde ahí elige la sucursal de contexto (solo activas, con la actual marcada), entra a los pedidos y al stock de esa sucursal y puede dejar de operar. El selector del navbar superior adopta el estilo de la píldora crema del badge de sucursal del admin (el `variant="warning"` de Bootstrap se perdía sobre el naranja de la barra).
+
 De paso se corrigió un bug preexistente: el superadmin (dueño del CRUD y de las bajas lógicas) no podía listar ni ver sus sucursales inactivas (`?activa=false` y `show` eran exclusivos del rol ADMIN).
 
 ### Las sugerencias de direcciones ya no ofrecen zonas sin sucursales
@@ -44,7 +46,6 @@ Distinción preservada: esto es solo el criterio "hay sucursal activa en la zona
 
 ## 3. Limitaciones conocidas
 
-1. **Barra inferior móvil**: el selector de contexto vive en el Navbar superior; la barra inferior del superadmin no suma accesos operativos (el panel es utilizable vía el menú superior también en móvil).
-2. **Suite realtime end-to-end** (`test/tiempo-real/protocolo.js` y el script Playwright del frontend): preexistente, depende del backend levantado y de ORS real sin mockear; su contrato de rooms quedó cubierto por el caso 8 de `conexion.test.js` y la cadena completa por el e2e contra el backend real. Queda como verificación manual opcional antes del merge.
-3. **Contexto vencido**: si una sucursal se desactiva con el contexto ya elegido, la sesión lo conserva (paridad con el admin de una sucursal desactivada, situación preexistente); el selector solo ofrece activas y al cambiar el contexto se valida la activa.
-4. **Lint del frontend**: viene rojo en `dev` (errores `no-unused-vars` de `React` en ~40 archivos preexistentes, p. ej. `Loader.jsx`); los archivos nuevos siguen la convención del código existente y los archivos tocados no suman errores nuevos.
+1. **Suite realtime end-to-end** (`test/tiempo-real/protocolo.js` y el script Playwright del frontend): preexistente, depende del backend levantado y de ORS real sin mockear; su contrato de rooms quedó cubierto por el caso 8 de `conexion.test.js` y la cadena completa por el e2e contra el backend real. Queda como verificación manual opcional antes del merge.
+2. **Contexto vencido**: si una sucursal se desactiva con el contexto ya elegido, la sesión lo conserva (paridad con el admin de una sucursal desactivada, situación preexistente); el selector solo ofrece activas y al cambiar el contexto se valida la activa.
+3. **Lint del frontend**: viene rojo en `dev` (errores `no-unused-vars` de `React` en ~40 archivos preexistentes, p. ej. `Loader.jsx`); los archivos nuevos siguen la convención del código existente y los archivos tocados no suman errores nuevos.
