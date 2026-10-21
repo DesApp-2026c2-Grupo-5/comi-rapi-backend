@@ -73,8 +73,7 @@ const parametros = [
   {
     clave: 'cantidadMaximaPromocionesAplicables',
     valor: '3',
-    descripcion:
-      'Máximo de promociones que se pueden aplicar sobre un pedido. Reservado: el motor actual aplica automáticamente el mejor descuento por línea, sin acumular.',
+    descripcion: 'Máximo de promociones que se pueden aplicar sobre un pedido.',
   },
 ];
 
