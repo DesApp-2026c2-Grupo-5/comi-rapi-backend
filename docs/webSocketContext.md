@@ -75,11 +75,13 @@ Flujo:
 
 ## 5. Rooms y autorización
 
-| Room            | Quién entra                                                                            |
-| --------------- | -------------------------------------------------------------------------------------- |
-| `admins`        | Automática al conectar, solo si `usuario.rol === 'SUPERADMINISTRADOR'`                 |
-| `sucursal:{id}` | Automática al conectar, solo si `usuario.rol === 'ADMINISTRADOR'` y tiene `sucursalId` |
-| `pedido:{id}`   | Solo por suscripción explícita **y** autorización verificada en backend                |
+| Room            | Quién entra                                                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `admins`        | Automática al conectar, solo si `usuario.rol === 'SUPERADMINISTRADOR'`                                                                |
+| `sucursal:{id}` | Automática al conectar si `usuario.rol === 'ADMINISTRADOR'` con `sucursalId`, o `SUPERADMINISTRADOR` con contexto de sucursal elegido |
+| `pedido:{id}`   | Solo por suscripción explícita **y** autorización verificada en backend                                                               |
+
+El contexto del superadmin se lee de la **sesión** durante el handshake (`session.sucursalOperativaId`, elegido vía `POST /api/auth/sucursal-contexto`): con contexto, el superadmin entra también a la room de esa sucursal y recibe en vivo `stock_actualizado` y `pedido_actualizado` de su contexto, igual que el admin del local. Como las rooms se resuelven al conectar, **al cambiar el contexto el frontend reconecta el socket** (`desconectarSocket` + reconexión con `versionSocket` en `SucursalOperativaContext`): el handshake nuevo entra a la room de la sucursal nueva.
 
 Un cliente **no** puede suscribirse a un pedido ajeno. La autorización se aplica en servidor, en `autorizarPedido` (`lib/realtime/conexion.js`), y aplica la misma regla que ya usa `GET /api/pedidos/:id` (`lib/controllers/pedido_controller.js`):
 
