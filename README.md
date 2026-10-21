@@ -1,162 +1,50 @@
-# Repositorio semilla: API NodeJS :seedling:
+# Comi-Rapi — Backend
 
-> Este repositorio es un fork de [otro que está en la organización surprograma](https://github.com/surprograma/nodejs-api-seed).  
-> El original es uno de los repositorios que se usan en la serie de videos **Tu primera aplicación full stack: NodeJS + React**, [disponible en YouTube](https://www.youtube.com/playlist?list=PL7q-McYJyHlgVGQIRYVKl381twyJ4XM_h).  
-> Mirar estos videos es una muy buena forma de entender un poco más sobre las tecnologías que van a usarse. :smiley:
->
-> A continuación, transcribimos los comentarios del repo de surprograma.
-> En el medio, incluimos algunas aclaraciones que (creo) pueden venir bien en el contexto de la materia.
+API de Comi-Rapi, una aplicación de delivery de comida con tres roles: cliente, administrador de sucursal y superadministrador. Expone el catálogo, los pedidos, el stock, las sucursales, los reportes y el canal de tiempo real que usa el frontend.
 
-¡Bienvenida/o! En este repositorio encontrarás una plantilla (de las infinitas posibles) para crear una API utilizando NodeJS. Las principales tecnologías que utilizamos son:
+## Tecnologías
 
-- [NodeJS](https://nodejs.org/es/): entorno de ejecución para JavaScript.
-- [ExpressJS](https://expressjs.com/): framework para crear aplicaciones web.
-- [Sequelize](https://sequelize.org/master/): ORM (object-relational mapping) para interactuar con una base SQL desde objetos JavaScript.
-- [PostgreSQL](https://www.postgresql.org/): base de datos SQL.
-- [Jest](https://jestjs.io/): framework para escribir tests.
+- Node.js 14
+- Express
+- Sequelize
+- PostgreSQL
+- Socket.IO
+- Express Session y CSRF
+- Argon2
+- Multer
+- Nodemailer
+- Swagger
+- Jest y Supertest
 
-Para crear un proyecto siguiendo esta plantilla, lo único que tenés que hacer es clickear en el botón que dice `Use this template`. ¡Y no te olvides de cambiarle el nombre en el `package.json`!
+## Instalación
 
-## :point_up: Prerrequisitos - para instalar antes de empezar
-
-Vas a necesitar un IDE o al menos un editor de texto que coloree la sintaxis. Recomendamos utilizar [Visual Studio Code](https://code.visualstudio.com/) - que se lleva muy bien con proyectos JavaScript - enriquecido con los siguientes plugins:
-
-- [ESlint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
-- [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
-- [Test Explorer UI](https://marketplace.visualstudio.com/items?itemName=hbenl.vscode-test-explorer)
-- [Jest Test Explorer](https://marketplace.visualstudio.com/items?itemName=kavod-io.vscode-jest-test-adapter)
-
-Para ejecutar el código es necesario tener NodeJS en su versión 14 (`lts/fermium`). Para instalarlo recomendamos utilizar el manejador de versiones [`nvm`](https://github.com/nvm-sh/nvm), aunque también podés hacerlo manualmente siguiendo las instrucciones adecuadas para tu sistema operativo.
-
-> **Nota**  
-> `nvm` no está disponible para Windows. Yo que uso Windows, me instalé [nvm for Windows](https://github.com/coreybutler/nvm-windows) y me viene andando.
-
-Por último, se incluye un archivo de [Docker Compose](https://docs.docker.com/compose/) con todo lo necesario para instalar y configurar las bases de datos en PostgreSQL (una para desarrollo y otra para test). Si por algún motivo no querés usar Docker, vas a tener que instalar PostgreSQL y luego ejecutar el script `docker/init/crear-db.sh` en tu entorno.
-
-> **Nota**  
-> Si no manejan Docker, creo que les conviene arrancar sin "dockerizar".
-> Es cierto que tienen que instalarse PostgreSQL y crear las bases de desarrollo y test.  
-> Para eso se puede, o bien ejecutar el script que se indica arriba, o bien abrirlo y ejecutar las sentencias SQL que están ahí, desde alguna herramienta que les permita manejar bases de datos relacionales. Yo uso la versión community de DBeaver (https://dbeaver.io/) y no tengo quejas hasta ahora.
-
-## :ballot_box_with_check: Configuración inicial del proyecto
-
-Asumiendo que ya configuraste todos los prerrequisitos y que vas a utilizar Docker, estos son los comandos que deberías ejecutar la primera vez que trabajes en el proyecto:
+Requiere Node.js 14 y Docker Desktop en ejecución. Los repositorios `comi-rapi-backend` y `comi-rapi-fronted` tienen que quedar en carpetas hermanas, porque el backend guarda las imágenes en `../comi-rapi-fronted/public/imagenes`.
 
 ```shell
-# Instala, configura y levanta las bases de datos.
-# El flag -d (daemon) hace que la ejecución continue incluso luego de reiniciar la máquina.
-# 1. Levantar el contenedor limpio
-docker-compose up -d
-
-# 2. Copiar los archivos de entorno
-cp .env.example .env.development
-cp .env.example .env.test
-
-# 3. Instalar dependencias
 npm install
 
-# 4. Crear la base de test
-docker exec -it comi-rapi-backend-db-1 psql -U unahur_desapp -d unahur_desapp_dev -c "CREATE DATABASE unahur_desapp_test OWNER unahur_desapp;"
+docker compose up -d
 
-# 5. Ejecutar migraciones en dev y test
 npm run db:init
 NODE_ENV=test npm run db:init
-
-```
-
-De manera opcional, también podés cargar unos datos de prueba, llamados _seeders_, que vienen incluidos. A medida que el desarrollo continue, se podrían seguir agregando más datos que ayuden en las pruebas manuales. Para cargar los _seeders_, ejecutar el siguiente comando:
-
-```shell
-# (Opcional) Carga los datos de prueba en la base de desarrollo.
 npm run db:seed
+npm run crear:superadmin
+
+npm run dev
 ```
 
-> **Nota**  
-> Los seeders son un concepto ligado a Sequelize. Busquen a partir de "Creating the first Seed" en [esta página](https://sequelize.org/master/manual/migrations.html).
+`docker compose up -d` levanta PostgreSQL en el puerto 5432, con las bases de desarrollo y de pruebas, y Mailpit en el puerto 1025, con interfaz web en 8025.
 
-## :file_folder: Estructura de directorios
+La API queda disponible en `http://localhost:3000` y la documentación de los endpoints en `http://localhost:3000/api/docs`.
 
-Breve descripción de qué se puede encontrar en cada uno de los directorios del proyecto:
+## Servicios externos
 
-```shell
-.
-├── bin                 # Punto de entrada del servidor
-├── db
-│   ├── migrations      # Migraciones de la base de datos
-│   └── seeders         # Datos de prueba para la base de datos
-├── docker              # Configuración de Docker para desarrollo
-├── lib
-│   ├── config          # Configuración de la base de datos
-│   ├── controllers     # Acciones de nuestra aplicación
-│   ├── models          # Definición de modelos, atributos, etc
-│   └── routes          # Rutas de la API
-└── test                # Utilidades para escribir tests
+Para calcular la distancia entre la sucursal y el domicilio del cliente hace falta una clave gratuita de OpenRouteService. Se obtiene registrando una cuenta en [account.heigit.org/signup](https://account.heigit.org/signup) y copiando la API key del panel a un archivo `.env.local` en la raíz de este repositorio:
+
+```
+ORS_API_KEY=tu-clave
 ```
 
-## :woman_technologist: :man_technologist: Comandos útiles para el día a día
+Sin esa clave el cálculo de rutas responde 503 y el flujo de pedidos no arranca. Los demás servicios externos no necesitan nada: la geocodificación de direcciones usa la API pública de datos.gob.ar y el correo de recuperación se envía a Mailpit, que ya levanta Docker.
 
-A continuación, algunos comandos necesarios para el desarrollo diario en este proyecto.
-
-### Código
-
-```shell
-# Levanta el proyecto y recarga automáticamente si hay cambios.
-npm start
-
-# Ejecuta los tests una sola vez.
-npm test
-
-# Ejecuta los tests y se queda esperando por cambios.
-npm test:watch
-```
-
-### Base de datos
-
-Estos comandos se tienen que ejecutar en una consola ubicada en la carpeta raíz del proyecto.
-
-```shell
-# Ejecuta las migraciones.
-npm run db:init
-
-# Carga los datos de prueba.
-npm run db:seed
-
-# Crea una nueva migración llamada `add-descripcion-to-producto`.
-npx sequelize migration:generate --name add-descripcion-to-producto
-
-# Crea un nuevo seeder llamado `edificios`.
-npx sequelize seed:generate --name edificios
-
-# Deshace la última migración.
-npx sequelize db:migrate:undo
-```
-
-## Pruebas y colección Postman (geolocalización)
-
-La funcionalidad de direcciones y geolocalización (Georef + OpenRouteService) se prueba en tres niveles:
-
-1. **Suite automatizada**: `npm test` (Jest, `--runInBand`). No depende de APIs externas: Georef y ORS están mockeados. Los tests de coverage/integración usan la base `unahur_desapp_test` (debe tener las migraciones aplicadas).
-2. **Colección Postman** (`docs/postman/`): importá `comi-rapi-geo.postman_collection.json` y el entorno `geo-local.postman_environment.json` en Postman. Cubre el flujo completo por HTTP: catálogo territorial, preview (identidad + cobertura), alta/edición/baja de direcciones del cliente y alta de sucursales desde el admin, con los resultados esperados en cada caso. Prerequisitos: backend en `:3000` con migraciones y seeders aplicados, y `ORS_API_KEY` válida en `.env.local` (los casos de distancia la usan). Ejecutá las carpetas en orden (el CSRF se guarda solo en la primera).
-3. **Verificación manual del frontend** (`npm run dev` en ambos repos): cascada territorial, autocompletado, desambiguación, bloqueo por cobertura y confirmación. Checklist en `docs/informe-tarea7-postman-cierre.md`.
-
-Documentación de referencia: `docs/swagger.yml` (contratos), `docs/flujo-direcciones-geolocalizacion.md` (flujo completo) y `docs/informe-mejoras-detallado.md` (historial por iteración).
-
-Credenciales: la clave de ORS vive SOLO en `.env.local` (gitignored); los `.env` versionados la dejan vacía. Nunca commitear claves.
-
-## Acciones automáticas
-
-Este repositorio está configurado para hacer un formateo automático de código al grabar, y para formatear y pasar chequeos al commitear.
-
-Si algún grupo quisiera desactivar estas opciones, se hace así.
-
-### Formateo automático al grabar
-
-En el archivo `/vscode/settings.json` cambiar el valor de `editor.formatOnSave`.
-
-### Acciones al commitear
-
-Se configuran en el archivo `package.json`, en el atributo `husky`.
-Actualmente, este atributo hace referencia a otro atributo `lint-staged`.
-
-- Si se eliminan ambos elementos del `package.json`, no va a hacer ninguna acción previa a commitear.
-- Si se modifica `lint-staged`, se puede eliminar, o modificar la configuración, del chequeo (`eslint`) y/o el formateo (`prettier`) de código. Obviamente, para modificar las configuraciones, hay que mirar cómo en la documentación de [ESLint](https://eslint.org/) y/o [Prettier](https://prettier.io/).
+El detalle de cada servicio está en `docs/servicios-externos.md`.
