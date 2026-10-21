@@ -1781,6 +1781,46 @@ paths:
                           items:
                             type: string
 
+  /geo/territorio-operativo:
+    get:
+      tags:
+        - Geo
+      summary: Territorio operativo (provincias/partidos con sucursales activas)
+      description: >-
+        Provincias y partidos/comunas donde hay SUCURSALES ACTIVAS
+        geolocalizadas (misma fuente que la cobertura, cache en memoria de
+        5 min). Alimenta las sugerencias del formulario de direcciones del
+        cliente: no se ofrecen zonas sin sucursal que pueda atender. Es solo
+        el criterio "hay sucursal activa en la zona": la cobertura real
+        (radio por ruta) la siguen validando /geo/preview con cobertura=true
+        y el alta de direcciones.
+      operationId: geoTerritorioOperativo
+      responses:
+        '200':
+          description: Territorio operativo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      provincias:
+                        type: array
+                        description: Nombres oficiales de provincias con sucursales activas
+                        items:
+                          type: string
+                      departamentosPorProvincia:
+                        type: object
+                        description: Partidos/comunas con sucursal activa, por provincia
+                        additionalProperties:
+                          type: array
+                          items:
+                            type: string
+
   /geo/preview:
     post:
       tags:
@@ -2029,7 +2069,12 @@ paths:
     get:
       tags:
         - Autenticacion
-      summary: Datos del usuario autenticado
+      summary: Datos del usuario autenticado (con su sucursal operativa)
+      description: >-
+        Datos públicos del usuario en sesión. Agrega `sucursalOperativa`:
+        la sucursal asignada del ADMINISTRADOR o el contexto elegido del
+        SUPERADMINISTRADOR ({ id, nombre, activa } o null). Es la única
+        fuente del frontend para "¿en qué sucursal opera esta sesión?".
       operationId: authMe
       security:
         - cookieAuth: []
@@ -2046,6 +2091,99 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
+
+  /auth/sucursal-contexto:
+    post:
+      tags:
+        - Autenticacion
+      summary: Elige la sucursal de contexto del superadmin
+      description: >-
+        Solo SUPERADMINISTRADOR. Guarda en la sesión la sucursal elegida
+        (validada contra la BD: existe y está activa) y habilita su
+        operación: pedidos (estados y reasignación) y stock de esa sucursal,
+        con las mismas reglas que su administrador. El scoping sale siempre
+        de la sesión, nunca de un sucursalId del request. La lectura global
+        de pedidos y las capacidades corporativas no cambian.
+      operationId: authElegirSucursalContexto
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sucursalId]
+              properties:
+                sucursalId:
+                  type: integer
+                  description: ID de la sucursal activa a operar
+      responses:
+        '200':
+          description: Contexto elegido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      sucursalOperativa:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          nombre:
+                            type: string
+        '400':
+          description: sucursalId faltante o inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de SUPERADMINISTRADOR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: La sucursal no existe o está inactiva
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    delete:
+      tags:
+        - Autenticacion
+      summary: Limpia la sucursal de contexto del superadmin
+      description: >-
+        Solo SUPERADMINISTRADOR. Deja de operar la sucursal: las rutas
+        operativas vuelven a responder 403 ("Elegí una sucursal para operar")
+        y el superadmin conserva sus capacidades globales.
+      operationId: authLimpiarSucursalContexto
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      responses:
+        '200':
+          description: Contexto limpiado (sucursalOperativa null)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      sucursalOperativa:
+                        nullable: true
 
   /usuarios:
     get:
@@ -2851,6 +2989,11 @@ paths:
       tags:
         - Pedidos
       summary: Cambia el estado de un pedido
+      description: >-
+        CLIENTE dueño (pago simulado/cancelación), ADMINISTRADOR de la
+        sucursal del pedido o SUPERADMINISTRADOR con contexto de sucursal
+        (solo pedidos de la sucursal de su contexto; sin contexto 403
+        "Elegí una sucursal para operar").
       operationId: pedidosCambiarEstado
       security:
         - cookieAuth: []
@@ -2883,7 +3026,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
         '403':
-          description: Rol o propietario no autorizado / token CSRF inválido
+          description: >-
+            Rol o propietario no autorizado, superadmin sin contexto o
+            pedido ajeno a la sucursal del contexto / token CSRF inválido
           content:
             application/json:
               schema:
@@ -2909,13 +3054,17 @@ paths:
     patch:
       tags:
         - Pedidos
-      summary: Reasigna el pedido a otra sucursal (T4, solo ADMIN)
+      summary: Reasigna el pedido a otra sucursal (solo SUPERADMIN con contexto)
       description: >-
-        Reasignación manual de sucursal por el administrador. Valida que el
-        pedido esté en pendiente, confirmado o en_preparacion; que la nueva
-        sucursal esté activa, tenga stock suficiente (transfiere la reserva
-        atómicamente) y esté dentro de la cobertura (≤5 km por ruta).
-        Recalcula el ETA y registra la trazabilidad en el historial.
+        Reasignación manual de sucursal, exclusiva del SUPERADMINISTRADOR
+        con contexto de sucursal elegido (POST /auth/sucursal-contexto): el
+        ADMINISTRADOR de sucursal ya no reasigna (403 siempre). El pedido
+        debe pertenecer a la sucursal del contexto (aislamiento); la nueva
+        sucursal debe estar activa, tener stock suficiente (transfiere la
+        reserva atómicamente) y estar dentro de la cobertura de la dirección
+        del pedido (radio vigente por ruta). El ETA se recalcula después del
+        commit (degradación a null si el proveedor falla) y la trazabilidad
+        queda en el historial ("Reasignado de X a Y por admin Z").
       operationId: pedidosReasignarSucursal
       security:
         - cookieAuth: []
@@ -2932,7 +3081,7 @@ paths:
               properties:
                 sucursalId:
                   type: integer
-                  description: ID de la sucursal destino
+                  description: ID de la sucursal destino (candidata con cobertura y stock)
       responses:
         '200':
           description: Pedido reasignado (con sucursal y ETA actualizados)
@@ -2947,7 +3096,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
         '403':
-          description: El pedido no está en un estado reasignable
+          description: >-
+            Sin rol SUPERADMIN, sin contexto de sucursal, pedido ajeno a la
+            sucursal del contexto o estado no reasignable
           content:
             application/json:
               schema:
@@ -2965,7 +3116,63 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
         '422':
-          description: La sucursal destino está fuera de cobertura
+          description: La sucursal destino está fuera de cobertura o el snapshot no tiene coordenadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /pedidos/{id}/sucursales-candidatas:
+    get:
+      tags:
+        - Pedidos
+      summary: Candidatas de reasignación (solo SUPERADMIN con contexto)
+      description: >-
+        Sucursales activas dentro de la cobertura de la dirección del
+        pedido (mismo ranking cache-first del service) y con stock suficiente
+        para satisfacerlo, excluyendo la sucursal actual. Es la lista del
+        selector del panel; el PATCH re-valida todo al confirmar.
+      operationId: pedidosSucursalesCandidatas
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Lista de candidatas (vacía si no hay ninguna válida)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        nombre:
+                          type: string
+                        distanciaMetros:
+                          type: integer
+                          description: Distancia por ruta desde la dirección del pedido
+        '403':
+          description: Sin rol SUPERADMIN, sin contexto o pedido ajeno al contexto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '422':
+          description: El snapshot del pedido no tiene coordenadas
           content:
             application/json:
               schema:
