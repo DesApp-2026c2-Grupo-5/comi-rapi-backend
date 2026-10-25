@@ -305,3 +305,20 @@ Regla de negocio, no entidad:
 - **Qué NO cambia**: la lectura global de pedidos del superadmin (`GET /api/pedidos` sigue sin filtro; el panel operativo filtra por contexto en el frontend), sus capacidades corporativas (resumen, reportes, CRUD de sucursales/usuarios/catálogo, parámetros, clientes) y el aislamiento: con contexto A no se opera nada de B sin cambiar el contexto (403 en estado/reasignación/stock cruzados).
 - **Contraste con `?sucursalId=` de reportes**: el query param de `GET /api/reportes` es un filtro de LECTURA puntual por request; el contexto de sesión define la sucursal OPERATIVA persistente (escrituras) hasta que se cambia o limpia. Conviven por diseño y están documentados en `docs/roles.md`.
 - **Frontend**: `SucursalOperativaContext` + `useSucursalOperativa()`; selector de contexto en el Navbar (solo sucursales activas); `/admin/pedidos` y `/admin/stock` compartidos por ambos roles; sin contexto, las pantallas operativas muestran el aviso y el backend responde 403 a toda operación.
+
+## 21. Reseñas de productos y combos
+
+> **Nota de cambio:** nueva sección. Reemplaza las reseñas demo del detalle de producto por la entidad real `Resena`. Se autorizó explícitamente sumar esta funcionalidad, que en la Propuesta 2 aparecía como "Calificación" y estaba fuera del alcance.
+
+- **Qué es**: la opinión de un CLIENTE sobre un producto o combo que ya compró y recibió. No evalúa al repartidor ni al pedido en general, y no reemplaza a `PedidoEstadoHistorial`.
+- **Quién puede reseñar**: solo usuarios con rol `CLIENTE` autenticados. El ADMINISTRADOR y el SUPERADMINISTRADOR no reseñan (403).
+- **Elegibilidad**: el cliente debe tener al menos un pedido en estado `entregado` que incluya el producto (`PedidoItem.productoId`). Los pedidos `cancelado`, `pendiente` o en cualquier otro estado no habilitan la reseña. Un mismo pedido entregado habilita todos sus productos.
+- **Una por producto**: UNIQUE `(usuarioId, productoId)`. Si ya existe, el alta devuelve 409; el cliente puede editarla o eliminarla. No se permite reseñar dos veces el mismo producto aunque haya varias compras.
+- **Puntuación**: obligatoria, entero de 1 a 5 (CHECK en la base y validación en el service). El comentario es opcional, texto libre de hasta 500 caracteres; vacío se guarda como `NULL`.
+- **Edición y borrado**: solo el autor puede modificar o eliminar su reseña (404 si no existe o es de otro usuario). El `pedidoId` no se cambia en la edición.
+- **Listado público**: `GET /api/productos/:id/resenas` no requiere sesión y devuelve `promedio`, `cantidad`, `total`, `pagina`, `paginas`, `limite` e `items`. El promedio se calcula sobre todas las reseñas del producto (no se guarda denormalizado). El resumen también viaja en `GET /api/productos/:id` (`resenas: { promedio, cantidad }`).
+- **Autor**: se muestra como "Nombre I." (primer nombre + inicial del apellido). Nunca se expone el email ni el apellido completo. Si el usuario no tiene apellido, se usa solo el nombre.
+- **Elegibles y propias**: `GET /api/resenas/elegibles` devuelve los productos de pedidos entregados del cliente que todavía no reseñó (opcionalmente filtrado por `pedidoId`); `GET /api/resenas/mias` devuelve sus reseñas. El frontend usa estos endpoints para mostrar "Calificar" o "Editar" y para no ofrecer el alta cuando ya existe.
+- **Dónde se escribe**: desde el detalle del producto y desde el detalle de un pedido entregado (acción por ítem). La lista de pedidos muestra un acceso "Calificar" en los pedidos entregados.
+- **Errores**: 400 validación (puntuación fuera de rango, comentario > 500, `productoId` faltante), 401 sin sesión, 403 sin compra entregada o rol no cliente, 404 producto/pedido/reseña inexistente o ajena, 409 reseña duplicada.
+- **Datos demo**: los clientes `elmesia@demo.com`, `tetia@demo.com` y `cassie@demo.com` (contraseña `123456`) tienen compras en volumen y tres reseñas por producto. El seeder es idempotente y está marcado con `SEED-RESENA`; se documenta en `docs/resenas.md`.

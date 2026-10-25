@@ -12,14 +12,22 @@ const promociones = [
     descripcion: '10% de descuento en hamburguesas seleccionadas.',
     tipo: 'DESCUENTO_PORCENTUAL',
     valor: 10,
-    productos: ['Hamburguesa Clásica', 'Hamburguesa Doble'],
+    productos: [
+      'Hamburguesa Clásica',
+      'Hamburguesa Doble',
+      'Hamburguesa Cheddar Bacon',
+    ],
   },
   {
     nombre: 'Promo 2x1 Papas',
     descripcion: 'Llevás 2 y pagás 1 en papas seleccionadas.',
     tipo: 'DOS_POR_UNO',
     valor: 50,
-    productos: ['Papas Fritas Grandes', 'Papas Cheddar'],
+    productos: [
+      'Papas Fritas Grandes',
+      'Papas Cheddar',
+      "Papas 'Kimchi' Coreanas",
+    ],
   },
 ];
 

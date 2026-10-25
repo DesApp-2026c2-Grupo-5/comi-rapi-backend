@@ -49,6 +49,9 @@ const USUARIOS_PROTEGIDOS = ['cliente@test.com', 'admin@test.com'];
 
 /** Hijas de Pedidos: hay que borrarlas antes por las FK. */
 const DEPENDIENTES = [
+  // Reseñas antes que Pedidos: `Resenas.pedidoId` es FK y sin esto el DELETE
+  // de pedidos falla con "violates foreign key constraint".
+  'Resenas',
   'PedidoEstadoHistorials',
   'PedidoItems',
   'PedidoPromociones',

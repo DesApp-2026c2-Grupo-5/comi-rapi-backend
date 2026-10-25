@@ -22,10 +22,11 @@ El dominio cubre:
 - direcciones;
 - stock por sucursal (Extensión 1);
 - promociones (Extensión 1);
+- reseñas de productos y combos comprados;
 - parámetros del sistema;
 - reportes (mediante agregaciones, sin tablas propias).
 
-**No** incluye todavía las funcionalidades de la Propuesta 2 (calificaciones, notificaciones, repartidores), que se contemplan como evolución futura.
+**No** incluye todavía las funcionalidades de la Propuesta 2 (notificaciones y repartidores), que se contemplan como evolución futura. Las reseñas sí se incorporaron como `Resena`: reemplazan la idea de "calificación" de la Propuesta 2 y se limitan a producto + estrellas + comentario, sin repartidor ni notificación.
 
 ## 3. Principios de diseño
 
@@ -37,27 +38,28 @@ El dominio cubre:
 
 ## 4. Entidades
 
-| #   | Entidad                 | Responsabilidad                               |
-| --- | ----------------------- | --------------------------------------------- |
-| 1   | `Usuario`               | Actor autenticado (cliente o administrador)   |
-| 2   | `Direccion`             | Dirección de un usuario o una sucursal        |
-| 3   | `Sucursal`              | Local físico                                  |
-| 4   | `Categoria`             | Agrupar productos                             |
-| 5   | `Producto`              | Artículo vendible (normal o combo)            |
-| 6   | `ComboComponente`       | Composición de un combo                       |
-| 7   | `OpcionGrupo`           | Grupo de opciones de personalización          |
-| 8   | `Opcion`                | Opción concreta dentro de un grupo            |
-| 9   | `ProductoOpcionGrupo`   | Vínculo producto ↔ grupo de opciones          |
-| 10  | `Stock`                 | Disponibilidad de un producto en una sucursal |
-| 11  | `Pedido`                | Pedido realizado por un cliente               |
-| 12  | `PedidoItem`            | Línea de un pedido                            |
-| 13  | `PedidoItemOpcion`      | Opción seleccionada en una línea              |
-| 14  | `EstadoPedido`          | Catálogo de estados                           |
-| 15  | `PedidoEstadoHistorial` | Trazabilidad de cambios de estado             |
-| 16  | `Promocion`             | Beneficio aplicable al catálogo               |
-| 17  | `PromocionProducto`     | Vínculo promoción ↔ producto                  |
-| 18  | `PedidoPromocion`       | Promoción aplicada a un pedido                |
-| 19  | `ParametroSistema`      | Configuración general del sistema             |
+| #   | Entidad                 | Responsabilidad                                  |
+| --- | ----------------------- | ------------------------------------------------ |
+| 1   | `Usuario`               | Actor autenticado (cliente o administrador)      |
+| 2   | `Direccion`             | Dirección de un usuario o una sucursal           |
+| 3   | `Sucursal`              | Local físico                                     |
+| 4   | `Categoria`             | Agrupar productos                                |
+| 5   | `Producto`              | Artículo vendible (normal o combo)               |
+| 6   | `ComboComponente`       | Composición de un combo                          |
+| 7   | `OpcionGrupo`           | Grupo de opciones de personalización             |
+| 8   | `Opcion`                | Opción concreta dentro de un grupo               |
+| 9   | `ProductoOpcionGrupo`   | Vínculo producto ↔ grupo de opciones             |
+| 10  | `Stock`                 | Disponibilidad de un producto en una sucursal    |
+| 11  | `Pedido`                | Pedido realizado por un cliente                  |
+| 12  | `PedidoItem`            | Línea de un pedido                               |
+| 13  | `PedidoItemOpcion`      | Opción seleccionada en una línea                 |
+| 14  | `EstadoPedido`          | Catálogo de estados                              |
+| 15  | `PedidoEstadoHistorial` | Trazabilidad de cambios de estado                |
+| 16  | `Promocion`             | Beneficio aplicable al catálogo                  |
+| 17  | `PromocionProducto`     | Vínculo promoción ↔ producto                     |
+| 18  | `PedidoPromocion`       | Promoción aplicada a un pedido                   |
+| 19  | `ParametroSistema`      | Configuración general del sistema                |
+| 20  | `Resena`                | Opinión de un cliente sobre un producto comprado |
 
 ## 5. Atributos principales
 
@@ -491,6 +493,21 @@ Relaciones:
 
 Regla: `clave` debe ser única. No crear entidades específicas para cada parámetro.
 
+### 5.18 Resena
+
+| Atributo     | Tipo / Notas                                                 |
+| ------------ | ------------------------------------------------------------ |
+| `id`         | PK                                                           |
+| `usuarioId`  | FK → `Usuario.id` (solo CLIENTE)                             |
+| `productoId` | FK → `Producto.id` (producto simple o combo)                 |
+| `pedidoId`   | FK → `Pedido.id` (pedido `entregado` que habilitó la reseña) |
+| `puntuacion` | INTEGER, 1 a 5                                               |
+| `comentario` | TEXT, opcional, máximo 500 caracteres                        |
+| `createdAt`  |                                                              |
+| `updatedAt`  |                                                              |
+
+Reglas: un cliente deja **una sola reseña por producto** (UNIQUE `usuarioId + productoId`); solo puede crearla si tiene un pedido `entregado` que incluya ese producto; puede editarla o eliminarla. El autor se muestra como "Nombre I." (nombre + inicial del apellido), nunca con email. No es la `Calificacion` de la Propuesta 2: no evalúa al repartidor ni al pedido en general.
+
 ## 6. Relaciones y cardinalidades
 
 ```
@@ -528,6 +545,10 @@ Promocion N:N Producto
 
 Pedido N:N Promocion
       mediante PedidoPromocion
+
+Usuario 1:N Resena
+Producto 1:N Resena
+Pedido 1:N Resena
 ```
 
 | A                     | B                     | Cardinalidad | FK                                |
@@ -557,6 +578,9 @@ Pedido N:N Promocion
 | Producto              | PromocionProducto     | 1:N          | `PromocionProducto.productoId`    |
 | Pedido                | PedidoPromocion       | 1:N          | `PedidoPromocion.pedidoId`        |
 | Promocion             | PedidoPromocion       | 1:N          | `PedidoPromocion.promocionId`     |
+| Usuario               | Resena                | 1:N          | `Resena.usuarioId`                |
+| Producto              | Resena                | 1:N          | `Resena.productoId`               |
+| Pedido                | Resena                | 1:N          | `Resena.pedidoId`                 |
 
 ## 7. Reglas de negocio
 
@@ -580,6 +604,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - **Cobertura geográfica**: el servicio `cobertura_service` determina si una dirección es válida para delivery: zona geográfica de operación (configurable en `cobertura-zonas`) + al menos una sucursal activa dentro de la distancia máxima por ruta (5 km inicial, configurable vía `COBERTURA_RADIO_MAX_KM`). Reutiliza `geolocation_service` y `routing_service`. Ver `docs/reglas-negocio.md` §16. La integración con el ABM de `Direccion` está implementada en `direccion_service` (ver §17); la asignación de sucursal por stock y el frontend de cobertura son tareas posteriores.
 - `Categoria.nombre` único; sin jerarquía de categorías.
 - `ParametroSistema.clave` único.
+- **Reseñas**: solo un CLIENTE con un pedido `entregado` que contenga el producto puede crearla, y solo una por producto (UNIQUE `usuarioId + productoId`). La puntuación es obligatoria (1 a 5) y el comentario opcional (máximo 500 caracteres). El autor puede editarla o eliminarla; el listado público muestra "Nombre I." y nunca el email. El promedio y la cantidad se calculan sobre las reseñas existentes.
 - `Stock`: PK compuesta `(sucursalId, productoId)` única.
 - El carrito es estado temporal y se revalida contra la BD al confirmar.
 - **Combos y stock (resuelto)**: un combo es un `Producto` cuya composición se define mediante `ComboComponente`. Su `cantidad` en `Stock` **se deriva del stock de sus componentes**, no de una existencia propia:
@@ -612,6 +637,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - Estado actual en `Pedido.estadoId` y trazabilidad en `PedidoEstadoHistorial`.
 - Carrito no persistido.
 - Promociones con tipos concretos iniciales (`DESCUENTO_PORCENTUAL`, `DOS_POR_UNO`).
+- Reseñas como `Resena` (producto + estrellas + comentario), no como la `Calificacion` de la Propuesta 2.
 - Reportes sin tablas propias.
 
 ## 10. Exclusiones / límites actuales
@@ -628,7 +654,6 @@ Este modelo **no** incluye:
 - motor genérico de promociones
 - `Cupon`
 - `Repartidor`
-- `Calificacion`
 - `Notificacion`
 - jerarquía de categorías
 - máquina de estados formal
@@ -636,14 +661,13 @@ Este modelo **no** incluye:
 
 ## 11. Consideraciones de escalabilidad futura
 
-La Propuesta 2 **no** forma parte del modelo implementado actualmente, pero las decisiones actuales deben permitir agregar posteriormente calificaciones, notificaciones y repartidores. No crear esas entidades ahora.
+La Propuesta 2 **no** forma parte del modelo implementado actualmente, pero las decisiones actuales deben permitir agregar posteriormente notificaciones y repartidores. Las reseñas ya están incluidas como `Resena`; no crear `Calificacion` ni las demás entidades ahora.
 
 La arquitectura futura podrá incorporar, por ejemplo:
 
 - un rol `REPARTIDOR`;
 - una entidad específica de repartidor asociada a `Usuario`;
 - asignación de repartidores a pedidos;
-- calificaciones asociadas a pedidos;
 - notificaciones asociadas a usuarios/pedidos o cambios de estado.
 
 ## 12. Resumen general del modelo
@@ -669,6 +693,7 @@ La arquitectura futura podrá incorporar, por ejemplo:
 | `PromocionProducto`     | Vínculo promoción ↔ producto       | N:1 `Promocion`, N:1 `Producto`                                                                                         |
 | `PedidoPromocion`       | Promoción aplicada                 | N:1 `Pedido`, N:1 `Promocion`                                                                                           |
 | `ParametroSistema`      | Configuración del sistema          | —                                                                                                                       |
+| `Resena`                | Opinión de un cliente              | N:1 `Usuario`, N:1 `Producto`, N:1 `Pedido`                                                                             |
 
 ## 13. Observaciones pendientes
 

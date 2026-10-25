@@ -48,6 +48,13 @@ const imagenProducto = {
   'Papas Cheddar': '/imagenes/productos/papas-cheddar-1790052341490.webp',
   'Lava Cake': '/imagenes/productos/lava-cake-1790052288448.webp',
   Cheesecake: '/imagenes/productos/cheesecake-1790052214004.webp',
+  'Hamburguesa Cheddar Bacon':
+    '/imagenes/productos/hamburguesa-cheddar-bacon-1792890157563.webp',
+  'Hamburguesa Dulce':
+    '/imagenes/productos/hamburguesa-dulce-1792890885264.webp',
+  "Papas 'Kimchi' Coreanas":
+    '/imagenes/productos/papas-kimchi-coreanas-1792895231374.webp',
+  'Pizza Fugazzeta': '/imagenes/productos/pizza-fugazzeta-1792897264258.webp',
 };
 
 const productos = [
@@ -66,6 +73,14 @@ const productos = [
     tipo: 'PRODUCTO',
   },
   {
+    nombre: 'Hamburguesa Cheddar Bacon',
+    precio: 11000,
+    categoria: 'Hamburguesas',
+    descripcion:
+      'Abundante queso cheddar fundido y fetas de panceta crujiente sobre nuestra mejor carne.',
+    tipo: 'PRODUCTO',
+  },
+  {
     nombre: 'Pizza Muzzarella',
     precio: 16900,
     categoria: 'Pizzas',
@@ -77,6 +92,14 @@ const productos = [
     precio: 19500,
     categoria: 'Pizzas',
     descripcion: 'Con tomate, muzzarella y albahaca fresca.',
+    tipo: 'PRODUCTO',
+  },
+  {
+    nombre: 'Pizza Fugazzeta',
+    precio: 11000,
+    categoria: 'Pizzas',
+    descripcion:
+      'Abundante queso muzzarella cubierto con cebolla salteada, orégano, ají molido y aceite de oliva.',
     tipo: 'PRODUCTO',
   },
   {
@@ -118,6 +141,14 @@ const productos = [
     tipo: 'PRODUCTO',
   },
   {
+    nombre: "Papas 'Kimchi' Coreanas",
+    precio: 7000,
+    categoria: 'Papas',
+    descripcion:
+      'Papas grandes cubiertas con kimchi picante salteado, un zig-zag de mayonesa, semillas de sésamo negro y cilantro fresco.',
+    tipo: 'PRODUCTO',
+  },
+  {
     nombre: 'Lava Cake',
     precio: 7400,
     categoria: 'Postres',
@@ -129,6 +160,15 @@ const productos = [
     precio: 7900,
     categoria: 'Postres',
     descripcion: 'Cheesecake cremoso con salsa de frutos rojos.',
+    tipo: 'PRODUCTO',
+  },
+  {
+    // Queda en Postres porque se vende y se agrupa como postre (pan de
+    // chocolate, frutilla, caramelo salado): así está cargada en la base actual.
+    nombre: 'Hamburguesa Dulce',
+    precio: 9000,
+    categoria: 'Postres',
+    descripcion: 'Una hamburguesa única y dulce.',
     tipo: 'PRODUCTO',
   },
 ];

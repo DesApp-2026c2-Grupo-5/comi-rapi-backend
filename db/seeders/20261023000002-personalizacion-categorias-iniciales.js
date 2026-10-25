@@ -7,6 +7,9 @@
  * (src/services/personalizacionConfig.js) para que, al eliminar ese fallback,
  * los productos sin configuración propia sigan mostrando opciones.
  *
+ * Los ingredientes (`personalizar`) NO se siembran: son propios de cada
+ * producto y se cargan en su formulario de alta/edición.
+ *
  * Los acompañamientos sólo se insertan si el producto ofrecido existe en la
  * base; los que no existen se omiten y se informan por consola.
  *
@@ -143,9 +146,7 @@ module.exports = {
       (tipos.extra || []).forEach((el) => {
         agregar(categoriaId, 'extra', el.nombre, el.precio, null);
       });
-      (tipos.personalizar || []).forEach((nombre) => {
-        agregar(categoriaId, 'personalizar', nombre, null, null);
-      });
+      // `personalizar` (ingredientes) no se siembra: es propio de cada producto.
       (tipos.condimento || []).forEach((nombre) => {
         agregar(categoriaId, 'condimento', nombre, null, null);
       });

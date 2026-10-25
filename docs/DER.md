@@ -381,14 +381,37 @@ Caché de distancias por ruta (A1-3). **Dato derivado y recomputable, no una ent
 - PK: `id`
 - UNIQUE: (`origenLatitud`, `origenLongitud`, `destinoLatitud`, `destinoLongitud`, `proveedor`) — coordenadas redondeadas a 6 decimales por `distancias_service.redondearCoord`
 
+### 2.22 Resena
+
+Opinión de un CLIENTE sobre un producto o combo que ya compró y recibió. Reemplaza la idea de "Calificación" de la Propuesta 2: se limita a producto + estrellas + comentario, sin Repartidor ni Notificación.
+
+| Atributo     | Tipo de dato | Notas                                                                |
+| ------------ | ------------ | -------------------------------------------------------------------- |
+| `id`         | `INTEGER`    | PK                                                                   |
+| `usuarioId`  | `INTEGER`    | FK a `Usuario.id` (NOT NULL)                                         |
+| `productoId` | `INTEGER`    | FK a `Producto.id` (NOT NULL); puede ser un producto o un combo      |
+| `pedidoId`   | `INTEGER`    | FK a `Pedido.id` (NOT NULL); pedido entregado que habilitó la reseña |
+| `puntuacion` | `INTEGER`    | NOT NULL, CHECK 1..5                                                 |
+| `comentario` | `TEXT`       | NULLABLE, máximo 500 caracteres (validado en el service)             |
+| `createdAt`  | `DATE`       | NOT NULL                                                             |
+| `updatedAt`  | `DATE`       | NOT NULL                                                             |
+
+- PK: `id`
+- FK: `usuarioId → Usuario.id`, `productoId → Producto.id`, `pedidoId → Pedido.id` (todas `ON DELETE RESTRICT`)
+- UNIQUE: `(usuarioId, productoId)` — un cliente deja una sola reseña por producto
+- Índice: `productoId`
+- CHECK: `puntuacion BETWEEN 1 AND 5`
+- Regla: solo se crea si el cliente tiene un pedido `entregado` que incluya el producto. El autor se muestra como "Nombre I." (nombre + inicial del apellido); nunca se expone el email.
+
 ## 3. Relaciones y cardinalidades
 
-A continuación se documentan las **25 relaciones únicas** del modelo.
+A continuación se documentan las **28 relaciones únicas** del modelo.
 
 ```
 Usuario 1:N Direccion
 Usuario 1:N Pedido
 Usuario 1:N PasswordResetToken
+Usuario 1:N Resena
 
 Sucursal 1:1 Direccion
 Sucursal 1:N Usuario              (sucursal asignada al ADMINISTRADOR)
@@ -418,6 +441,9 @@ Usuario 1:N PedidoEstadoHistorial
 
 Promocion N:N Producto            (mediante PromocionProducto)
 Pedido N:N Promocion              (mediante PedidoPromocion)
+
+Producto 1:N Resena
+Pedido 1:N Resena
 ```
 
 | #   | A                     | B                     | Cardinalidad | FK                                |
@@ -447,10 +473,13 @@ Pedido N:N Promocion              (mediante PedidoPromocion)
 | 23  | Pedido                | PedidoPromocion       | 1:N          | `PedidoPromocion.pedidoId`        |
 | 24  | Promocion             | PedidoPromocion       | 1:N          | `PedidoPromocion.promocionId`     |
 | 25  | Sucursal              | Usuario               | 1:N          | `Usuario.sucursalId`              |
+| 26  | Usuario               | Resena                | 1:N          | `Resena.usuarioId`                |
+| 27  | Producto              | Resena                | 1:N          | `Resena.productoId`               |
+| 28  | Pedido                | Resena                | 1:N          | `Resena.pedidoId`                 |
 
 ## 4. Claves y restricciones
 
-- **PK simples**: `Usuario`, `Direccion`, `Sucursal`, `Categoria`, `Producto`, `ComboComponente`, `OpcionGrupo`, `Opcion`, `ProductoOpcionGrupo`, `Pedido`, `PedidoItem`, `PedidoItemOpcion`, `EstadoPedido`, `PedidoEstadoHistorial`, `Promocion`, `PromocionProducto`, `PedidoPromocion`, `ParametroSistema` (todas con `id`).
+- **PK simples**: `Usuario`, `Direccion`, `Sucursal`, `Categoria`, `Producto`, `ComboComponente`, `OpcionGrupo`, `Opcion`, `ProductoOpcionGrupo`, `Pedido`, `PedidoItem`, `PedidoItemOpcion`, `EstadoPedido`, `PedidoEstadoHistorial`, `Promocion`, `PromocionProducto`, `PedidoPromocion`, `ParametroSistema`, `Resena` (todas con `id`).
 - **PK compuesta**: `Stock (sucursalId, productoId)`.
 - **UNIQUE**:
   - `Usuario.email`
@@ -460,8 +489,10 @@ Pedido N:N Promocion              (mediante PedidoPromocion)
   - `PromocionProducto (promocionId, productoId)`
   - `PedidoPromocion (pedidoId, promocionId)`
   - `ParametroSistema.clave`
+  - `Resena (usuarioId, productoId)` — una reseña por cliente y producto
 - **CHECK**: `Direccion`: `CK_Direcciones_propietario` — exactamente uno de `usuarioId` / `sucursalId` debe estar informado (`("usuarioId" IS NOT NULL)::int + ("sucursalId" IS NOT NULL)::int = 1`). Una dirección pertenece a un usuario o a una sucursal, nunca a ambos ni a ninguno.
 - **CHECK**: `Usuario`: `chk_usuarios_sucursal_solo_admin` — `sucursalId` solo puede estar informado cuando `rol = 'ADMINISTRADOR'` (`"rol" = 'ADMINISTRADOR' OR "sucursalId" IS NULL`).
+- **CHECK**: `Resena`: `resenas_puntuacion_rango` — `puntuacion BETWEEN 1 AND 5`.
 - **Relaciones N:M resueltas por entidades asociativas**:
   - `Producto N:N OpcionGrupo` → `ProductoOpcionGrupo`
   - `Promocion N:N Producto` → `PromocionProducto`
@@ -482,12 +513,14 @@ Pedido N:N Promocion              (mediante PedidoPromocion)
   - `PedidoItemOpcion` conserva `nombre` y `precioAdicional`.
   - `PedidoPromocion` conserva `descuentoAplicado`.
 - **Promociones**: `Promocion` (definición) + `PromocionProducto` (productos alcanzados) + `PedidoPromocion` (aplicación efectiva a un pedido con descuento snapshot).
+- **Reseñas**: `Resena` vincula un `Usuario` (CLIENTE), un `Producto` (simple o COMBO) y el `Pedido` entregado que habilitó la opinión. No guarda snapshots: el texto y la puntuación son una opinión actual sobre el producto; si el pedido se borra, la FK `RESTRICT` impide dejar la reseña huérfana. Una reseña por cliente y producto (UNIQUE), editable y borrable por su autor.
 
 ## 6. Reglas que afectan al DER
 
 - **Consistencia de estado**: cada cambio de estado de un pedido debe actualizar el estado actual de `Pedido` (`estadoId`) y generar simultáneamente un registro en `PedidoEstadoHistorial`.
 - **Asignación de sucursal**: es una regla de negocio (proximidad + disponibilidad de stock), no una entidad. Un administrador puede reasignar manualmente la sucursal como excepción operativa.
 - **Verificación de stock de combos**: queda pendiente de definición. Un combo es un `Producto` cuya disponibilidad puede depender de la disponibilidad de sus componentes; no se agrega entidad para resolverla en esta etapa.
+- **Elegibilidad de reseñas**: solo un CLIENTE con un pedido en estado `entregado` que contenga el producto puede crearla. La regla vive en `lib/services/resenas.js`; la base solo refuerza el rango de puntuación y la unicidad.
 - **Snapshots históricos**: los precios, nombres y dirección de un pedido no se reconstruyen desde el catálogo; se conservan como copia en el propio pedido/ítem.
 - **Carrito**: no es una entidad persistente; se revalida contra la BD al confirmar el pedido.
 
@@ -499,6 +532,7 @@ erDiagram
     Sucursal ||--|| Direccion : "1:1"
     Usuario ||--o{ Pedido : "1:N"
     Usuario ||--o{ PedidoEstadoHistorial : "1:N"
+    Usuario ||--o{ Resena : "1:N"
 
     Categoria ||--o{ Producto : "1:N"
 
@@ -530,6 +564,9 @@ erDiagram
     Producto ||--o{ PromocionProducto : "1:N"
     Pedido ||--o{ PedidoPromocion : "1:N"
     Promocion ||--o{ PedidoPromocion : "1:N"
+
+    Producto ||--o{ Resena : "1:N"
+    Pedido ||--o{ Resena : "1:N"
 
     Usuario {
         int id PK
@@ -716,6 +753,15 @@ erDiagram
         string valor
         string descripcion
     }
+
+    Resena {
+        int id PK
+        int usuarioId FK
+        int productoId FK
+        int pedidoId FK
+        int puntuacion
+        string comentario
+    }
 ```
 
 ## 8. Decisiones pendientes
@@ -729,4 +775,5 @@ Las siguientes decisiones provienen directamente del modelo de dominio y afectan
 
 ## Observaciones
 
-- La relación `Usuario → Pedido` que estaba duplicada en `docs/modelo-dominio.md` (§6) fue corregida: ambos documentos listan ahora las 24 relaciones únicas, incluida la nueva `Sucursal 1:1 Direccion` (`Direccion.sucursalId`).
+- La relación `Usuario → Pedido` que estaba duplicada en `docs/modelo-dominio.md` (§6) fue corregida: ambos documentos listan ahora las 28 relaciones únicas, incluida la nueva `Sucursal 1:1 Direccion` (`Direccion.sucursalId`) y las tres de `Resena`.
+- `Resena` reemplaza la "Calificación" de la Propuesta 2. Se aprobó explícitamente sumarla al alcance porque el pedido la usa como funcionalidad real (estrellas + comentario sobre productos y combos comprados). No agrega `Repartidor` ni `Notificacion`.

@@ -72,6 +72,10 @@ tags:
     description: ABM de categorías de productos
   - name: Productos
     description: ABM de productos
+  - name: Resenas
+    description: >-
+      Reseñas de productos y combos: listado público por producto y CRUD de la
+      propia reseña para el CLIENTE (solo sobre compras entregadas).
   - name: Pedidos
     description: Registración, consulta y cambios de estado de pedidos
   - name: Sucursales
@@ -716,6 +720,197 @@ components:
           type: boolean
         tipo:
           $ref: '#/components/schemas/TipoProducto'
+
+    ResenaAutor:
+      type: object
+      description: Autor público de la reseña (nunca expone email ni apellido completo).
+      properties:
+        nombre:
+          type: string
+          example: María G.
+
+    Resena:
+      type: object
+      properties:
+        id:
+          type: integer
+        productoId:
+          type: integer
+        puntuacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comentario:
+          type: string
+          nullable: true
+          maxLength: 500
+        creadaEn:
+          type: string
+          format: date-time
+        actualizadaEn:
+          type: string
+          format: date-time
+        autor:
+          $ref: '#/components/schemas/ResenaAutor'
+
+    ResenaConProducto:
+      type: object
+      properties:
+        id:
+          type: integer
+        productoId:
+          type: integer
+        puntuacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comentario:
+          type: string
+          nullable: true
+          maxLength: 500
+        creadaEn:
+          type: string
+          format: date-time
+        actualizadaEn:
+          type: string
+          format: date-time
+        autor:
+          $ref: '#/components/schemas/ResenaAutor'
+        producto:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            nombre:
+              type: string
+            imagen:
+              type: string
+              nullable: true
+            tipo:
+              $ref: '#/components/schemas/TipoProducto'
+
+    ProductoElegibleResena:
+      type: object
+      properties:
+        productoId:
+          type: integer
+        pedidoId:
+          type: integer
+          description: Pedido entregado que habilitó la reseña.
+        nombre:
+          type: string
+        imagen:
+          type: string
+          nullable: true
+        tipo:
+          $ref: '#/components/schemas/TipoProducto'
+
+    ResenaRequest:
+      type: object
+      required:
+        - productoId
+        - puntuacion
+      properties:
+        productoId:
+          type: integer
+        puntuacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comentario:
+          type: string
+          nullable: true
+          maxLength: 500
+
+    ResenaUpdateRequest:
+      type: object
+      required:
+        - puntuacion
+      properties:
+        puntuacion:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comentario:
+          type: string
+          nullable: true
+          maxLength: 500
+
+    PaginaResenas:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            promedio:
+              type: number
+              format: double
+              example: 4.3
+            cantidad:
+              type: integer
+              example: 3
+            total:
+              type: integer
+              example: 3
+            pagina:
+              type: integer
+              example: 1
+            limite:
+              type: integer
+              example: 10
+            paginas:
+              type: integer
+              example: 1
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Resena'
+
+    RespuestaResena:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Resena'
+
+    RespuestaListaResenas:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Resena'
+
+    RespuestaListaMisResenas:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResenaConProducto'
+
+    RespuestaElegiblesResena:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductoElegibleResena'
 
     Sucursal:
       type: object
@@ -2868,6 +3063,261 @@ paths:
                 $ref: '#/components/schemas/RespuestaOk'
         '404':
           description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /productos/{id}/resenas:
+    get:
+      tags:
+        - Resenas
+      summary: Lista las reseñas de un producto (público)
+      description: >-
+        Devuelve el promedio, la cantidad total y una página de reseñas. No
+        requiere sesión. El autor se muestra como "Nombre I.".
+      operationId: productosResenas
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+        - name: pagina
+          in: query
+          required: false
+          description: Página (1-based). Por defecto 1.
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limite
+          in: query
+          required: false
+          description: Reseñas por página (máximo 50). Por defecto 10.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Reseñas del producto (más recientes primero)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaResenas'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /resenas:
+    post:
+      tags:
+        - Resenas
+      summary: Crea una reseña de un producto comprado y entregado (CLIENTE)
+      description: >-
+        Solo el CLIENTE puede reseñar. El producto debe pertenecer a alguno de
+        sus pedidos en estado `entregado` y no puede tener ya una reseña suya
+        para ese producto (409).
+      operationId: resenasCreate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResenaRequest'
+      responses:
+        '201':
+          description: Reseña creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaResena'
+        '400':
+          description: Puntuación inválida, comentario demasiado largo o producto faltante
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE, sin compra entregada o CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '409':
+          description: El cliente ya reseñó ese producto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /resenas/elegibles:
+    get:
+      tags:
+        - Resenas
+      summary: Productos que el cliente puede reseñar (CLIENTE)
+      description: >-
+        Productos y combos de pedidos entregados del cliente que todavía no
+        tienen una reseña suya. `pedidoId` acota el resultado a un pedido.
+      operationId: resenasElegibles
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: pedidoId
+          in: query
+          required: false
+          description: Acota a los productos de un pedido puntual.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Productos elegibles (uno por producto, con el pedido que lo habilitó)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaElegiblesResena'
+        '400':
+          description: pedidoId inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /resenas/mias:
+    get:
+      tags:
+        - Resenas
+      summary: Reseñas del cliente autenticado (CLIENTE)
+      operationId: resenasMias
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Reseñas propias, con el producto al que pertenecen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaListaMisResenas'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /resenas/{id}:
+    put:
+      tags:
+        - Resenas
+      summary: Edita la propia reseña (CLIENTE)
+      operationId: resenasUpdate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResenaUpdateRequest'
+      responses:
+        '200':
+          description: Reseña actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaResena'
+        '400':
+          description: Puntuación inválida o comentario demasiado largo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE o CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Reseña inexistente o de otro usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    delete:
+      tags:
+        - Resenas
+      summary: Elimina la propia reseña (CLIENTE)
+      operationId: resenasDestroy
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Reseña eliminada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaOk'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE o CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Reseña inexistente o de otro usuario
           content:
             application/json:
               schema:

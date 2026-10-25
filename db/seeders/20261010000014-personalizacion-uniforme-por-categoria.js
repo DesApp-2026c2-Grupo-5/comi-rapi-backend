@@ -127,6 +127,30 @@ const CATALOGO = {
       ref: null,
     },
   ],
+  // Producto con ingredientes propios cargados a mano: no sigue el set uniforme
+  // de la categoría (así está cargado en la base actual).
+  'Hamburguesa Cheddar Bacon': [
+    {
+      tipo: 'personalizar',
+      nombre: 'Bacon crujiente',
+      precio: null,
+      ref: null,
+    },
+    { tipo: 'personalizar', nombre: 'tomate fresh', precio: null, ref: null },
+    {
+      tipo: 'personalizar',
+      nombre: 'queso cheddar fundido',
+      precio: null,
+      ref: null,
+    },
+    {
+      tipo: 'personalizar',
+      nombre: 'carne de vacuno',
+      precio: null,
+      ref: null,
+    },
+    { tipo: 'personalizar', nombre: 'lechuga verde', precio: null, ref: null },
+  ],
   'Pizza Muzzarella': [
     { tipo: 'extra', nombre: 'Muzzarella extra', precio: 2200.0, ref: null },
     { tipo: 'extra', nombre: 'Jamón', precio: 2800.0, ref: null },
@@ -201,6 +225,34 @@ const CATALOGO = {
       nombre: 'Papas Cheddar',
       precio: 8700.0,
       ref: 'Papas Cheddar',
+    },
+    { tipo: 'condimento', nombre: 'Sobre de Orégano', precio: null, ref: null },
+    { tipo: 'condimento', nombre: 'Sobre de Ají', precio: null, ref: null },
+  ],
+  'Pizza Fugazzeta': [
+    { tipo: 'extra', nombre: 'Muzzarella extra', precio: 2200.0, ref: null },
+    { tipo: 'extra', nombre: 'Jamón', precio: 2800.0, ref: null },
+    { tipo: 'extra', nombre: 'Tomate', precio: 1800.0, ref: null },
+    {
+      tipo: 'personalizar',
+      nombre: 'Queso Muzzarella',
+      precio: null,
+      ref: null,
+    },
+    { tipo: 'personalizar', nombre: 'Cebolla', precio: null, ref: null },
+    { tipo: 'personalizar', nombre: 'Orégano', precio: null, ref: null },
+    { tipo: 'personalizar', nombre: 'Ají molido', precio: null, ref: null },
+    {
+      tipo: 'personalizar',
+      nombre: 'Aceite de Oliva',
+      precio: null,
+      ref: null,
+    },
+    {
+      tipo: 'acompanar',
+      nombre: 'Papas Fritas Grandes',
+      precio: 6900.0,
+      ref: 'Papas Fritas Grandes',
     },
     { tipo: 'condimento', nombre: 'Sobre de Orégano', precio: null, ref: null },
     { tipo: 'condimento', nombre: 'Sobre de Ají', precio: null, ref: null },
@@ -412,6 +464,38 @@ const CATALOGO = {
       ref: null,
     },
   ],
+  "Papas 'Kimchi' Coreanas": [
+    { tipo: 'extra', nombre: 'Cheddar extra', precio: 2400.0, ref: null },
+    { tipo: 'extra', nombre: 'Bacon', precio: 3200.0, ref: null },
+    { tipo: 'personalizar', nombre: 'Kimchi Picante', precio: null, ref: null },
+    { tipo: 'personalizar', nombre: 'Mayonesa', precio: null, ref: null },
+    {
+      tipo: 'personalizar',
+      nombre: 'Semillas de Sésamo Negro',
+      precio: null,
+      ref: null,
+    },
+    { tipo: 'personalizar', nombre: 'Cilantro', precio: null, ref: null },
+    {
+      tipo: 'acompanar',
+      nombre: 'Coca-Cola 500ml',
+      precio: 6900.0,
+      ref: 'Coca-Cola 500ml',
+    },
+    {
+      tipo: 'acompanar',
+      nombre: 'Limonada Natural',
+      precio: 3400.0,
+      ref: 'Limonada Natural',
+    },
+    { tipo: 'condimento', nombre: 'Sobre de Ketchup', precio: null, ref: null },
+    {
+      tipo: 'condimento',
+      nombre: 'Sobre de Mayonesa',
+      precio: null,
+      ref: null,
+    },
+  ],
   'Lava Cake': [
     {
       tipo: 'extra',
@@ -496,6 +580,52 @@ const CATALOGO = {
     {
       tipo: 'condimento',
       nombre: 'Sobre de salsa de chocolate',
+      precio: null,
+      ref: null,
+    },
+  ],
+  // Se agrupa en Postres: los ingredientes son de postre (pan de chocolate,
+  // frutilla, caramelo salado), tal como está cargada en la base actual.
+  'Hamburguesa Dulce': [
+    {
+      tipo: 'personalizar',
+      nombre: 'Pan de Chocolate con Azúcar Glas y Nueces Picadas',
+      precio: null,
+      ref: null,
+    },
+    {
+      tipo: 'personalizar',
+      nombre: 'Rodajas de Frutilla',
+      precio: null,
+      ref: null,
+    },
+    {
+      tipo: 'personalizar',
+      nombre: 'Salsa de Caramelo Salado',
+      precio: null,
+      ref: null,
+    },
+    {
+      tipo: 'personalizar',
+      nombre: 'Brownie de Chocolate',
+      precio: null,
+      ref: null,
+    },
+    {
+      tipo: 'personalizar',
+      nombre: 'Frambuesas Frescas',
+      precio: null,
+      ref: null,
+    },
+    {
+      tipo: 'personalizar',
+      nombre: 'Perlas Dulces Blancas',
+      precio: null,
+      ref: null,
+    },
+    {
+      tipo: 'personalizar',
+      nombre: 'Hojas de Menta Picadas y Base de Pastel.',
       precio: null,
       ref: null,
     },

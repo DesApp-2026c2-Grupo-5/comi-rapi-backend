@@ -3,16 +3,21 @@
 ## Objetivo
 
 Permitir que el superadministrador defina, **por categoría**, los extras,
-condimentos, opciones de personalización y acompañamientos que deben recibir
-automáticamente los **productos nuevos** de esa categoría.
+condimentos y acompañamientos que deben recibir automáticamente los **productos
+nuevos** de esa categoría.
 
-Ejemplo: en `Bebidas` se configura `Personalizar → Hielo`. Al crear un producto
-nuevo de `Bebidas`, el producto nace con la opción `Hielo` (que el cliente ve
-como “Sin Hielo”) sin tener que cargarla a mano.
+Ejemplo: en `Bebidas` se configura `Extra → Limón`. Al crear un producto nuevo
+de `Bebidas`, el producto nace con la opción `Limón` sin tener que cargarla a
+mano.
+
+Los **ingredientes** son la excepción: se cargan en el formulario del producto
+(campo opcional `Ingredientes`) y no se heredan de la categoría. Ver
+[Ingredientes del producto](#ingredientes-del-producto).
 
 Además, las plantillas activas se usan como **fallback de lectura** para los
-productos existentes que no tienen ninguna configuración propia. De esta forma
-los productos viejos también reflejan la configuración de su categoría.
+productos existentes que no tienen ninguna configuración propia (excepto
+`personalizar`). De esta forma los productos viejos también reflejan la
+configuración de su categoría.
 
 ## Extensión respecto del DER
 
@@ -82,9 +87,10 @@ Notas:
 la misma transacción del alta:
 
 1. Busca las plantillas activas de la categoría.
-2. Descarta los acompañamientos sin producto de referencia o que apunten al
+2. Descarta las de tipo `personalizar` (ingredientes: son propios del producto).
+3. Descarta los acompañamientos sin producto de referencia o que apunten al
    producto que se está creando (no puede pasar, pero se protege).
-3. Crea filas equivalentes en `PersonalizacionElementos` con
+4. Crea filas equivalentes en `PersonalizacionElementos` con
    `productoId = nuevo producto`.
 
 Si falla la copia, falla el alta completa del producto (no queda a medias).
@@ -93,8 +99,24 @@ Alcance:
 
 - Aplica a productos `PRODUCTO` y también a `COMBO` (si se configuraron
   plantillas para la categoría `Combos`).
+- **No** se copian las plantillas `personalizar`.
 - **No** se copia retroactivamente a productos existentes.
 - **No** se copia al cambiar de categoría un producto existente.
+
+## Ingredientes del producto
+
+Los ingredientes se guardan como filas de `PersonalizacionElementos` con
+`tipo = 'personalizar'` (`minimo = 0`, `maximo = 1`). El detalle del producto
+las lista como “Ingredientes” y el modal del cliente permite pedir “Sin X”.
+
+- Se cargan desde el formulario de alta/edición de producto (`POST`/`PUT /api/productos`), en el campo opcional `ingredientes: string[]`.
+- `ingredientes` ausente = no se tocan los existentes (compatibilidad).
+  `ingredientes: []` = se borran todos.
+- Al editar se reemplazan los `personalizar` anteriores del producto.
+- Un `COMBO` no acepta `ingredientes`: sus ingredientes son los productos de su
+  receta.
+- Las plantillas de categoría de tipo `personalizar` quedan sin efecto sobre
+  los productos nuevos.
 
 ## Fallback para productos existentes
 
@@ -104,6 +126,10 @@ Alcance:
 - no tiene ninguna fila en `PersonalizacionElementos`, o
 - no tiene filas de un tipo determinado (por ejemplo, no tiene extras
   configurados pero la categoría sí).
+
+La excepción es `personalizar`: no hay fallback por categoría, porque los
+ingredientes son datos propios del producto. Los productos viejos que ya tenían
+ingredientes copiados los conservan hasta que se editen.
 
 El catálogo hardcodeado que vivía en
 `src/services/personalizacionConfig.js` fue eliminado. Las plantillas activas
