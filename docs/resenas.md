@@ -69,7 +69,7 @@ No requiere sesión. `limite` se limita a 50. Devuelve:
         "comentario": "La mejor hamburguesa del barrio.",
         "creadaEn": "2026-10-24T18:30:00.000Z",
         "actualizadaEn": "2026-10-24T18:30:00.000Z",
-        "autor": { "nombre": "Elmesia" }
+        "autor": { "nombre": "Sunny" }
       }
     ],
     "total": 3,
@@ -118,7 +118,7 @@ Devuelve los productos de pedidos entregados que el cliente todavía no reseñó
       "comentario": "La mejor hamburguesa del barrio.",
       "creadaEn": "2026-10-24T18:30:00.000Z",
       "actualizadaEn": "2026-10-24T18:30:00.000Z",
-      "autor": { "nombre": "Elmesia" },
+      "autor": { "nombre": "Sunny" },
       "producto": {
         "id": 5,
         "nombre": "Hamburguesa clásica",
@@ -179,8 +179,9 @@ El controller traduce `ResenaError.codigo` al status HTTP; cualquier otro error 
 - `src/components/cliente/Estrellas.jsx` — estrellas de solo lectura y modo interactivo (1 a 5), accesibles por teclado.
 - `src/components/cliente/FormularioResena.jsx` — alta y edición; valida la puntuación antes de enviar.
 - `src/components/cliente/ResenaModal.jsx` — modal que monta el formulario recién al abrir, para inicializarlo con la reseña correcta.
-- `src/components/cliente/ListaResenas.jsx` — promedio, listado público, bloque "Tu reseña" separado, paginación con "Ver más reseñas" y acciones de editar/eliminar.
-- `src/pages/cliente/DetalleProducto.jsx` — reemplaza `RESENAS_DEMO` y el badge "demo" por datos reales; muestra el promedio en el encabezado y la lista debajo.
+- `src/components/cliente/ListaResenas.jsx` — promedio, listado público, bloque "Tu reseña" separado, acciones de editar/eliminar y botón "Ver las N opiniones" que enlaza a la página completa.
+- `src/pages/cliente/DetalleProducto.jsx` — reemplaza `RESENAS_DEMO` y el badge "demo" por datos reales; muestra el promedio en el encabezado y sólo las primeras 4 reseñas debajo.
+- `src/pages/cliente/ResenasProducto.jsx` — página pública `/producto/:id/resenas` con todas las opiniones del producto (hasta 50 por pedido al backend).
 - `src/pages/cliente/DetallePedido.jsx` — en pedidos `entregado`, agrega una columna "Reseña" por ítem con "Calificar" o "Editar".
 - `src/components/cliente/ListaPedidos.jsx` — botón "Calificar" en los pedidos entregados, que lleva al detalle.
 - `src/utils/formatters.js` — `formatFechaRelativa` para "hace 2 días", "ayer", etc.
@@ -193,12 +194,14 @@ La elegibilidad del frontend es solo informativa: el backend vuelve a validar la
 
 Seeder `db/seeders/20261025000002-demo-clientes-compras.js` (marcador `SEED-RESENA`, idempotente):
 
-- Usuarios `elmesia@demo.com`, `tetia@demo.com` y `cassie@demo.com`, contraseña `123456`, rol `CLIENTE`, sin apellido (para que el panel admin muestre exactamente "Elmesia", "Tetia" y "Cassie").
-- 36 pedidos (12 por cliente) repartidos en los últimos 10 días, incluido hoy. La mayoría `entregado`; 2 `cancelado` (≈5,5 %).
-- Cada pedido tiene 5 productos distintos con 1 a 3 unidades, sobre los productos activos de la base.
-- 51 reseñas (3 por producto activo, una por cliente), con puntuaciones variadas para que los promedios queden entre 4,0 y 4,7.
+- 43 usuarios demo (`sunny@demo.com`, `nephis@demo.com`, ... `altelicia@demo.com`), contraseña `123456`, rol `CLIENTE`, sin apellido (para que el panel admin muestre sólo el nombre del personaje).
+- 172 pedidos (4 por cliente) repartidos en los últimos 10 días, incluido hoy. La mayoría `entregado`; unos 9 `cancelado` (≈5 %).
+- Cada pedido tiene 5 productos distintos con 1 a 3 unidades, sobre los productos activos de la base (se excluyen los de imagen de placeholder, que son productos de prueba).
+- 190 reseñas: entre 5 y 9 por producto, siempre de clientes distintos, así que ningún cliente reseña todo el catálogo. Cada reseña se apoya en un pedido `entregado` real que contiene el producto. Las notas y los comentarios salen de bolsas por familia (hamburguesas, pizzas, combos, papas, café, refrescos, postres) en ventanas corridas, para que los promedios queden entre 3,6 y 4,8.
 
 Los usuarios demo usan `@demo.com` a propósito: el script `npm run limpiar:pruebas` borra los pedidos de `@test.com` y no debe tocar la demo.
+
+El complemento `db/seeders/20261026000001-demo-catalogo-ampliado.js` (marcador `SEED-CATALOGO`, idempotente) agrega los 10 ítems que se habían cargado desde el panel y no existían en ningún seeder: la hamburguesa Royale, las pizzas Pepperoni & Miel Picante y Cuatro Quesos, los tres postres nuevos, las tres bebidas de cafetería y el Combo Party. Incluye su personalización, stock 150 por sucursal (50 para el combo, derivado de su receta), membresía en las promociones que corresponden y entre 5 y 9 reseñas por ítem sobre pedidos entregados de los mismos clientes demo.
 
 ### 5.2 Stock
 

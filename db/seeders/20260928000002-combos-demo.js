@@ -30,8 +30,9 @@
 const combos = [
   {
     nombre: 'Combo Clásico',
-    precio: 19500,
-    descripcion: 'Hamburguesa clásica, papas fritas grandes y bebida.',
+    precio: 18400,
+    descripcion:
+      'Hamburguesa Clásica, papas grandes y Coca-Cola. Por menos que sueltos.',
     imagen:
       '/imagenes/productos/combo-cl-sico-1790808917969-1791229635931.webp',
     componentes: [
@@ -43,8 +44,9 @@ const combos = [
   },
   {
     nombre: 'Combo Pizza',
-    precio: 25900,
-    descripcion: 'Pizza muzzarella, papas fritas y una coca cola.',
+    precio: 24800,
+    descripcion:
+      'Pizza muzzarella, papas fritas y Coca-Cola. La noche resuelta.',
     imagen:
       '/imagenes/productos/combo-pizza-papas-bebida-1790809471048-1791229758604.webp',
     componentes: [

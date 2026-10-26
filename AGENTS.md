@@ -45,7 +45,7 @@ Flujo de una petición:
 
 - `Categoria` y `Producto` ya tienen implementación funcional (migración + modelo + controller + ruta + seeder). Reutilizarla y adaptarla (por ejemplo, agregar `tipo` en `Producto`), no rehacerla innecesariamente.
 - **Reseñas**: `Resena` tiene migración, modelo, asociaciones, service (`lib/services/resenas.js`), controller, rutas (`/api/productos/:id/resenas` público y `/api/resenas/*` para CLIENTE) y tests. El detalle está en `docs/resenas.md`. No volver a usar `RESENAS_DEMO` ni promedios hardcodeados en el frontend.
-- **Datos demo**: el seeder `20261025000002-demo-clientes-compras.js` crea `elmesia@demo.com`, `tetia@demo.com` y `cassie@demo.com` (password `123456`) con compras en volumen y 3 reseñas por producto; el seeder `20261025000003-stock-150.js` deja todo el stock en 150. Ambos son idempotentes y están documentados en `docs/resenas.md` §5.
+- **Datos demo**: el seeder `20261025000002-demo-clientes-compras.js` crea 43 clientes demo (`sunny@demo.com`, `nephis@demo.com`, ... `altelicia@demo.com`; password `123456`) con compras en volumen y entre 5 y 9 reseñas por producto, de clientes distintos; el seeder `20261025000003-stock-150.js` deja todo el stock en 150. Ambos son idempotentes y están documentados en `docs/resenas.md` §5.
 
 ## Comandos existentes
 
