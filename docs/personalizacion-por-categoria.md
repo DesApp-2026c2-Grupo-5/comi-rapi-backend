@@ -44,6 +44,7 @@ Tabla `PersonalizacionCategorias` (modelo
 | `nombre`                  | `STRING`        | Nombre de la opción                                |
 | `precio`                  | `DECIMAL(10,2)` | Obligatorio en `extra` y `acompanar`               |
 | `productoReferenciaId`    | `INTEGER`       | FK → `Productos.id`, sólo `acompanar`              |
+| `insumoId`                | `INTEGER`       | FK → `Insumos.id`, sólo `extra` y `condimento`     |
 | `minimo`                  | `INTEGER`       | Default `0`                                        |
 | `maximo`                  | `INTEGER`       | Default `1`                                        |
 | `activo`                  | `BOOLEAN`       | Default `true`                                     |
@@ -51,13 +52,16 @@ Tabla `PersonalizacionCategorias` (modelo
 
 Las reglas de validación son las mismas que las de `PersonalizacionElementos`:
 
-- `extra`: nombre obligatorio y precio mayor a 0.
-- `personalizar` y `condimento`: nombre obligatorio, sin precio.
+- `extra`: nombre obligatorio, precio mayor a 0 e `insumoId` obligatorio.
+- `personalizar` y `condimento`: nombre obligatorio, sin precio; `condimento`
+  además exige `insumoId`.
 - `acompanar`: producto de referencia obligatorio y precio mayor o igual a 0.
 - `maximo >= minimo`, `minimo >= 0`, `maximo >= 1`.
 - No se permiten duplicados dentro de la misma categoría y tipo. Para
   `acompanar` la identidad es el producto de referencia; para el resto, el
   nombre (sin distinguir mayúsculas).
+- El insumo define el nombre y el precio de referencia; la plantilla puede pisar
+  el precio. Ver `docs/insumos.md`.
 
 ## API
 
@@ -157,6 +161,18 @@ Pantallas:
 - `SubnavPersonalizacion.jsx`: navegación entre las dos vistas.
 
 Las rutas están protegidas para `SUPERADMINISTRADOR` en `AppRoutes.jsx`.
+
+## Insumos y disponibilidad
+
+Cada plantilla de tipo `extra` o `condimento` apunta a un `Insumo`
+(`insumoId`). El insumo aporta el nombre y el precio de referencia; la plantilla
+puede pisar el precio. Para que el cliente vea "Agotado", el backend agrega
+`stockTotal` y `agotado` al listado de plantillas con una consulta agregada por
+request; "agotado" significa sin stock en ninguna sucursal activa.
+
+El seeder `db/seeders/20261028000003-demo-insumos.js` deja un catálogo demo de
+extras y condimentos con 150 unidades por sucursal activa. El detalle está en
+`docs/insumos.md`.
 
 ## Datos iniciales
 

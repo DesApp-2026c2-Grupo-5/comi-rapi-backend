@@ -1,6 +1,6 @@
 # WebSocket — canal de tiempo real para pedidos, catálogo, parámetros y stock
 
-Fecha: 2026-09-28 (original) · 2026-10-19 (ampliación a catálogo, parámetros y stock)
+Fecha: 2026-09-28 (original) · 2026-10-19 (ampliación a catálogo, parámetros y stock) · 2026-10-28 (insumos)
 Archivo: `comi-rapi-backend/docs/webSocketContext.md`
 Estado: **documento vivo** — se actualiza al cerrar cada parte de la implementación.
 
@@ -25,6 +25,7 @@ Consecuencias directas:
 | 3     | Frontend: servicio de socket + reemplazo del polling de 3 s                                         | **Hecho** |
 | 4     | Reconexión y verificación end-to-end de los 7 casos                                                 | **Hecho** |
 | 5     | Ampliación: `catalogo_actualizado`, `parametros_actualizados`, `stock_actualizado`                  | **Hecho** |
+| 6     | Insumos: `stock_actualizado` también avisa `insumoIds` de la sucursal                               | **Hecho** |
 
 **Estado actual: implementación completa y verificada.** El backend emite, el frontend escucha, y el polling de 3 s ya no existe. Verificado en navegador real (sección 9.2). La ampliación (parte 5) agregó tres eventos con el mismo principio: REST manda, el socket solo avisa.
 
@@ -99,14 +100,14 @@ En `PedidoContext.jsx` el admin **no** emite `suscribir_pedido`: entra automáti
 
 Payloads mínimos, definidos en `lib/realtime/eventos.js`.
 
-| Evento                    | Dirección        | Payload                       | Destino                                       |
-| ------------------------- | ---------------- | ----------------------------- | --------------------------------------------- |
-| `suscribir_pedido`        | cliente → server | `{ pedidoId }` + ack          | —                                             |
-| `desuscribir_pedido`      | cliente → server | `{ pedidoId }` + ack          | —                                             |
-| `pedido_actualizado`      | server → cliente | `{ pedidoId }`                | `admins`, `pedido:{id}` **y** `sucursal:{id}` |
-| `catalogo_actualizado`    | server → cliente | `{ tipo, id, accion }`        | broadcast a todos los conectados              |
-| `parametros_actualizados` | server → cliente | `{}`                          | broadcast a todos los conectados              |
-| `stock_actualizado`       | server → cliente | `{ sucursalId, productoIds }` | **solo** `sucursal:{id}`                      |
+| Evento                    | Dirección        | Payload                                  | Destino                                       |
+| ------------------------- | ---------------- | ---------------------------------------- | --------------------------------------------- |
+| `suscribir_pedido`        | cliente → server | `{ pedidoId }` + ack                     | —                                             |
+| `desuscribir_pedido`      | cliente → server | `{ pedidoId }` + ack                     | —                                             |
+| `pedido_actualizado`      | server → cliente | `{ pedidoId }`                           | `admins`, `pedido:{id}` **y** `sucursal:{id}` |
+| `catalogo_actualizado`    | server → cliente | `{ tipo, id, accion }`                   | broadcast a todos los conectados              |
+| `parametros_actualizados` | server → cliente | `{}`                                     | broadcast a todos los conectados              |
+| `stock_actualizado`       | server → cliente | `{ sucursalId, productoIds, insumoIds }` | **solo** `sucursal:{id}`                      |
 
 No existe `pedido_creado`, y es deliberado (sección 6.1).
 
@@ -163,10 +164,12 @@ Fuentes de emisión (todas post-commit):
 | `pedido_controller.reasignarSucursal`         | la vieja **y** la nueva                                                          |
 | `producto_controller` (alta/edición de combo) | sucursal(es) cuya fila de combo cambió                                           |
 | `stock_controller` (alta/ajuste/baja)         | la sucursal del ajuste                                                           |
+| `stock_controller.updateInsumo`               | la sucursal del ajuste (con `insumoIds`)                                         |
 
-El `productoIds` del payload es **orientativo** (los ids tocados
+El `productoIds` (y el `insumoIds`) del payload es **orientativo** (los ids tocados
 directamente); el frontend recarga la tabla entera de su sucursal, que es más
-simple y siempre correcto.
+simple y siempre correcto. Un ajuste de insumo puede mandar sólo `insumoIds`, sin
+`productoIds`; `GestionStock` filtra por el array que venga.
 
 ### 6.6 Límite conocido: sin sesión no hay tiempo real
 
@@ -268,7 +271,7 @@ Reglas del patrón:
 | 6    | Falla la BD → no se emite el evento                                      | **verde**                                   |
 | 7    | Reconexión: id nuevo, rooms perdidas, re-suscripción, sin duplicados     | **verde** (6 tests)                         |
 
-Estado: 38 suites, **586/586 tests en verde** (`npm test`). Los tests de realtime (`lib/realtime/conexion.test.js`) siguen verdes con la ampliación: los emisores nuevos son no-op sin servidor, así que ningún controller test se vuelve flaky.
+Estado: 51 suites, **789/789 tests en verde** (`npm test`). Los tests de realtime (`lib/realtime/conexion.test.js`) siguen verdes con la ampliación: los emisores nuevos son no-op sin servidor, así que ningún controller test se vuelve flaky.
 
 El caso 5 se comprobó dos veces: en los tests y a mano, con el backend de desarrollo levantado.
 
@@ -389,7 +392,7 @@ Lo que quedó descartado, y por qué:
 
 Comprobado en navegador (sección 9 de `scripts/verificar-tiempo-real.js`): la tabla de gestión relee sólo el producto editado, **no** re-pide la colección, no se re-enciende el `.spinner-border` y `performance.getEntriesByType('navigation')` sigue en 1 (hubo un solo `goto`, cero recargas).
 
-El **stock** sigue la misma idea con otro evento (`stock_actualizado {sucursalId, productoIds}`, room de la sucursal, sin datos: restricción 9): `GestionStock` relee sólo `GET /api/stock/:sucursalId/:productoId` por cada id notificado y fusiona la fila (sección 10 del E2E: cantidad N→N-1, tabla viva, cero spinners, cero pedidos a la colección `/api/stock`). El `PUT /api/stock` de un guardado manual hace lo mismo: se aplica la fila que devuelve el backend, sin `cargar()`.
+El **stock** sigue la misma idea con otro evento (`stock_actualizado {sucursalId, productoIds, insumoIds}`, room de la sucursal, sin datos: restricción 9): `GestionStock` relee sólo `GET /api/stock/:sucursalId/:productoId` (o `GET /api/stock/insumos`) por cada id notificado y fusiona la fila (sección 10 del E2E: cantidad N→N-1, tabla viva, cero spinners, cero pedidos a la colección `/api/stock`). El `PUT /api/stock` de un guardado manual hace lo mismo: se aplica la fila que devuelve el backend, sin `cargar()`.
 
 ## 10. Verificación manual
 
@@ -419,7 +422,7 @@ Para confirmar que el polling desapareció: en Network, filtrar `pedidos` y deja
 | `src/context/ParametrosContext.jsx`                                | Dueño del socket en vistas sin pedidos; escucha `parametros_actualizados`                                   |
 | `src/pages/cliente/{Inicio,Catalogo,DetalleProducto}.jsx`          | Listeners de `catalogo_actualizado` (+ `stock_actualizado` en Catálogo) con sesión                          |
 | `src/components/admin/Lista{Productos,Categorias,Promociones}.jsx` | Listas del panel; aplican el cambio en el lugar (ver 9.6)                                                   |
-| `src/pages/admin/GestionStock.jsx`                                 | `stock_actualizado` filtrado por sucursal; el guardado también se aplica en el lugar                        |
+| `src/pages/admin/GestionStock.jsx`                                 | `stock_actualizado` filtrado por sucursal (productos e insumos); el guardado también se aplica en el lugar  |
 | `src/components/superadmin/PanelSuperadmin.jsx`                    | `pedido_actualizado` → reconsulta el resumen                                                                |
 | `src/pages/superadmin/Editar{Producto,Categoria,Promocion}.jsx`    | `catalogo_actualizado` filtrado por tipo + id                                                               |
 | `.env`                                                             | `VITE_SOCKET_URL` (además de `VITE_API_URL`)                                                                |

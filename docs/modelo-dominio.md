@@ -60,6 +60,8 @@ El dominio cubre:
 | 18  | `PedidoPromocion`       | Promoción aplicada a un pedido                   |
 | 19  | `ParametroSistema`      | Configuración general del sistema                |
 | 20  | `Resena`                | Opinión de un cliente sobre un producto comprado |
+| 21  | `Insumo`                | Extra o condimento con precio y baja lógica      |
+| 22  | `InsumoStock`           | Existencia de un insumo en una sucursal          |
 
 ## 5. Atributos principales
 
@@ -302,6 +304,20 @@ actual de sus componentes. No la carga el administrador: el backend la deriva de
 la receta y la recalcula sola. Lo que sí se maneja a mano es `disponible`, para
 sacarlo del catálogo de la sucursal. Ver §7.2 ("Combos y stock").
 
+### 5.8.1 Insumo e InsumoStock (extensión implementada)
+
+Los extras y condimentos con stock propio se separan de `Producto`:
+
+- `Insumo`: `id`, `nombre`, `tipo` (`extra` o `condimento`), `precio` (obligatorio
+  en extra, `null` en condimento) y `activo` (baja lógica). UNIQUE `(nombre, tipo)`.
+- `InsumoStock`: PK compuesta `(sucursalId, insumoId)`, `cantidad >= 0` y
+  `disponible`. Misma semántica que `Stock`.
+
+`PersonalizacionElementos` y `PersonalizacionCategorias` agregan `insumoId`
+(nullable, FK → `Insumo.id`), obligatorio en `extra`/`condimento`.
+
+El detalle de reglas, endpoints y datos demo está en `docs/insumos.md`.
+
 ### 5.9 Pedido
 
 | Atributo      | Tipo / Notas                            |
@@ -530,6 +546,11 @@ Producto (componente) 1:N ComboComponente
 Sucursal 1:N Stock
 Producto 1:N Stock
 
+Sucursal 1:N InsumoStock
+Insumo 1:N InsumoStock
+Insumo 1:N PersonalizacionElemento   (opcional, extra/condimento)
+Insumo 1:N PersonalizacionCategoria  (opcional, extra/condimento)
+
 Pedido N:1 Usuario
 Pedido N:1 Sucursal
 Pedido N:1 EstadoPedido
@@ -565,6 +586,8 @@ Pedido 1:N Resena
 | Producto (componente) | ComboComponente       | 1:N          | `ComboComponente.productoId`      |
 | Sucursal              | Stock                 | 1:N          | `Stock.sucursalId`                |
 | Producto              | Stock                 | 1:N          | `Stock.productoId`                |
+| Sucursal              | InsumoStock           | 1:N          | `InsumoStock.sucursalId`          |
+| Insumo                | InsumoStock           | 1:N          | `InsumoStock.insumoId`            |
 | Sucursal              | Pedido                | 1:N          | `Pedido.sucursalId`               |
 | EstadoPedido          | Pedido                | 1:N          | `Pedido.estadoId`                 |
 | Pedido                | PedidoItem            | 1:N          | `PedidoItem.pedidoId`             |
@@ -606,6 +629,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - `ParametroSistema.clave` único.
 - **Reseñas**: solo un CLIENTE con un pedido `entregado` que contenga el producto puede crearla, y solo una por producto (UNIQUE `usuarioId + productoId`). La puntuación es obligatoria (1 a 5) y el comentario opcional (máximo 500 caracteres). El autor puede editarla o eliminarla; el listado público muestra "Nombre I." y nunca el email. El promedio y la cantidad se calculan sobre las reseñas existentes.
 - `Stock`: PK compuesta `(sucursalId, productoId)` única.
+- **Insumos**: `Insumo` con UNIQUE `(nombre, tipo)`; `InsumoStock` con PK compuesta `(sucursalId, insumoId)` y `cantidad >= 0`. Sólo `extra` y `condimento` se vinculan desde la personalización (`insumoId`) y descuentan stock. "Agotado" = sin stock en ninguna sucursal activa. La baja de un insumo es lógica y no permite cambiar su `tipo` si ya está vinculado. Ver `docs/insumos.md`.
 - El carrito es estado temporal y se revalida contra la BD al confirmar.
 - **Combos y stock (resuelto)**: un combo es un `Producto` cuya composición se define mediante `ComboComponente`. Su `cantidad` en `Stock` **se deriva del stock de sus componentes**, no de una existencia propia:
   - Un combo tiene fila propia en `Stock` para estar en el catálogo de la sucursal y poder apagarse con `disponible`, pero su `cantidad` **no la carga el administrador**: es un espejo del máximo que arma la receta.
@@ -633,6 +657,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - Precio del combo es propio en `Producto.precio`, no suma de componentes.
 - Personalización con `OpcionGrupo` + `Opcion` + `ProductoOpcionGrupo`.
 - Stock por sucursal y producto con clave compuesta.
+- Extras y condimentos como `Insumo` + `InsumoStock` (extensión implementada), no como `Producto`.
 - ProductoOpcionGrupo, PromocionProducto y PedidoPromocion (asociativas N:M) usan id propio + UNIQUE sobre el par de FKs, no clave compuesta (a diferencia de Stock, que sí la usa por acceder siempre por el par sucursal+producto).
 - Estado actual en `Pedido.estadoId` y trazabilidad en `PedidoEstadoHistorial`.
 - Carrito no persistido.
@@ -684,6 +709,8 @@ La arquitectura futura podrá incorporar, por ejemplo:
 | `Opcion`                | Opción concreta                    | N:1 `OpcionGrupo`                                                                                                       |
 | `ProductoOpcionGrupo`   | Vínculo producto ↔ grupo           | N:1 `Producto`, N:1 `OpcionGrupo`                                                                                       |
 | `Stock`                 | Disponibilidad producto×sucursal   | N:1 `Sucursal`, N:1 `Producto`                                                                                          |
+| `Insumo`                | Extra o condimento con precio      | 1:N `InsumoStock`, 1:N `PersonalizacionElemento` (opcional)                                                             |
+| `InsumoStock`           | Existencia insumo×sucursal         | N:1 `Sucursal`, N:1 `Insumo`                                                                                            |
 | `Pedido`                | Pedido realizado/registrado        | N:1 `Usuario`, N:1 `Sucursal`, N:1 `EstadoPedido`, 1:N `PedidoItem`, 1:N `PedidoEstadoHistorial`, 1:N `PedidoPromocion` |
 | `PedidoItem`            | Línea de pedido                    | N:1 `Pedido`, N:1 `Producto`, 1:N `PedidoItemOpcion`                                                                    |
 | `PedidoItemOpcion`      | Opción seleccionada                | N:1 `PedidoItem`, N:1 `Opcion`                                                                                          |

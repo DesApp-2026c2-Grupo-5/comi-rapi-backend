@@ -187,6 +187,41 @@ backend la recalcula cada vez que cambia el stock de un componente, la receta o
 la fila del combo. La fila existe para que el combo esté en el catálogo de la
 sucursal y se pueda apagar con `disponible`.
 
+### 2.10.1 Insumo (extensión implementada)
+
+Catálogo corporativo de extras y condimentos con existencia propia. No es un
+`Producto`: no tiene ficha, categoría, foto ni receta.
+
+| Atributo | Tipo de dato    | Notas                                      |
+| -------- | --------------- | ------------------------------------------ |
+| `id`     | `INTEGER`       | PK                                         |
+| `nombre` | `STRING`        | Obligatorio                                |
+| `tipo`   | `ENUM`          | `extra` o `condimento`                     |
+| `precio` | `DECIMAL(10,2)` | Obligatorio en extra; `null` en condimento |
+| `activo` | `BOOLEAN`       | Baja lógica                                |
+
+- UNIQUE: `(nombre, tipo)`.
+- Los tipos `acompanar` y `personalizar` no se vinculan a insumos.
+
+### 2.10.2 InsumoStock (extensión implementada)
+
+| Atributo     | Tipo de dato | Notas                          |
+| ------------ | ------------ | ------------------------------ |
+| `sucursalId` | `INTEGER`    | PK (parte), FK → `Sucursal.id` |
+| `insumoId`   | `INTEGER`    | PK (parte), FK → `Insumo.id`   |
+| `cantidad`   | `INTEGER`    | `>= 0` (CHECK)                 |
+| `disponible` | `BOOLEAN`    |                                |
+
+- PK (compuesta): `(sucursalId, insumoId)`.
+- FK: `sucursalId → Sucursal.id`; `insumoId → Insumo.id` (borrado en cascada).
+- CHECK: `CK_InsumoStocks_cantidad` (`cantidad >= 0`).
+- Misma semántica que `Stock`: `disponible = false` equivale a 0 para la venta.
+- `PersonalizacionElementos` y `PersonalizacionCategorias` agregan `insumoId`
+  nullable (FK → `Insumo.id`, `ON DELETE SET NULL`), obligatorio en `extra` y
+  `condimento`.
+
+El detalle de reglas, endpoints y datos demo está en `docs/insumos.md`.
+
 ### 2.11 Pedido
 
 | Atributo      | Tipo de dato                      | Notas                  |
@@ -427,6 +462,11 @@ Producto (componente) 1:N ComboComponente
 Sucursal 1:N Stock
 Producto 1:N Stock
 
+Sucursal 1:N InsumoStock
+Insumo 1:N InsumoStock
+Insumo 1:N PersonalizacionElemento       (opcional, sólo extra/condimento)
+Insumo 1:N PersonalizacionCategoria      (opcional, sólo extra/condimento)
+
 Pedido N:1 Sucursal
 Pedido N:1 EstadoPedido
 
@@ -476,16 +516,20 @@ Pedido 1:N Resena
 | 26  | Usuario               | Resena                | 1:N          | `Resena.usuarioId`                |
 | 27  | Producto              | Resena                | 1:N          | `Resena.productoId`               |
 | 28  | Pedido                | Resena                | 1:N          | `Resena.pedidoId`                 |
+| 29  | Sucursal              | InsumoStock           | 1:N          | `InsumoStock.sucursalId`          |
+| 30  | Insumo                | InsumoStock           | 1:N          | `InsumoStock.insumoId`            |
 
 ## 4. Claves y restricciones
 
-- **PK simples**: `Usuario`, `Direccion`, `Sucursal`, `Categoria`, `Producto`, `ComboComponente`, `OpcionGrupo`, `Opcion`, `ProductoOpcionGrupo`, `Pedido`, `PedidoItem`, `PedidoItemOpcion`, `EstadoPedido`, `PedidoEstadoHistorial`, `Promocion`, `PromocionProducto`, `PedidoPromocion`, `ParametroSistema`, `Resena` (todas con `id`).
-- **PK compuesta**: `Stock (sucursalId, productoId)`.
+- **PK simples**: `Usuario`, `Direccion`, `Sucursal`, `Categoria`, `Producto`, `ComboComponente`, `OpcionGrupo`, `Opcion`, `ProductoOpcionGrupo`, `Pedido`, `PedidoItem`, `PedidoItemOpcion`, `EstadoPedido`, `PedidoEstadoHistorial`, `Promocion`, `PromocionProducto`, `PedidoPromocion`, `ParametroSistema`, `Resena`, `Insumo` (todas con `id`).
+- **PK compuesta**: `Stock (sucursalId, productoId)`, `InsumoStock (sucursalId, insumoId)`.
 - **UNIQUE**:
   - `Usuario.email`
   - `Categoria.nombre`
   - `ProductoOpcionGrupo (productoId, grupoId)`
   - `Stock (sucursalId, productoId)` — mediante PK compuesta
+  - `Insumo (nombre, tipo)`
+  - `InsumoStock (sucursalId, insumoId)` — mediante PK compuesta
   - `PromocionProducto (promocionId, productoId)`
   - `PedidoPromocion (pedidoId, promocionId)`
   - `ParametroSistema.clave`
@@ -493,6 +537,7 @@ Pedido 1:N Resena
 - **CHECK**: `Direccion`: `CK_Direcciones_propietario` — exactamente uno de `usuarioId` / `sucursalId` debe estar informado (`("usuarioId" IS NOT NULL)::int + ("sucursalId" IS NOT NULL)::int = 1`). Una dirección pertenece a un usuario o a una sucursal, nunca a ambos ni a ninguno.
 - **CHECK**: `Usuario`: `chk_usuarios_sucursal_solo_admin` — `sucursalId` solo puede estar informado cuando `rol = 'ADMINISTRADOR'` (`"rol" = 'ADMINISTRADOR' OR "sucursalId" IS NULL`).
 - **CHECK**: `Resena`: `resenas_puntuacion_rango` — `puntuacion BETWEEN 1 AND 5`.
+- **CHECK**: `InsumoStock`: `CK_InsumoStocks_cantidad` — `cantidad >= 0`.
 - **Relaciones N:M resueltas por entidades asociativas**:
   - `Producto N:N OpcionGrupo` → `ProductoOpcionGrupo`
   - `Promocion N:N Producto` → `PromocionProducto`
@@ -506,6 +551,7 @@ Pedido 1:N Resena
 - **Combos**: se representan con `Producto` (`tipo = COMBO`) + `ComboComponente`, que relaciona el producto-combo con sus componentes y cantidades. No existe una entidad `Combo` separada. El precio del combo es el propio `Producto.precio`, no la suma de componentes.
 - **Personalización**: `OpcionGrupo` (grupo de opciones, con `tipoSeleccion`, `minimo`, `maximo`, `obligatorio`) + `Opcion` (opción concreta, con `precioAdicional` y `productoReferenciaId` opcional) + `ProductoOpcionGrupo` (vínculo N:M producto ↔ grupo). Permite que distintos productos tengan distintos grupos.
 - **Stock por sucursal**: `Stock (sucursalId, productoId)` con cantidad y `disponible`, independiente por sucursal.
+- **Insumos**: `Insumo` (extra o condimento con precio y baja lógica) + `InsumoStock (sucursalId, insumoId)`. Sólo `extra` y `condimento` descuentan stock; se vinculan desde `PersonalizacionElementos.insumoId` y `PersonalizacionCategorias.insumoId`. "Agotado" significa sin stock en ninguna sucursal activa. El detalle está en `docs/insumos.md`.
 - **Historial de estados**: `PedidoEstadoHistorial` registra cada cambio con `fechaHora`, `estadoId` y opcionalmente `usuarioId` y `observacion`. El estado actual se mantiene desnormalizado en `Pedido.estadoId`.
 - **Snapshot histórico de pedidos**:
   - `Pedido` conserva la dirección de entrega (calle, altura, ciudad, código postal, referencia, latitud, longitud).
@@ -546,6 +592,9 @@ erDiagram
 
     Sucursal ||--o{ Stock : "1:N"
     Producto ||--o{ Stock : "1:N"
+
+    Sucursal ||--o{ InsumoStock : "1:N"
+    Insumo ||--o{ InsumoStock : "1:N"
 
     Sucursal ||--o{ Usuario : "1:N (solo ADMINISTRADOR)"
 
@@ -663,6 +712,21 @@ erDiagram
         int sucursalId PK
         int productoId PK
         int cantidad
+        boolean disponible
+    }
+
+    Insumo {
+        int id PK
+        string nombre
+        string tipo "extra | condimento"
+        decimal precio "null en condimento"
+        boolean activo
+    }
+
+    InsumoStock {
+        int sucursalId PK
+        int insumoId PK
+        int cantidad "CHECK >= 0"
         boolean disponible
     }
 

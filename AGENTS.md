@@ -8,6 +8,7 @@ Instrucciones permanentes para el trabajo de OpenCode sobre este proyecto.
 2. `docs/modelo-dominio.md` — modelo de dominio aprobado.
 3. `docs/DER.md` — diagrama entidad-relación / estructura de datos.
 4. `docs/resenas.md` — reglas, endpoints y datos demo de reseñas.
+5. `docs/insumos.md` — catálogo de extras/condimentos y su stock por sucursal.
 
 `docs/DER-comi-rapi.pdf` es el DER exportado (mismo contenido).
 `docs/historico/analisis-inicial.md` es material histórico: NO es fuente de verdad y no debe usarse para redefinir el modelo.
