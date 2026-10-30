@@ -459,11 +459,11 @@ components:
               description: Top 10 por facturaci\u00f3n
               items:
                 $ref: '#/components/schemas/ProductoReporte'
-            menosVendido:
-              description: Producto con menos unidades vendidas (null si no hubo ventas)
-              nullable: true
-              allOf:
-                - $ref: '#/components/schemas/ProductoReporte'
+            menosVendidos:
+              type: array
+              description: Top 10 por menos unidades vendidas (ascendente)
+              items:
+                $ref: '#/components/schemas/ProductoReporte'
         stock:
           type: object
           properties:
@@ -537,6 +537,29 @@ components:
                     format: date
                   cantidad:
                     type: integer
+            productos:
+              type: array
+              description: >-
+                Top 10 productos de pedidos cancelados, ordenados por unidades
+                canceladas
+              items:
+                type: object
+                properties:
+                  productoId:
+                    type: integer
+                  nombre:
+                    type: string
+                  categoria:
+                    type: string
+                    nullable: true
+                  unidades:
+                    type: integer
+                  pedidos:
+                    type: integer
+                    description: Pedidos cancelados distintos que incluyen el producto
+                  importe:
+                    type: number
+                    description: Suma de subtotales de los ítems cancelados
         promociones:
           type: object
           properties:
