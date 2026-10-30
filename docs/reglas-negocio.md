@@ -76,6 +76,11 @@ Regla de negocio, no entidad:
 - Al confirmar se registran usuario, sucursal asignada, dirección (snapshot), fecha/hora, detalle de productos, total y estado inicial.
 - Al confirmar se revalidan las condiciones relevantes.
 - El carrito es temporal y no se persiste.
+- Cada ítem del pedido puede llevar una `nota` libre del cliente para cocina
+  ("sin sal", "bien cocida"): máximo 140 caracteres, se recortan los extremos y
+  se colapsan los espacios; vacía equivale a `null`. Se conserva en
+  `PedidoItem.nota`, separada de `PedidoItem.observacion`, que guarda el
+  snapshot de la personalización.
 - `Pedido` conserva `costoEnvio`, `total`, `medioPago`, `observacion` y el snapshot de dirección.
 - La implementación actual simula el medio de pago.
 - Pendiente de definición: valores definitivos de `medioPago`. Los valores utilizados actualmente son `MERCADO_PAGO` y `TARJETA`.

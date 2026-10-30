@@ -1087,6 +1087,17 @@ components:
         observacion:
           type: string
           nullable: true
+          description: >-
+            Snapshot de la personalización elegida, serializado como JSON
+            (extras, acompanamientos, sin, condimentos). Lo consume el descuento
+            de stock de insumos.
+        nota:
+          type: string
+          nullable: true
+          maxLength: 140
+          description: >-
+            Nota libre del cliente para cocina ("sin sal", "bien cocida").
+            Columna independiente de `observacion`.
         Producto:
           $ref: '#/components/schemas/ProductoResumen'
           nullable: true
@@ -1300,6 +1311,15 @@ components:
           default: 1
         observacion:
           type: string
+          description: >-
+            Uso interno: snapshot de personalización serializado. Para la nota
+            del cliente usar `nota`.
+        nota:
+          type: string
+          maxLength: 140
+          description: >-
+            Nota libre para cocina. Se recortan los extremos y se colapsan los
+            espacios; vacía equivale a null.
         personalizacion:
           $ref: '#/components/schemas/PersonalizacionInput'
         extras:

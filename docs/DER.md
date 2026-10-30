@@ -263,20 +263,25 @@ Tiempo de entrega:
 
 ### 2.12 PedidoItem
 
-| Atributo         | Tipo de dato    | Notas              |
-| ---------------- | --------------- | ------------------ |
-| `id`             | `INTEGER`       | PK                 |
-| `pedidoId`       | `INTEGER`       | FK → `Pedido.id`   |
-| `productoId`     | `INTEGER`       | FK → `Producto.id` |
-| `nombreProducto` | `STRING`        | snapshot           |
-| `precioUnitario` | `DECIMAL(10,2)` | snapshot           |
-| `cantidad`       | `INTEGER`       |                    |
-| `subtotal`       | `DECIMAL(10,2)` |                    |
-| `observacion`    | `TEXT`          |                    |
+| Atributo         | Tipo de dato    | Notas                   |
+| ---------------- | --------------- | ----------------------- |
+| `id`             | `INTEGER`       | PK                      |
+| `pedidoId`       | `INTEGER`       | FK → `Pedido.id`        |
+| `productoId`     | `INTEGER`       | FK → `Producto.id`      |
+| `nombreProducto` | `STRING`        | snapshot                |
+| `precioUnitario` | `DECIMAL(10,2)` | snapshot                |
+| `cantidad`       | `INTEGER`       |                         |
+| `subtotal`       | `DECIMAL(10,2)` |                         |
+| `observacion`    | `TEXT`          |                         |
+| `nota`           | `TEXT`          | observación para cocina |
 
 - PK: `id`
 - FK: `pedidoId → Pedido.id`
 - FK: `productoId → Producto.id`
+- `observacion` guarda el snapshot de la personalización elegida serializado
+  como JSON (`extras`, `acompanamientos`, `sin`, `condimentos`); lo consume el
+  descuento de stock de insumos. `nota` es el texto libre que el cliente deja
+  para cocina y no reemplaza a `observacion`.
 
 ### 2.13 PedidoItemOpcion
 
