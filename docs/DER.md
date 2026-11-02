@@ -68,17 +68,36 @@ El DER contempla las **19 entidades** del modelo actual. Para cada una se indica
 
 ### 2.3 Sucursal
 
-| Atributo   | Tipo de dato | Notas                             |
-| ---------- | ------------ | --------------------------------- |
-| `id`       | `INTEGER`    | PK                                |
-| `nombre`   | `STRING`     |                                   |
-| `telefono` | `STRING`     |                                   |
-| `horarios` | `STRING`     | información propia de la sucursal |
-| `activa`   | `BOOLEAN`    |                                   |
+| Atributo   | Tipo de dato | Notas |
+| ---------- | ------------ | ----- |
+| `id`       | `INTEGER`    | PK    |
+| `nombre`   | `STRING`     |       |
+| `telefono` | `STRING`     |       |
+| `activa`   | `BOOLEAN`    |       |
 
 - PK: `id`
 - FK: `Direccion.sucursalId → Sucursal.id` (relación `Sucursal 1:1 Direccion`, declarada en `Direccion`). `Sucursal` no almacena `direccion` ni coordenadas: esos datos quedan centralizados en `Direccion`.
-- `horarios` no es una entidad independiente.
+- El horario de atención es estructurado: ver `HorarioSucursal` (§2.3.1). La antigua columna `Sucursales.horarios` se eliminó tras el backfill.
+
+### 2.3.1 HorarioSucursal
+
+| Atributo     | Tipo de dato | Notas                                   |
+| ------------ | ------------ | --------------------------------------- |
+| `id`         | `INTEGER`    | PK                                      |
+| `sucursalId` | `INTEGER`    | FK → `Sucursal.id`                      |
+| `diaSemana`  | `INTEGER`    | 1 = lunes … 7 = domingo (ISO-8601)      |
+| `apertura`   | `TIME`       | hora real de apertura del local (HH:MM) |
+| `cierre`     | `TIME`       | hora real de cierre del local (HH:MM)   |
+
+- PK: `id`
+- FK: `sucursalId → Sucursal.id`, `ON DELETE CASCADE`
+- UNIQUE: `(sucursalId, diaSemana, apertura, cierre)` — se rechazan franjas exactamente duplicadas.
+- CHECK: `CK_HorarioSucursales_dia` — `diaSemana` entre 1 y 7.
+- Validación de servicio (`horarios_service.normalizarHorarios`): `apertura` y `cierre` son horas válidas, `apertura <> cierre` (una franja no puede durar cero) y las franjas no se repiten dentro del mismo día.
+- Varias franjas por día y solapamientos permitidos: "abierta" es caer en cualquiera.
+- `cierre <= apertura` representa una franja que **cruza la medianoche** (ej. 19:00–02:00) y pertenece al día de apertura.
+- Sin franjas para un día = sucursal cerrada ese día. Para cerrar todo el local se usa `Sucursal.activa = false`, no la ausencia de franjas.
+- `apertura`/`cierre` guardan el horario **real del local**. El corte de pedidos se **deriva** restando el parámetro global `margenCierreMinutos` (default 30): el local cierra 23:00 y la página deja de tomar pedidos 22:30.
 
 ### 2.4 Categoria
 
@@ -440,7 +459,7 @@ Opinión de un CLIENTE sobre un producto o combo que ya compró y recibió. Reem
 
 ## 3. Relaciones y cardinalidades
 
-A continuación se documentan las **28 relaciones únicas** del modelo.
+A continuación se documentan las **31 relaciones únicas** del modelo.
 
 ```
 Usuario 1:N Direccion
@@ -450,6 +469,7 @@ Usuario 1:N Resena
 
 Sucursal 1:1 Direccion
 Sucursal 1:N Usuario              (sucursal asignada al ADMINISTRADOR)
+Sucursal 1:N HorarioSucursal      (franjas de atención por día)
 
 Categoria 1:N Producto
 
@@ -518,10 +538,11 @@ Pedido 1:N Resena
 | 28  | Pedido                | Resena                | 1:N          | `Resena.pedidoId`                 |
 | 29  | Sucursal              | InsumoStock           | 1:N          | `InsumoStock.sucursalId`          |
 | 30  | Insumo                | InsumoStock           | 1:N          | `InsumoStock.insumoId`            |
+| 31  | Sucursal              | HorarioSucursal       | 1:N          | `HorarioSucursal.sucursalId`      |
 
 ## 4. Claves y restricciones
 
-- **PK simples**: `Usuario`, `Direccion`, `Sucursal`, `Categoria`, `Producto`, `ComboComponente`, `OpcionGrupo`, `Opcion`, `ProductoOpcionGrupo`, `Pedido`, `PedidoItem`, `PedidoItemOpcion`, `EstadoPedido`, `PedidoEstadoHistorial`, `Promocion`, `PromocionProducto`, `PedidoPromocion`, `ParametroSistema`, `Resena`, `Insumo` (todas con `id`).
+- **PK simples**: `Usuario`, `Direccion`, `Sucursal`, `HorarioSucursal`, `Categoria`, `Producto`, `ComboComponente`, `OpcionGrupo`, `Opcion`, `ProductoOpcionGrupo`, `Pedido`, `PedidoItem`, `PedidoItemOpcion`, `EstadoPedido`, `PedidoEstadoHistorial`, `Promocion`, `PromocionProducto`, `PedidoPromocion`, `ParametroSistema`, `Resena`, `Insumo` (todas con `id`).
 - **PK compuesta**: `Stock (sucursalId, productoId)`, `InsumoStock (sucursalId, insumoId)`.
 - **UNIQUE**:
   - `Usuario.email`
@@ -534,6 +555,7 @@ Pedido 1:N Resena
   - `PedidoPromocion (pedidoId, promocionId)`
   - `ParametroSistema.clave`
   - `Resena (usuarioId, productoId)` — una reseña por cliente y producto
+  - `HorarioSucursal (sucursalId, diaSemana, apertura, cierre)` — se rechazan franjas exactamente duplicadas
 - **CHECK**: `Direccion`: `CK_Direcciones_propietario` — exactamente uno de `usuarioId` / `sucursalId` debe estar informado (`("usuarioId" IS NOT NULL)::int + ("sucursalId" IS NOT NULL)::int = 1`). Una dirección pertenece a un usuario o a una sucursal, nunca a ambos ni a ninguno.
 - **CHECK**: `Usuario`: `chk_usuarios_sucursal_solo_admin` — `sucursalId` solo puede estar informado cuando `rol = 'ADMINISTRADOR'` (`"rol" = 'ADMINISTRADOR' OR "sucursalId" IS NULL`).
 - **CHECK**: `Resena`: `resenas_puntuacion_rango` — `puntuacion BETWEEN 1 AND 5`.
@@ -551,6 +573,7 @@ Pedido 1:N Resena
 - **Combos**: se representan con `Producto` (`tipo = COMBO`) + `ComboComponente`, que relaciona el producto-combo con sus componentes y cantidades. No existe una entidad `Combo` separada. El precio del combo es el propio `Producto.precio`, no la suma de componentes.
 - **Personalización**: `OpcionGrupo` (grupo de opciones, con `tipoSeleccion`, `minimo`, `maximo`, `obligatorio`) + `Opcion` (opción concreta, con `precioAdicional` y `productoReferenciaId` opcional) + `ProductoOpcionGrupo` (vínculo N:M producto ↔ grupo). Permite que distintos productos tengan distintos grupos.
 - **Stock por sucursal**: `Stock (sucursalId, productoId)` con cantidad y `disponible`, independiente por sucursal.
+- **Horarios de atención**: `HorarioSucursal` guarda una fila por franja y día (`diaSemana` 1..7, `apertura`/`cierre` como `TIME`). Varias franjas por día y solapamientos permitidos; `cierre <= apertura` cruza la medianoche. El corte de pedidos no se persiste: se deriva del cierre real menos `margenCierreMinutos` (parámetro global, default 30). La evaluación se hace en `America/Argentina/Buenos_Aires`.
 - **Insumos**: `Insumo` (extra o condimento con precio y baja lógica) + `InsumoStock (sucursalId, insumoId)`. Sólo `extra` y `condimento` descuentan stock; se vinculan desde `PersonalizacionElementos.insumoId` y `PersonalizacionCategorias.insumoId`. "Agotado" significa sin stock en ninguna sucursal activa. El detalle está en `docs/insumos.md`.
 - **Historial de estados**: `PedidoEstadoHistorial` registra cada cambio con `fechaHora`, `estadoId` y opcionalmente `usuarioId` y `observacion`. El estado actual se mantiene desnormalizado en `Pedido.estadoId`.
 - **Snapshot histórico de pedidos**:
@@ -597,6 +620,7 @@ erDiagram
     Insumo ||--o{ InsumoStock : "1:N"
 
     Sucursal ||--o{ Usuario : "1:N (solo ADMINISTRADOR)"
+    Sucursal ||--o{ HorarioSucursal : "1:N"
 
     Sucursal ||--o{ Pedido : "1:N"
     EstadoPedido ||--o{ Pedido : "1:N"
@@ -653,8 +677,15 @@ erDiagram
         int id PK
         string nombre
         string telefono
-        string horarios
         boolean activa
+    }
+
+    HorarioSucursal {
+        int id PK
+        int sucursalId FK
+        int diaSemana "1 = lunes ... 7 = domingo"
+        time apertura "hora real del local"
+        time cierre "hora real del local; cierre <= apertura cruza medianoche"
     }
 
     Categoria {
@@ -839,5 +870,5 @@ Las siguientes decisiones provienen directamente del modelo de dominio y afectan
 
 ## Observaciones
 
-- La relación `Usuario → Pedido` que estaba duplicada en `docs/modelo-dominio.md` (§6) fue corregida: ambos documentos listan ahora las 28 relaciones únicas, incluida la nueva `Sucursal 1:1 Direccion` (`Direccion.sucursalId`) y las tres de `Resena`.
+- La relación `Usuario → Pedido` que estaba duplicada en `docs/modelo-dominio.md` (§6) fue corregida: ambos documentos listan ahora las relaciones únicas, incluida `Sucursal 1:1 Direccion` (`Direccion.sucursalId`), `Sucursal 1:N HorarioSucursal` y las tres de `Resena`.
 - `Resena` reemplaza la "Calificación" de la Propuesta 2. Se aprobó explícitamente sumarla al alcance porque el pedido la usa como funcionalidad real (estrellas + comentario sobre productos y combos comprados). No agrega `Repartidor` ni `Notificacion`.

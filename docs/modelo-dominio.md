@@ -144,21 +144,39 @@ Importante: la dirección utilizada en un pedido **no debe depender de esta enti
 
 ### 5.3 Sucursal
 
-| Atributo   | Tipo / Notas                      |
-| ---------- | --------------------------------- |
-| `id`       | PK                                |
-| `nombre`   |                                   |
-| `telefono` |                                   |
-| `horarios` | información propia de la sucursal |
-| `activa`   | booleano                          |
+| Atributo   | Tipo / Notas |
+| ---------- | ------------ |
+| `id`       | PK           |
+| `nombre`   |              |
+| `telefono` |              |
+| `activa`   | booleano     |
 
 `Sucursal` **no** almacena `direccion` ni `latitud`/`longitud`: esos datos quedan centralizados en `Direccion` mediante la relación `Sucursal 1:1 Direccion` (FK `Direccion.sucursalId`). Antes de esta alineación, `Sucursal` los duplicaba como `direccion STRING` + coordenadas; dichas columnas fueron eliminadas.
 
-`horarios` se documenta como información de la sucursal, no como entidad independiente. No crear `HorarioSucursal`. La decisión podrá revisarse si se requiere gestionar horarios de forma estructurada.
+### 5.3.1 HorarioSucursal
+
+El horario de atención es **estructurado**. `Sucursales.horarios` (texto libre) se eliminó tras el backfill a `HorarioSucursal`:
+
+| Atributo     | Tipo / Notas                                   |
+| ------------ | ---------------------------------------------- |
+| `id`         | PK                                             |
+| `sucursalId` | FK → `Sucursal.id` (`ON DELETE CASCADE`)       |
+| `diaSemana`  | entero 1..7 (lunes = 1, domingo = 7, ISO-8601) |
+| `apertura`   | `TIME` — hora real de apertura del local       |
+| `cierre`     | `TIME` — hora real de cierre del local         |
+
+Reglas:
+
+- Varias franjas por día y solapamientos permitidos: "abierta" es caer en cualquiera. Se rechazan franjas exactamente duplicadas (UNIQUE `(sucursalId, diaSemana, apertura, cierre)`) y `apertura = cierre`.
+- `cierre <= apertura` representa una franja que **cruza la medianoche** (ej. 19:00–02:00) y pertenece al día de apertura; se evalúan también las franjas del día anterior.
+- Un día sin franjas está cerrado. Para cerrar todo el local se usa `activa = false`, no la ausencia de franjas.
+- La franja guarda el horario del local. El **corte de pedidos** se deriva restando el parámetro global `margenCierreMinutos` (default 30): el local cierra 23:00 y la página deja de tomar pedidos 22:30.
+- La evaluación se hace siempre en `America/Argentina/Buenos_Aires`.
 
 Relaciones:
 
 - `Sucursal 1:1 Direccion`
+- `Sucursal 1:N HorarioSucursal`
 - `Sucursal 1:N Stock`
 - `Sucursal 1:N Pedido`
 
@@ -532,6 +550,7 @@ Usuario 1:N Pedido
 
 Sucursal 1:1 Direccion
 Sucursal 1:N Usuario              (sucursal asignada al ADMINISTRADOR)
+Sucursal 1:N HorarioSucursal      (franjas de atención por día)
 
 Categoria 1:N Producto
 
@@ -588,6 +607,7 @@ Pedido 1:N Resena
 | Producto              | Stock                 | 1:N          | `Stock.productoId`                |
 | Sucursal              | InsumoStock           | 1:N          | `InsumoStock.sucursalId`          |
 | Insumo                | InsumoStock           | 1:N          | `InsumoStock.insumoId`            |
+| Sucursal              | HorarioSucursal       | 1:N          | `HorarioSucursal.sucursalId`      |
 | Sucursal              | Pedido                | 1:N          | `Pedido.sucursalId`               |
 | EstadoPedido          | Pedido                | 1:N          | `Pedido.estadoId`                 |
 | Pedido                | PedidoItem            | 1:N          | `PedidoItem.pedidoId`             |
@@ -610,13 +630,14 @@ Pedido 1:N Resena
 ### 7.1 Asignación de sucursal (regla de negocio, no entidad)
 
 1. Obtener las sucursales activas.
-2. Ordenarlas por proximidad geográfica a la dirección de entrega.
-3. Comprobar si la sucursal más cercana dispone del stock necesario.
-4. Si no dispone del stock, evaluar la siguiente sucursal más cercana.
-5. Continuar hasta encontrar una sucursal capaz de satisfacer el pedido.
-6. Si ninguna sucursal puede satisfacerlo, el pedido no puede confirmarse.
+2. **Descartar las que están fuera del horario de atención** en el momento del pedido (franjas de `HorarioSucursal` menos el margen de cierre global). Si la más cercana está cerrada se saltea a la siguiente.
+3. Ordenarlas por proximidad geográfica a la dirección de entrega.
+4. Comprobar si la sucursal más cercana dispone del stock necesario.
+5. Si no dispone del stock, evaluar la siguiente sucursal más cercana.
+6. Continuar hasta encontrar una sucursal capaz de satisfacer el pedido.
+7. Si ninguna sucursal puede satisfacerlo, el pedido no puede confirmarse.
 
-Además, un administrador puede reasignar manualmente la sucursal de un pedido como excepción operativa. No crear una entidad para esta regla.
+Además, un administrador puede reasignar manualmente la sucursal de un pedido como excepción operativa, siempre que el destino esté abierto y tenga stock. No crear una entidad para esta regla.
 
 ### 7.2 Otras reglas
 
@@ -652,7 +673,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - Una sola entidad `Usuario` con `rol` (sin `Cliente`/`Administrador` separados).
 - `Direccion` como única entidad de ubicación (domicilio + coordenadas), compartida por usuarios y sucursales; `Sucursal 1:1 Direccion` (sin `direccion STRING` ni coordenadas en `Sucursal`).
 - Dirección histórica por snapshot dentro de `Pedido` (sin `PedidoDireccion`).
-- `horarios` como información de `Sucursal` (sin `HorarioSucursal`).
+- `horarios` como entidad `HorarioSucursal` (franjas por día), no como texto en `Sucursal`. El corte de pedidos se deriva del cierre real menos `margenCierreMinutos`.
 - Combos como `Producto` con `tipo = COMBO` + `ComboComponente` (sin entidad `Combo`).
 - Precio del combo es propio en `Producto.precio`, no suma de componentes.
 - Personalización con `OpcionGrupo` + `Opcion` + `ProductoOpcionGrupo`.
@@ -673,7 +694,6 @@ Este modelo **no** incluye:
 - `Administrador` separado de `Usuario`
 - `Carrito`
 - `CarritoItem`
-- `HorarioSucursal`
 - `PrecioHistorico`
 - tablas específicas de reportes
 - motor genérico de promociones

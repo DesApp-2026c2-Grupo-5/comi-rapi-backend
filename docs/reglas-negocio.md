@@ -41,6 +41,7 @@ Fuentes: `docs/enunciado.md`, `docs/modelo-dominio.md`, `docs/DER.md`, `AGENTS.m
 - `disponible = false` significa que la sucursal no ofrece actualmente ese producto.
 - No todos los productos están disponibles en todas las sucursales.
 - Al confirmar un pedido se debe verificar la disponibilidad correspondiente.
+- **Horarios**: cada sucursal tiene `HorarioSucursal` (franjas por día). Una sucursal fuera del horario de atención no puede recibir pedidos, aunque tenga stock y esté dentro de cobertura. Ver §22.
 - Pendiente de definición: cómo se verifica el stock de un combo cuya disponibilidad depende de sus componentes. No agregar una entidad para resolverlo.
 
 ## 6. Asignación de sucursal
@@ -48,13 +49,14 @@ Fuentes: `docs/enunciado.md`, `docs/modelo-dominio.md`, `docs/DER.md`, `AGENTS.m
 Regla de negocio, no entidad:
 
 1. Obtener sucursales activas.
-2. Ordenarlas por proximidad geográfica a la dirección de entrega.
-3. Verificar stock de la más cercana.
-4. Si no puede satisfacer el pedido, probar la siguiente.
-5. Repetir hasta encontrar una sucursal capaz de cumplirlo.
-6. Si ninguna puede, el pedido no se confirma.
+2. Descartar las que están fuera del horario de atención en ese momento (`HorarioSucursal` menos `margenCierreMinutos`; §22). Si la más cercana está cerrada, se saltea a la siguiente.
+3. Ordenarlas por proximidad geográfica a la dirección de entrega.
+4. Verificar stock de la más cercana.
+5. Si no puede satisfacer el pedido, probar la siguiente.
+6. Repetir hasta encontrar una sucursal capaz de cumplirlo.
+7. Si ninguna puede, el pedido no se confirma.
 
-- El SUPERADMINISTRADOR (con su sucursal de contexto, §20.5) puede reasignar manualmente la sucursal de un pedido como excepción operativa (§20.4); el ADMINISTRADOR de sucursal ya no reasigna.
+- El SUPERADMINISTRADOR (con su sucursal de contexto, §20.5) puede reasignar manualmente la sucursal de un pedido como excepción operativa (§20.4), siempre que el destino esté abierto y tenga stock; el ADMINISTRADOR de sucursal ya no reasigna.
 
 ## 7. Direcciones
 
@@ -115,19 +117,20 @@ Regla de negocio, no entidad:
 - **Validación** (`normalizarValor`): el valor debe ser numérico, respetar el `tipo` (`entero` no admite decimales) y caer dentro de `[minimo, maximo]`. Errores tipados: `ParametroDesconocidoError`, `ParametroInvalidoError` → HTTP 400.
 - **Parámetros y dónde se aplican**:
 
-  | Clave                                 | Grupo       | Por defecto | Aplica en                                                            |
-  | ------------------------------------- | ----------- | ----------- | -------------------------------------------------------------------- |
-  | `montoMinimoEnvioGratis`              | envio       | 10000       | `pedido_controller` (envío server-side)                              |
-  | `costoEnvioFijo`                      | envio       | 350         | `pedido_controller` (envío server-side)                              |
-  | `radioCoberturaKm`                    | cobertura   | 5           | `cobertura_service` (§16)                                            |
-  | `cantidadMaximaProductoCarrito`       | carrito     | 20          | frontend (tope de unidades por producto)                             |
-  | `minimoComponentesCombo`              | catalogo    | 2           | `combo` (§ del catálogo)                                             |
-  | `montoMinimoPedido`                   | pedido      | 2000        | `pedido_controller` (límites del pedido)                             |
-  | `montoMaximoPedido`                   | pedido      | 500000      | `pedido_controller` (límites del pedido)                             |
-  | `cantidadMaximaItemsPedido`           | pedido      | 50          | `pedido_controller` (límites del pedido)                             |
-  | `cantidadMaximaUnidadesProducto`      | pedido      | 20          | `pedido_controller` (límites del pedido)                             |
-  | `porcentajeMaximoDescuento`           | promociones | 50          | `promocion_controller` (§11)                                         |
-  | `cantidadMaximaPromocionesAplicables` | promociones | 3           | reservado: el motor aplica el mejor descuento por línea sin acumular |
+  | Clave                                 | Grupo       | Por defecto | Aplica en                                                                       |
+  | ------------------------------------- | ----------- | ----------- | ------------------------------------------------------------------------------- |
+  | `montoMinimoEnvioGratis`              | envio       | 10000       | `pedido_controller` (envío server-side)                                         |
+  | `costoEnvioFijo`                      | envio       | 350         | `pedido_controller` (envío server-side)                                         |
+  | `radioCoberturaKm`                    | cobertura   | 5           | `cobertura_service` (§16)                                                       |
+  | `margenCierreMinutos`                 | horarios    | 30          | `horarios_service` (§22): minutos antes del cierre en que se cortan los pedidos |
+  | `cantidadMaximaProductoCarrito`       | carrito     | 20          | frontend (tope de unidades por producto)                                        |
+  | `minimoComponentesCombo`              | catalogo    | 2           | `combo` (§ del catálogo)                                                        |
+  | `montoMinimoPedido`                   | pedido      | 2000        | `pedido_controller` (límites del pedido)                                        |
+  | `montoMaximoPedido`                   | pedido      | 500000      | `pedido_controller` (límites del pedido)                                        |
+  | `cantidadMaximaItemsPedido`           | pedido      | 50          | `pedido_controller` (límites del pedido)                                        |
+  | `cantidadMaximaUnidadesProducto`      | pedido      | 20          | `pedido_controller` (límites del pedido)                                        |
+  | `porcentajeMaximoDescuento`           | promociones | 50          | `promocion_controller` (§11)                                                    |
+  | `cantidadMaximaPromocionesAplicables` | promociones | 3           | reservado: el motor aplica el mejor descuento por línea sin acumular            |
 
 - **Pendiente de definición**: cálculo del tiempo estimado de entrega (ETA). Puede definirse como una regla dinámica a partir del estado y/o parámetros, sin requerir necesariamente persistencia.
 
@@ -262,7 +265,7 @@ Regla de negocio, no entidad:
 ### 20.1 Selección de sucursal (T1)
 
 - **Regla D1**: al crear un pedido, el backend selecciona **la sucursal más cercana por ruta que tenga stock suficiente, dentro de cobertura** (≤ `COBERTURA_RADIO_MAX_KM` km por ruta). Reemplaza la lógica anterior de "menor carga de pedidos pendientes" (válida según `enunciado.md:58` que deja la estrategia a criterio del grupo).
-- Elegible = activa ∧ stock suficiente (`faltantesDePedido`) ∧ dentro de cobertura (`sucursalesEnCobertura`, ranking por distancia de ruta). **Desde A1-4 el ranking es cache-first**: las distancias salen del caché `DistanciasRutas` del proveedor activo y solo los pares faltantes se calculan en vivo (lazy, fail-closed — ver §15); las reglas no cambian, solo la fuente de la distancia.
+- Elegible = activa ∧ **abierta ahora** (§22) ∧ stock suficiente (`faltantesDePedido`) ∧ dentro de cobertura (`sucursalesEnCobertura`, ranking por distancia de ruta). **Desde A1-4 el ranking es cache-first**: las distancias salen del caché `DistanciasRutas` del proveedor activo y solo los pares faltantes se calculan en vivo (lazy, fail-closed — ver §15); las reglas no cambian, solo la fuente de la distancia.
 - Casos límite: ninguna elegible → 422 "No hay sucursales disponibles con stock dentro de la cobertura"; la más cercana sin stock → la siguiente más cercana con stock; con stock fuera de cobertura → no elegible (cobertura es hard). Si se evaluaron candidatas con stock parcial, el 422 informa los **faltantes de la mejor candidata** (la que menos productos debe y, a la vez, más unidades ofrece de esos productos; ver §20.3), no el mensaje genérico.
 - **El frontend NO pre-asigna sucursal** (se eliminó el espejo `asignacionSucursal.js`): el POST siempre asigna con las reglas reales; la respuesta trae la sucursal asignada.
 - Si el cliente envía `sucursalId`, se valida que sea elegible (cobertura + stock) y se respeta; si no, se elige automáticamente.
@@ -279,7 +282,7 @@ Regla de negocio, no entidad:
 ### 20.3 Reasignación automática al confirmar el pago (corrección post-T4)
 
 - **Disparador**: al confirmar el pedido (`pendiente→confirmado`, el "pago"), `reservasDeStockVencidas` detecta que la reserva del pedido venció: el admin desactivó el producto (`disponible = false`), quitó su fila de `Stocks` o apagó un componente de un combo del pedido.
-- **Mismas reglas que la asignación inicial (D1)**: la reasignación delega en `seleccionarSucursal` — la **más cercana por ruta con stock suficiente, dentro de cobertura**, excluyendo la sucursal original (`exceptoSucursalId`: su reserva venció, ya no es elegible). El cliente no rearma el pedido.
+- **Mismas reglas que la asignación inicial (D1)**: la reasignación delega en `seleccionarSucursal` — la **más cercana por ruta con stock suficiente, dentro de cobertura y abierta ahora** (§22), excluyendo la sucursal original (`exceptoSucursalId`: su reserva venció, ya no es elegible). El cliente no rearma el pedido. Si la sucursal original cerró (aunque su stock siga reservado), también se dispara la reasignación al confirmar el pago.
 - **Atomicidad**: reponer reserva de la vieja + descontar en la nueva + cambio de `sucursalId` + historial ocurren en la MISMA transacción que la transición de estado; si algo falla, el pedido queda `pendiente` con su sucursal y stock originales.
 - **Ninguna elegible → 409 `StockInsuficienteError`**: el pago se corta, el pedido queda `pendiente` y el cliente puede cancelarlo (se repone el stock). **No existe un estado "pagado sin sucursal"**: el pago simulado ES la transición `pendiente→confirmado`, así que nunca se confirma un pedido sin una sucursal que pueda prepararlo. No se agregaron estados ni reembolsos.
 - **Mensaje al cliente**: los faltantes de la mejor candidata en cobertura (el máximo realmente entregable; desempate: menos productos faltantes, luego más unidades). Si no se evaluó ninguna candidata (cobertura vacía o snapshot sin coordenadas de pedidos previos a T0), se informa qué productos perdieron su reserva. El detalle estructurado viaja en `error.faltantes` (tests/logs), no en el texto al cliente: no se exponen nombres de sucursales, distancias ni stock interno.
@@ -291,7 +294,7 @@ Regla de negocio, no entidad:
 - **Endpoint**: `PATCH /api/pedidos/:id/sucursal` (solo SUPERADMIN con contexto de sucursal vía `requiereSucursalOperativa`; estados `pendiente`, `confirmado`, `en_preparacion`). El ADMINISTRADOR de sucursal ya no reasigna manualmente (403 siempre): la excepción operativa de §6 queda centralizada en el superadmin.
 - **Aislamiento del contexto**: el pedido debe pertenecer a la sucursal del contexto elegido (`pedido.sucursalId === sucursalOperativaDeSesion`); si no, 403. Para reasignar un pedido de otra sucursal hay que cambiar el contexto explícitamente.
 - **Destino**: `GET /api/pedidos/:id/sucursales-candidatas` expone las sucursales activas **en cobertura de la dirección del pedido** (mismo ranking cache-first del service) y **con stock suficiente** (`faltantesDePedido`), excluyendo la actual — es la lista del selector del panel. El PATCH re-valida todo en el service; la lista nunca reemplaza a las reglas.
-- **Validaciones** (service `reasignacion_service`, en transacción): misma sucursal → 400; no existe o inactiva → 404; fuera de cobertura (radio vigente por ruta desde las coords del snapshot) → 422; snapshot sin coordenadas → 422; stock insuficiente → 409. La transferencia de la reserva (reponer vieja + descontar nueva) es atómica con el cambio de `sucursalId`.
+- **Validaciones** (service `reasignacion_service`, en transacción): misma sucursal → 400; no existe o inactiva → 404; **cerrada ahora** (§22) → 422; fuera de cobertura (radio vigente por ruta desde las coords del snapshot) → 422; snapshot sin coordenadas → 422; stock insuficiente → 409. La transferencia de la reserva (reponer vieja + descontar nueva) es atómica con el cambio de `sucursalId`.
 - **Trazabilidad**: registro en `PedidoEstadoHistorial` con observación "Reasignado de X a Y por admin Z" (sin cambio de estado, sin tabla nueva).
 - **ETA**: recalculado con la nueva sucursal **después del commit** (igual que el pago de §20.2): la transacción no espera redes externas. Si el proveedor falla, el pedido queda reasignado sin ETA (degradación).
 - **Frontend**: botón "Reasignar sucursal" solo para el superadmin operando una sucursal, en el panel de pedidos; el modal ofrece solo las candidatas (cobertura + stock) con su distancia. El admin de sucursal no ve el botón.
@@ -322,3 +325,31 @@ Regla de negocio, no entidad:
 - **Dónde se escribe**: desde el detalle del producto y desde el detalle de un pedido entregado (acción por ítem). La lista de pedidos muestra un acceso "Calificar" en los pedidos entregados.
 - **Errores**: 400 validación (puntuación fuera de rango, comentario > 500, `productoId` faltante), 401 sin sesión, 403 sin compra entregada o rol no cliente, 404 producto/pedido/reseña inexistente o ajena, 409 reseña duplicada.
 - **Datos demo**: los 43 clientes demo (`sunny@demo.com`, `nephis@demo.com`, ... `altelicia@demo.com`, contraseña `123456`) tienen compras en volumen y entre 5 y 9 reseñas por producto, siempre de clientes distintos. El seeder es idempotente y está marcado con `SEED-RESENA`; se documenta en `docs/resenas.md`.
+
+## 22. Horarios de atención por sucursal
+
+> **Nota de cambio:** el horario dejó de ser el texto libre `Sucursales.horarios` y pasó a la entidad `HorarioSucursal` (franjas por día). La columna vieja se eliminó después del backfill.
+
+- **Modelo**: `HorarioSucursal (id, sucursalId, diaSemana, apertura, cierre)`. `diaSemana` va de 1 (lunes) a 7 (domingo); `apertura`/`cierre` son `TIME`. Reglas y restricciones en `docs/DER.md` §2.3.1 y `docs/modelo-dominio.md` §5.3.1.
+- **Franjas**: se permiten varias por día y solapamientos (basta caer en una). Se rechazan duplicados exactos (UNIQUE) y `apertura = cierre`. Un día sin franjas está cerrado; para cerrar todo el local se usa `Sucursal.activa = false`.
+- **Cruce de medianoche**: `cierre <= apertura` significa que la franja termina al día siguiente (ej. 19:00–02:00) y pertenece al día de apertura. Al evaluar se miran también las franjas del día anterior.
+- **Horario real vs. corte de pedidos**: la franja guarda el horario **del local** (10:00–23:00). El **corte de pedidos** se deriva restando el parámetro global `margenCierreMinutos` (default 30): 23:00 → 22:30. Esos minutos son el colchón para terminar los pedidos de última hora. Una franja más corta que el margen no tiene ventana de pedidos.
+- **Zona horaria**: toda la evaluación se hace en `America/Argentina/Buenos_Aires`, con un único `ahora` por request.
+- **Alta y edición**: `POST/PUT /api/sucursales` recibe `horarios` agrupado por día: `[{ diaSemana, franjas: [{ apertura, cierre }] }]`. Si se omite en el alta, el backend aplica 10:00–23:00 de lunes a domingo. Un horario inválido devuelve 400 (`HorarioInvalidoError`).
+- **Serialización**: `GET /api/sucursales` y `GET /api/sucursales/:id` devuelven, además de `horarios` agrupado, `horariosTexto`, `abiertaAhora`, `cierrePedidos`, `segundosRestantes` y `proximaApertura`. El frontend muestra ese estado sin replicar la regla.
+- **Selección de sucursal**: una sucursal cerrada no es elegible aunque tenga stock y esté en cobertura (§6 y §20.1). Si la más cercana está cerrada se saltea a la siguiente.
+- **Creación de pedido**: si ninguna sucursal puede tomar el pedido (todas cerradas o sin stock), el POST devuelve 422 con el motivo y la próxima apertura cuando corresponde. El pedido no se crea.
+- **Pago**: al confirmar se revalida el horario. Si la sucursal asignada cerró, el backend reasigna el pedido a otra sucursal abierta con stock dentro de cobertura (§20.3); si no hay ninguna, **cancela automáticamente el pedido** en la misma transacción (repone el stock, deja el historial en `cancelado`) y responde 409 con `cancelado: true`. El cliente vuelve al carrito con los mismos productos; el pedido no queda bloqueado en `pendiente`.
+- **Reasignación manual**: el destino debe estar abierto ahora; si no, 422 (§20.4).
+- **Avisos al cliente**:
+  - `POST /api/pedidos/disponibilidad` (CLIENTE autenticado) recibe `{ direccionId, productos }` y devuelve `{ disponible, unica, sucursal, sucursales, proximaApertura, proximaAperturaTexto, margenCierreMinutos, mensaje }`. No reserva stock: es la foto previa a confirmar. `unica` indica que hay exactamente una sucursal viable; el frontend muestra el contador sólo en ese caso, porque con más de una el backend puede reasignar.
+  - `GET /api/pedidos/:id/disponibilidad` (dueño del pedido) devuelve `{ estado, sucursalId, sucursal, abierta, cierrePedidos, segundosRestantes, hayAlternativa, alternativas, proximaApertura, proximaAperturaTexto, mensaje }`. Es lo que usa la pantalla de pago.
+  - **Umbral del contador**: el aviso de "última chance" (sucursal única en el carrito, o pedido sin alternativa en el pago) se muestra sólo cuando faltan **10 minutos o menos** para el corte (`MINUTOS_AVISO_CIERRE` en `comi-rapi-fronted/src/utils/horarios.js`). Antes de ese umbral no se muestra, aunque el backend ya informe `segundosRestantes`.
+  - El catálogo muestra un único banner cuando **todas** las sucursales activas están cerradas; no hay estado por producto ni chequeo por dirección en el catálogo.
+  - En la pantalla de pago, si la sucursal asignada cerró y hay alternativa, el panel "Tu pedido será preparado en" muestra directamente la sucursal nueva (nombre y dirección) y se actualiza con el evento de tiempo real; el aviso "La sucursal cerró" queda reservado para cuando no hay ninguna otra sucursal disponible.
+- **Tiempo real**: `sucursal_estado` es un evento broadcast de Socket.IO que avisa que una sucursal abrió o cerró. No lleva datos obligatorios: el frontend relee `GET /api/sucursales` (contexto global) o `GET /api/pedidos/:id/disponibilidad` (pantalla de pago).
+  - Se emite al crear, editar o dar de baja una sucursal y al cambiar `margenCierreMinutos` (post-commit).
+  - Además, `lib/services/horarios_vigia.js` mantiene un único temporizador al próximo límite operativo (apertura o corte) de las sucursales activas y emite el evento al vencer, reprogramándose solo. Se arranca desde `bin/www.js`; sin Socket.IO (tests) no hace nada. Es un complemento: el pago sigue revalidando aunque el evento no llegue.
+  - En la pantalla de pago, si el evento confirma que la sucursal cerró y no hay alternativa, el pedido se cancela solo (llamada a `PATCH /api/pedidos/:id/estado` con `cancelado`) y el cliente vuelve al carrito.
+- **Parámetro**: `margenCierreMinutos` (grupo `horarios`, default 30, rango 0–120) se edita en `/superadmin/parametros`.
+- **Sin feriados**: por ahora no hay excepciones por feriado ni cortes adicionales.

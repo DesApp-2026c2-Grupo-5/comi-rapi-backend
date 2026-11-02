@@ -10,6 +10,8 @@ Instrucciones permanentes para el trabajo de OpenCode sobre este proyecto.
 4. `docs/resenas.md` — reglas, endpoints y datos demo de reseñas.
 5. `docs/insumos.md` — catálogo de extras/condimentos y su stock por sucursal.
 
+Los horarios de atención están en `docs/reglas-negocio.md` §22 (y en `docs/DER.md` §2.3.1 / `docs/modelo-dominio.md` §5.3.1): cualquier cambio de comportamiento debe reflejarse ahí.
+
 `docs/DER-comi-rapi.pdf` es el DER exportado (mismo contenido).
 `docs/historico/analisis-inicial.md` es material histórico: NO es fuente de verdad y no debe usarse para redefinir el modelo.
 
@@ -32,7 +34,7 @@ Flujo de una petición:
 - Un archivo por entidad del DER (no agrupar entidades en un solo archivo).
 - Modelos: clase Sequelize con `init(sequelize)` + `associate(db)`. `lib/models/index.js` los descubre automáticamente.
 - Migraciones: en `db/migrations/`; seeders: en `db/seeders/`. Sírvanse de `.sequelizerc`.
-- Nombre de tabla en plural (`Productos`, `Categorias`); nombres de columnas según exactamente el DER (ej. `usuarioId`, `latitud`, `longitud`, `horarios`, `activa`, `tipo`).
+- Nombre de tabla en plural (`Productos`, `Categorias`, `HorarioSucursales`); nombres de columnas según exactamente el DER (ej. `usuarioId`, `latitud`, `longitud`, `diaSemana`, `apertura`, `cierre`, `activa`, `tipo`).
 - Tipos de dato según la columna `Tipo de dato` del DER (INTEGER, STRING, TEXT, DECIMAL(10,2), DECIMAL(10,7), BOOLEAN, DATE, ENUM).
 - Respetar PK, FK, UNIQUE y restricciones indicadas en `DER.md`.
 
@@ -46,6 +48,7 @@ Flujo de una petición:
 
 - `Categoria` y `Producto` ya tienen implementación funcional (migración + modelo + controller + ruta + seeder). Reutilizarla y adaptarla (por ejemplo, agregar `tipo` en `Producto`), no rehacerla innecesariamente.
 - **Reseñas**: `Resena` tiene migración, modelo, asociaciones, service (`lib/services/resenas.js`), controller, rutas (`/api/productos/:id/resenas` público y `/api/resenas/*` para CLIENTE) y tests. El detalle está en `docs/resenas.md`. No volver a usar `RESENAS_DEMO` ni promedios hardcodeados en el frontend.
+- **Horarios de atención**: `HorarioSucursal` (migración `20261031000001-create-horario-sucursal.js`, modelo `lib/models/horario_sucursal.js`, `Sucursal.hasMany as: 'horarios'`) guarda una fila por día y franja (`diaSemana` 1..7, `apertura`/`cierre` `TIME`). La lógica vive en `lib/services/horarios_service.js` (`franjaVigente`, `agruparHorarios`, `formatearHorarios`, `normalizarHorarios`, `proximaApertura`). `Sucursal.horarios` (texto libre) **ya no existe**: se eliminó tras el backfill. El corte de pedidos se deriva restando el parámetro global `margenCierreMinutos` (default 30); no se persiste. La evaluación se hace en `America/Argentina/Buenos_Aires` con un único `ahora` por request. Los avisos del cliente son `POST /api/pedidos/disponibilidad` y `GET /api/pedidos/:id/disponibilidad`. El canal de tiempo real emite `sucursal_estado` (broadcast) al crear/editar/baja una sucursal, al cambiar `margenCierreMinutos` y desde `lib/services/horarios_vigia.js`, que programa un único temporizador al próximo límite (`proximaLimite`: apertura o corte) de las sucursales activas; se arranca en `bin/www.js`. Al confirmar el pago con la sucursal cerrada y sin alternativa, el pedido se **cancela automáticamente** (repone stock, historial) y la respuesta 409 trae `cancelado: true`.
 - **Datos demo**: el seeder `20261025000002-demo-clientes-compras.js` crea 43 clientes demo (`sunny@demo.com`, `nephis@demo.com`, ... `altelicia@demo.com`; password `123456`) con compras en volumen y entre 5 y 9 reseñas por producto, de clientes distintos; el seeder `20261025000003-stock-150.js` deja todo el stock en 150. Ambos son idempotentes y están documentados en `docs/resenas.md` §5.
 
 ## Comandos existentes
@@ -56,6 +59,6 @@ Flujo de una petición:
 - `npm run db:migrate` — ejecuta migraciones.
 - `npm run db:seed` — carga seeders.
 - `npm run lint` — eslint + prettier.
-- `npm test` / `npm run test:watch` — tests con Jest.
+- `npm test` / `npm run test:watch` — tests con Jest sobre `SQL_TEST_DATABASE` (nunca la base de desarrollo). Ambos corren `--runInBand`: no lanzar dos runners en paralelo sobre la misma base de test (truncan tablas y producen deadlocks). Una base separada por runner se consigue con `SQL_TEST_DATABASE=...`. Las migraciones de la base de test se aplican con `NODE_ENV=test npx sequelize db:migrate` (`.sequelizerc` apunta a `dist/`, así que requiere `npm run build` antes).
 - `npm run test:tiempo-real` — verificación end-to-end del canal WebSocket contra el backend de desarrollo (debe estar levantado en `:3000`). Al terminar borra los pedidos que creó.
 - `npm run limpiar:pruebas` — borra los pedidos de los usuarios de prueba (`@test.com`, menos los de la seeder). No toca las cuentas demo `@demo.com` ni sus reseñas. Acepta `--dry-run`.
