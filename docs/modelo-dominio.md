@@ -23,10 +23,11 @@ El dominio cubre:
 - stock por sucursal (Extensión 1);
 - promociones (Extensión 1);
 - reseñas de productos y combos comprados;
+- reclamos del cliente sobre pedidos entregados (`Queja`);
 - parámetros del sistema;
 - reportes (mediante agregaciones, sin tablas propias).
 
-**No** incluye todavía las funcionalidades de la Propuesta 2 (notificaciones y repartidores), que se contemplan como evolución futura. Las reseñas sí se incorporaron como `Resena`: reemplazan la idea de "calificación" de la Propuesta 2 y se limitan a producto + estrellas + comentario, sin repartidor ni notificación.
+**No** incluye todavía las funcionalidades de la Propuesta 2 (notificaciones y repartidores), que se contemplan como evolución futura. Las reseñas sí se incorporaron como `Resena`: reemplazan la idea de "calificación" de la Propuesta 2 y se limitan a producto + estrellas + comentario, sin repartidor ni notificación. Los reclamos se incorporaron como `Queja`, autorizados explícitamente: son un canal de atención sobre un pedido entregado y **no** habilitan `Notificacion` ni `Repartidor`.
 
 ## 3. Principios de diseño
 
@@ -62,6 +63,8 @@ El dominio cubre:
 | 20  | `Resena`                | Opinión de un cliente sobre un producto comprado |
 | 21  | `Insumo`                | Extra o condimento con precio y baja lógica      |
 | 22  | `InsumoStock`           | Existencia de un insumo en una sucursal          |
+| 23  | `Queja`                 | Reclamo de un cliente sobre un pedido entregado  |
+| 24  | `QuejaMensaje`          | Mensaje del hilo de un reclamo                   |
 
 ## 5. Atributos principales
 
@@ -542,6 +545,27 @@ Regla: `clave` debe ser única. No crear entidades específicas para cada parám
 
 Reglas: un cliente deja **una sola reseña por producto** (UNIQUE `usuarioId + productoId`); solo puede crearla si tiene un pedido `entregado` que incluya ese producto; puede editarla o eliminarla. El autor se muestra como "Nombre I." (nombre + inicial del apellido), nunca con email. No es la `Calificacion` de la Propuesta 2: no evalúa al repartidor ni al pedido en general.
 
+### 5.19 Queja
+
+| Atributo          | Tipo / Notas                                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------------------------- |
+| `id`              | PK                                                                                                    |
+| `usuarioId`       | FK → `Usuario.id` (solo CLIENTE autor del reclamo)                                                    |
+| `pedidoId`        | FK → `Pedido.id` (pedido propio y `entregado`), UNIQUE                                                |
+| `motivo`          | ENUM: `PEDIDO_INCOMPLETO`, `PRODUCTO_EN_MAL_ESTADO`, `DEMORA_EN_LA_ENTREGA`, `ERROR_DE_COBRO`, `OTRO` |
+| `detalle`         | TEXT, obligatorio, 10 a 1000 caracteres                                                               |
+| `estado`          | ENUM: `PENDIENTE` (default), `EN_REVISION`, `RESUELTA`, `RECHAZADA`, `CERRADA`                        |
+| `respuesta`       | TEXT, opcional, máximo 1000 caracteres (última del negocio)                                           |
+| `respondidoPorId` | FK → `Usuario.id` (ADMINISTRADOR o SUPERADMINISTRADOR), opcional                                      |
+| `respondidaEn`    | DATE, opcional (se completa al responder)                                                             |
+| `cerradaEn`       | DATE, opcional (cierre del cliente)                                                                   |
+| `createdAt`       |                                                                                                       |
+| `updatedAt`       |                                                                                                       |
+
+Hilo: `QuejaMensajes` (`quejaId`, `autorId`, `contenido`) guarda las respuestas del cliente (hasta 5) y del negocio.
+
+Reglas: solo el CLIENTE dueño del pedido puede crear la queja, y únicamente si el pedido está `entregado`; **un pedido admite una sola queja** (UNIQUE `pedidoId`). El cliente consulta solo las suyas. El ADMINISTRADOR gestiona las quejas de pedidos de su sucursal y el SUPERADMINISTRADOR todas. Estados: `PENDIENTE → EN_REVISION → RESUELTA | RECHAZADA`; se puede resolver o rechazar directamente desde `PENDIENTE`. `RESUELTA` y `RECHAZADA` exigen `respuesta` y cierran del lado del negocio, pero el cliente puede reabrirlas respondiendo. El cliente puede cerrar en cualquier momento: pasa a `CERRADA` (final). No confundir con `Resena`: la queja es un reclamo operativo con respuesta del negocio, no una opinión pública.
+
 ## 6. Relaciones y cardinalidades
 
 ```
@@ -589,6 +613,12 @@ Pedido N:N Promocion
 Usuario 1:N Resena
 Producto 1:N Resena
 Pedido 1:N Resena
+
+Usuario 1:N Queja                    (autor del reclamo)
+Usuario 1:N Queja                    (administrador que respondió)
+Pedido 1:1 Queja                     (UNIQUE pedidoId)
+Queja 1:N QuejaMensaje
+Usuario 1:N QuejaMensaje             (autor del mensaje)
 ```
 
 | A                     | B                     | Cardinalidad | FK                                |
@@ -624,6 +654,11 @@ Pedido 1:N Resena
 | Usuario               | Resena                | 1:N          | `Resena.usuarioId`                |
 | Producto              | Resena                | 1:N          | `Resena.productoId`               |
 | Pedido                | Resena                | 1:N          | `Resena.pedidoId`                 |
+| Usuario               | Queja                 | 1:N          | `Queja.usuarioId`                 |
+| Usuario               | Queja                 | 1:N          | `Queja.respondidoPorId`           |
+| Pedido                | Queja                 | 1:1          | `Queja.pedidoId`                  |
+| Queja                 | QuejaMensaje          | 1:N          | `QuejaMensaje.quejaId`            |
+| Usuario               | QuejaMensaje          | 1:N          | `QuejaMensaje.autorId`            |
 
 ## 7. Reglas de negocio
 
@@ -649,6 +684,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - `Categoria.nombre` único; sin jerarquía de categorías.
 - `ParametroSistema.clave` único.
 - **Reseñas**: solo un CLIENTE con un pedido `entregado` que contenga el producto puede crearla, y solo una por producto (UNIQUE `usuarioId + productoId`). La puntuación es obligatoria (1 a 5) y el comentario opcional (máximo 500 caracteres). El autor puede editarla o eliminarla; el listado público muestra "Nombre I." y nunca el email. El promedio y la cantidad se calculan sobre las reseñas existentes.
+- **Quejas**: solo el CLIENTE dueño de un pedido `entregado` puede reclamar, y solo una vez por pedido (UNIQUE `pedidoId`). `motivo` es un enum fijo y `detalle` es obligatorio (10 a 1000 caracteres). El cliente solo ve las propias; el ADMINISTRADOR ve las de su sucursal y el SUPERADMINISTRADOR todas. El cliente puede responder hasta 5 veces (reabre a `PENDIENTE` si estaba resuelta o rechazada) y cerrar en cualquier momento (`CERRADA`, final). `RESUELTA` y `RECHAZADA` exigen `respuesta` (máximo 1000 caracteres). Ver `docs/quejas.md`.
 - `Stock`: PK compuesta `(sucursalId, productoId)` única.
 - **Insumos**: `Insumo` con UNIQUE `(nombre, tipo)`; `InsumoStock` con PK compuesta `(sucursalId, insumoId)` y `cantidad >= 0`. Sólo `extra` y `condimento` se vinculan desde la personalización (`insumoId`) y descuentan stock. "Agotado" = sin stock en ninguna sucursal activa. La baja de un insumo es lógica y no permite cambiar su `tipo` si ya está vinculado. Ver `docs/insumos.md`.
 - El carrito es estado temporal y se revalida contra la BD al confirmar.
@@ -684,6 +720,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - Carrito no persistido.
 - Promociones con tipos concretos iniciales (`DESCUENTO_PORCENTUAL`, `DOS_POR_UNO`).
 - Reseñas como `Resena` (producto + estrellas + comentario), no como la `Calificacion` de la Propuesta 2.
+- Quejas como `Queja`: reclamo del cliente sobre un pedido entregado, con motivo, detalle, estado y respuesta del administrador. Una por pedido.
 - Reportes sin tablas propias.
 
 ## 10. Exclusiones / límites actuales
@@ -741,6 +778,8 @@ La arquitectura futura podrá incorporar, por ejemplo:
 | `PedidoPromocion`       | Promoción aplicada                 | N:1 `Pedido`, N:1 `Promocion`                                                                                           |
 | `ParametroSistema`      | Configuración del sistema          | —                                                                                                                       |
 | `Resena`                | Opinión de un cliente              | N:1 `Usuario`, N:1 `Producto`, N:1 `Pedido`                                                                             |
+| `Queja`                 | Reclamo sobre pedido entregado     | N:1 `Usuario` (autor), N:1 `Usuario` (respondedor), 1:1 `Pedido`, 1:N `QuejaMensaje`                                    |
+| `QuejaMensaje`          | Mensaje del hilo                   | N:1 `Queja`, N:1 `Usuario` (autor)                                                                                      |
 
 ## 13. Observaciones pendientes
 

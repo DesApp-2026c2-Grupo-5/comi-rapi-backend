@@ -10,7 +10,7 @@ Deriva directamente del modelo de dominio aprobado en `docs/modelo-dominio.md` (
 
 ## 2. Entidades
 
-El DER contempla las **19 entidades** del modelo actual. Para cada una se indica su PK, atributos principales, FKs y restricciones relevantes.
+El DER contempla las **26 entidades** del modelo actual (las 23 del modelo de dominio más `HorarioSucursal`, `PasswordResetToken` y `DistanciaRuta`). Para cada una se indica su PK, atributos principales, FKs y restricciones relevantes.
 
 ### 2.1 Usuario
 
@@ -462,15 +462,45 @@ Opinión de un CLIENTE sobre un producto o combo que ya compró y recibió. Reem
 - CHECK: `puntuacion BETWEEN 1 AND 5`
 - Regla: solo se crea si el cliente tiene un pedido `entregado` que incluya el producto. El autor se muestra como "Nombre I." (nombre + inicial del apellido); nunca se expone el email.
 
+### 2.23 Queja
+
+Reclamo de un CLIENTE sobre un pedido propio que ya fue entregado. Es un canal de atención con respuesta del negocio, distinto de `Resena` (opinión pública sobre un producto). Se autorizó explícitamente; no habilita `Notificacion` ni `Repartidor`.
+
+| Atributo          | Tipo de dato | Notas                                                                                                     |
+| ----------------- | ------------ | --------------------------------------------------------------------------------------------------------- |
+| `id`              | `INTEGER`    | PK                                                                                                        |
+| `usuarioId`       | `INTEGER`    | FK a `Usuario.id` (NOT NULL); CLIENTE autor del reclamo                                                   |
+| `pedidoId`        | `INTEGER`    | FK a `Pedido.id` (NOT NULL); pedido propio y `entregado`                                                  |
+| `motivo`          | `ENUM`       | NOT NULL: `PEDIDO_INCOMPLETO`, `PRODUCTO_EN_MAL_ESTADO`, `DEMORA_EN_LA_ENTREGA`, `ERROR_DE_COBRO`, `OTRO` |
+| `detalle`         | `TEXT`       | NOT NULL, entre 10 y 1000 caracteres (validado en el service)                                             |
+| `estado`          | `ENUM`       | NOT NULL, default `PENDIENTE`: `PENDIENTE`, `EN_REVISION`, `RESUELTA`, `RECHAZADA`, `CERRADA`             |
+| `respuesta`       | `TEXT`       | NULLABLE, máximo 1000 caracteres (última respuesta del negocio)                                           |
+| `respondidoPorId` | `INTEGER`    | FK a `Usuario.id` (NULLABLE); ADMINISTRADOR o SUPERADMINISTRADOR que respondió                            |
+| `respondidaEn`    | `DATE`       | NULLABLE; se completa junto con `respuesta`                                                               |
+| `cerradaEn`       | `DATE`       | NULLABLE; cierre del cliente (`CERRADA`)                                                                  |
+| `createdAt`       | `DATE`       | NOT NULL                                                                                                  |
+| `updatedAt`       | `DATE`       | NOT NULL                                                                                                  |
+
+Hilo: tabla `QuejaMensajes` (`id`, `quejaId → Queja.id`, `autorId → Usuario.id`, `contenido TEXT`, timestamps), con índice por `quejaId` y FK `RESTRICT`. Guarda las respuestas del cliente (máximo 5) y del negocio.
+
+- PK: `id`
+- FK: `usuarioId → Usuario.id`, `pedidoId → Pedido.id`, `respondidoPorId → Usuario.id` (todas `ON DELETE RESTRICT`; `respondidoPorId` es NULLABLE).
+- UNIQUE: `pedidoId` — un pedido admite una sola queja.
+- Índices: `usuarioId`, `estado`.
+- CHECK: `estado IN ('PENDIENTE', 'EN_REVISION', 'RESUELTA', 'RECHAZADA', 'CERRADA')` (además del ENUM).
+- Regla: solo el CLIENTE dueño de un pedido `entregado` puede crearla. El cliente solo ve las propias; el ADMINISTRADOR ve las de pedidos de su sucursal y el SUPERADMINISTRADOR todas. El cliente puede responder hasta 5 veces (reapertura a `PENDIENTE` si estaba resuelta o rechazada) y cerrar en cualquier momento (`CERRADA`, final). `RESUELTA` y `RECHAZADA` exigen `respuesta`. La máquina de estados y el alcance viven en `lib/services/quejas.js`; el detalle está en `docs/quejas.md`.
+
 ## 3. Relaciones y cardinalidades
 
-A continuación se documentan las **31 relaciones únicas** del modelo.
+A continuación se documentan las **36 relaciones únicas** del modelo.
 
 ```
 Usuario 1:N Direccion
 Usuario 1:N Pedido
 Usuario 1:N PasswordResetToken
 Usuario 1:N Resena
+Usuario 1:N Queja                 (autor del reclamo)
+Usuario 1:N Queja                 (administrador que respondió)
 
 Sucursal 1:1 Direccion
 Sucursal 1:N Usuario              (sucursal asignada al ADMINISTRADOR)
@@ -509,6 +539,9 @@ Pedido N:N Promocion              (mediante PedidoPromocion)
 
 Producto 1:N Resena
 Pedido 1:N Resena
+Pedido 1:1 Queja                  (UNIQUE pedidoId)
+Queja 1:N QuejaMensaje
+Usuario 1:N QuejaMensaje          (autor del mensaje)
 ```
 
 | #   | A                     | B                     | Cardinalidad | FK                                |
@@ -544,10 +577,15 @@ Pedido 1:N Resena
 | 29  | Sucursal              | InsumoStock           | 1:N          | `InsumoStock.sucursalId`          |
 | 30  | Insumo                | InsumoStock           | 1:N          | `InsumoStock.insumoId`            |
 | 31  | Sucursal              | HorarioSucursal       | 1:N          | `HorarioSucursal.sucursalId`      |
+| 32  | Usuario               | Queja                 | 1:N          | `Queja.usuarioId`                 |
+| 33  | Usuario               | Queja                 | 1:N          | `Queja.respondidoPorId`           |
+| 34  | Pedido                | Queja                 | 1:1          | `Queja.pedidoId`                  |
+| 35  | Queja                 | QuejaMensaje          | 1:N          | `QuejaMensaje.quejaId`            |
+| 36  | Usuario               | QuejaMensaje          | 1:N          | `QuejaMensaje.autorId`            |
 
 ## 4. Claves y restricciones
 
-- **PK simples**: `Usuario`, `Direccion`, `Sucursal`, `HorarioSucursal`, `Categoria`, `Producto`, `ComboComponente`, `OpcionGrupo`, `Opcion`, `ProductoOpcionGrupo`, `Pedido`, `PedidoItem`, `PedidoItemOpcion`, `EstadoPedido`, `PedidoEstadoHistorial`, `Promocion`, `PromocionProducto`, `PedidoPromocion`, `ParametroSistema`, `Resena`, `Insumo` (todas con `id`).
+- **PK simples**: `Usuario`, `Direccion`, `Sucursal`, `HorarioSucursal`, `Categoria`, `Producto`, `ComboComponente`, `OpcionGrupo`, `Opcion`, `ProductoOpcionGrupo`, `Pedido`, `PedidoItem`, `PedidoItemOpcion`, `EstadoPedido`, `PedidoEstadoHistorial`, `Promocion`, `PromocionProducto`, `PedidoPromocion`, `ParametroSistema`, `Resena`, `Queja`, `QuejaMensaje`, `Insumo` (todas con `id`).
 - **PK compuesta**: `Stock (sucursalId, productoId)`, `InsumoStock (sucursalId, insumoId)`.
 - **UNIQUE**:
   - `Usuario.email`
@@ -560,10 +598,12 @@ Pedido 1:N Resena
   - `PedidoPromocion (pedidoId, promocionId)`
   - `ParametroSistema.clave`
   - `Resena (usuarioId, productoId)` — una reseña por cliente y producto
+  - `Queja.pedidoId` — una queja por pedido
   - `HorarioSucursal (sucursalId, diaSemana, apertura, cierre)` — se rechazan franjas exactamente duplicadas
 - **CHECK**: `Direccion`: `CK_Direcciones_propietario` — exactamente uno de `usuarioId` / `sucursalId` debe estar informado (`("usuarioId" IS NOT NULL)::int + ("sucursalId" IS NOT NULL)::int = 1`). Una dirección pertenece a un usuario o a una sucursal, nunca a ambos ni a ninguno.
 - **CHECK**: `Usuario`: `chk_usuarios_sucursal_solo_admin` — `sucursalId` solo puede estar informado cuando `rol = 'ADMINISTRADOR'` (`"rol" = 'ADMINISTRADOR' OR "sucursalId" IS NULL`).
 - **CHECK**: `Resena`: `resenas_puntuacion_rango` — `puntuacion BETWEEN 1 AND 5`.
+- **CHECK**: `Queja`: `quejas_estado_valido` — `estado IN ('PENDIENTE', 'EN_REVISION', 'RESUELTA', 'RECHAZADA', 'CERRADA')`.
 - **CHECK**: `InsumoStock`: `CK_InsumoStocks_cantidad` — `cantidad >= 0`.
 - **Relaciones N:M resueltas por entidades asociativas**:
   - `Producto N:N OpcionGrupo` → `ProductoOpcionGrupo`
@@ -588,6 +628,7 @@ Pedido 1:N Resena
   - `PedidoPromocion` conserva `descuentoAplicado`.
 - **Promociones**: `Promocion` (definición) + `PromocionProducto` (productos alcanzados) + `PedidoPromocion` (aplicación efectiva a un pedido con descuento snapshot).
 - **Reseñas**: `Resena` vincula un `Usuario` (CLIENTE), un `Producto` (simple o COMBO) y el `Pedido` entregado que habilitó la opinión. No guarda snapshots: el texto y la puntuación son una opinión actual sobre el producto; si el pedido se borra, la FK `RESTRICT` impide dejar la reseña huérfana. Una reseña por cliente y producto (UNIQUE), editable y borrable por su autor.
+- **Quejas**: `Queja` vincula un `Usuario` (CLIENTE autor), el `Pedido` entregado reclamado y opcionalmente otro `Usuario` (ADMINISTRADOR o SUPERADMINISTRADOR que respondió). Una queja por pedido (UNIQUE `pedidoId`). No guarda snapshots: el motivo, el detalle y la respuesta son texto del momento. El cliente no edita ni borra la queja una vez creada; el estado y la respuesta los maneja el negocio.
 
 ## 6. Reglas que afectan al DER
 
@@ -595,6 +636,7 @@ Pedido 1:N Resena
 - **Asignación de sucursal**: es una regla de negocio (proximidad + disponibilidad de stock), no una entidad. Un administrador puede reasignar manualmente la sucursal como excepción operativa.
 - **Verificación de stock de combos**: queda pendiente de definición. Un combo es un `Producto` cuya disponibilidad puede depender de la disponibilidad de sus componentes; no se agrega entidad para resolverla en esta etapa.
 - **Elegibilidad de reseñas**: solo un CLIENTE con un pedido en estado `entregado` que contenga el producto puede crearla. La regla vive en `lib/services/resenas.js`; la base solo refuerza el rango de puntuación y la unicidad.
+- **Elegibilidad de quejas**: solo el CLIENTE dueño de un pedido en estado `entregado` puede crearla, una vez por pedido. El alcance de la bandeja (admin por sucursal, superadmin global) y la máquina de estados viven en `lib/services/quejas.js`; la base refuerza la unicidad y el dominio de `estado`.
 - **Snapshots históricos**: los precios, nombres y dirección de un pedido no se reconstruyen desde el catálogo; se conservan como copia en el propio pedido/ítem.
 - **Carrito**: no es una entidad persistente; se revalida contra la BD al confirmar el pedido.
 
@@ -607,6 +649,8 @@ erDiagram
     Usuario ||--o{ Pedido : "1:N"
     Usuario ||--o{ PedidoEstadoHistorial : "1:N"
     Usuario ||--o{ Resena : "1:N"
+    Usuario ||--o{ Queja : "1:N (autor)"
+    Usuario ||--o{ Queja : "1:N (respondedor)"
 
     Categoria ||--o{ Producto : "1:N"
 
@@ -645,6 +689,7 @@ erDiagram
 
     Producto ||--o{ Resena : "1:N"
     Pedido ||--o{ Resena : "1:N"
+    Pedido ||--|| Queja : "1:1 (UNIQUE pedidoId)"
 
     Usuario {
         int id PK
@@ -862,6 +907,18 @@ erDiagram
         int puntuacion
         string comentario
     }
+
+    Queja {
+        int id PK
+        int usuarioId FK
+        int pedidoId FK "UNIQUE"
+        string motivo
+        string detalle
+        string estado
+        string respuesta
+        int respondidoPorId FK "opcional"
+        datetime respondidaEn "opcional"
+    }
 ```
 
 ## 8. Decisiones pendientes
@@ -877,3 +934,4 @@ Las siguientes decisiones provienen directamente del modelo de dominio y afectan
 
 - La relación `Usuario → Pedido` que estaba duplicada en `docs/modelo-dominio.md` (§6) fue corregida: ambos documentos listan ahora las relaciones únicas, incluida `Sucursal 1:1 Direccion` (`Direccion.sucursalId`), `Sucursal 1:N HorarioSucursal` y las tres de `Resena`.
 - `Resena` reemplaza la "Calificación" de la Propuesta 2. Se aprobó explícitamente sumarla al alcance porque el pedido la usa como funcionalidad real (estrellas + comentario sobre productos y combos comprados). No agrega `Repartidor` ni `Notificacion`.
+- `Queja` se agregó como canal de reclamos sobre pedidos entregados (autorización explícita). No habilita las entidades de la Propuesta 2 y se documenta en `docs/quejas.md`.

@@ -358,3 +358,19 @@ Regla de negocio, no entidad:
   - En la pantalla de pago, si el evento confirma que la sucursal cerró y no hay alternativa, el pedido se cancela solo (llamada a `PATCH /api/pedidos/:id/estado` con `cancelado`) y el cliente vuelve al carrito.
 - **Parámetro**: `margenCierreMinutos` (grupo `horarios`, default 30, rango 0–120) se edita en `/superadmin/parametros`.
 - **Sin feriados**: por ahora no hay excepciones por feriado ni cortes adicionales.
+
+## 23. Reclamos del cliente sobre pedidos entregados
+
+> **Nota de cambio:** nueva sección. Se autorizó explícitamente sumar un canal de reclamos (`Queja`) aunque no figuraba en el modelo aprobado. No habilita `Notificacion`, `Repartidor` ni el rol `REPARTIDOR`.
+
+- **Qué es**: un reclamo operativo de un CLIENTE sobre un pedido propio que ya fue entregado. Se distingue de `Resena`: la queja pide una respuesta del negocio y no se publica; la reseña es una opinión sobre un producto.
+- **Quién puede reclamar**: solo usuarios con rol `CLIENTE` autenticados. El ADMINISTRADOR y el SUPERADMINISTRADOR no crean quejas (403).
+- **Elegibilidad**: el pedido debe ser del cliente y estar en estado `entregado`. Los pedidos `cancelado`, `pendiente` o en cualquier otro estado no habilitan el reclamo (403). Un pedido ajeno responde 404.
+- **Una por pedido**: UNIQUE `pedidoId`. Si ya existe, el alta devuelve 409. El cliente consulta las suyas (`GET /api/quejas/mias`), responde en el hilo y lo cierra; no edita el motivo ni el detalle original.
+- **Motivo y detalle**: `motivo` es obligatorio y debe ser uno de `PEDIDO_INCOMPLETO`, `PRODUCTO_EN_MAL_ESTADO`, `DEMORA_EN_LA_ENTREGA`, `ERROR_DE_COBRO`, `OTRO`. `detalle` es obligatorio, texto libre de 10 a 1000 caracteres.
+- **Estados**: `PENDIENTE` (default) → `EN_REVISION` → `RESUELTA` o `RECHAZADA`. Se permite resolver o rechazar directamente desde `PENDIENTE`. El cliente puede cerrar en cualquier momento: pasa a `CERRADA` (final, no admite respuestas ni cambios). Si responde una queja `RESUELTA` o `RECHAZADA`, vuelve a `PENDIENTE`.
+- **Respuesta**: al pasar a `RESUELTA` o `RECHAZADA` la `respuesta` es obligatoria (máximo 1000 caracteres). Se guardan `respondidoPorId`, `respondidaEn` y un mensaje en el hilo (`QuejaMensajes`). El cliente puede responder hasta 5 veces; sus respuestas también quedan en el hilo.
+- **Alcance de la bandeja**: el ADMINISTRADOR ve y responde las quejas de pedidos de su sucursal (`Pedido.sucursalId`); el SUPERADMINISTRADOR ve todas y puede filtrar por `sucursalId`. Responder una queja fuera del alcance devuelve 404.
+- **Endpoints**: `POST /api/quejas`, `GET /api/quejas/mias?pedidoId=`, `POST /api/quejas/:id/mensajes`, `POST /api/quejas/:id/cerrar`, `GET /api/quejas?estado=&q=&sucursalId=&pagina=&limite=` (ADMIN/SUPERADMIN) y `PUT /api/quejas/:id` (ADMIN/SUPERADMIN). El detalle completo está en `docs/quejas.md`.
+- **Errores**: 400 validación (motivo inválido, detalle fuera de rango, respuesta faltante al cerrar, transición inválida), 401 sin sesión, 403 rol incorrecto o pedido no entregado, 404 queja/pedido inexistente o fuera del alcance, 409 queja duplicada, queja cerrada o tope de respuestas alcanzado.
+- **Frontend**: el cliente escribe desde el detalle de un pedido entregado, ve el hilo, responde y cierra; el panel (`/admin/quejas`) muestra la bandeja compartida con filtros y el hilo completo. No hay seeder demo: se prueba con los pedidos entregados existentes.

@@ -8,7 +8,8 @@ Instrucciones permanentes para el trabajo de OpenCode sobre este proyecto.
 2. `docs/modelo-dominio.md` — modelo de dominio aprobado.
 3. `docs/DER.md` — diagrama entidad-relación / estructura de datos.
 4. `docs/resenas.md` — reglas, endpoints y datos demo de reseñas.
-5. `docs/insumos.md` — catálogo de extras/condimentos y su stock por sucursal.
+5. `docs/quejas.md` — reclamos sobre pedidos entregados.
+6. `docs/insumos.md` — catálogo de extras/condimentos y su stock por sucursal.
 
 Los horarios de atención están en `docs/reglas-negocio.md` §22 (y en `docs/DER.md` §2.3.1 / `docs/modelo-dominio.md` §5.3.1): cualquier cambio de comportamiento debe reflejarse ahí.
 
@@ -41,13 +42,14 @@ Flujo de una petición:
 ## Reglas de alcance
 
 - No inventar entidades, relaciones ni reglas que contradigan el modelo aprobado.
-- No implementar todavía las entidades de Propuesta 2 que siguen fuera de alcance (`Repartidor`, `Notificacion`, rol `REPARTIDOR`). `Resena` **sí** está implementada: reemplaza la "Calificación" de la Propuesta 2 y se limita a producto/combo + estrellas + comentario.
+- No implementar todavía las entidades de Propuesta 2 que siguen fuera de alcance (`Repartidor`, `Notificacion`, rol `REPARTIDOR`). `Resena` **sí** está implementada: reemplaza la "Calificación" de la Propuesta 2 y se limita a producto/combo + estrellas + comentario. `Queja` también está autorizada explícitamente: es el canal de reclamos sobre pedidos entregados y no habilita las demás entidades de la Propuesta 2.
 - Los snapshots históricos del DER son obligatorios: `Pedido` conserva la dirección (calle, altura, ciudad, codigoPostal, referencia, latitud, longitud); `PedidoItem` conserva `nombreProducto` y `precioUnitario`; `PedidoItemOpcion` conserva `nombre` y `precioAdicional`; `PedidoPromocion` conserva `descuentoAplicado`. Nunca reconstruir histórico desde el catálogo actual.
 
 ## Implementación reutilizable existente
 
 - `Categoria` y `Producto` ya tienen implementación funcional (migración + modelo + controller + ruta + seeder). Reutilizarla y adaptarla (por ejemplo, agregar `tipo` en `Producto`), no rehacerla innecesariamente.
 - **Reseñas**: `Resena` tiene migración, modelo, asociaciones, service (`lib/services/resenas.js`), controller, rutas (`/api/productos/:id/resenas` público y `/api/resenas/*` para CLIENTE) y tests. El detalle está en `docs/resenas.md`. No volver a usar `RESENAS_DEMO` ni promedios hardcodeados en el frontend.
+- **Quejas**: `Queja` tiene migración (`20261102000001-create-queja.js`), modelo, asociaciones, service (`lib/services/quejas.js`), controller, rutas (`POST /api/quejas`, `GET /api/quejas/mias`, `POST /api/quejas/:id/mensajes`, `POST /api/quejas/:id/cerrar`, `GET /api/quejas` y `PUT /api/quejas/:id`) y tests. Solo el CLIENTE reclama sobre un pedido propio `entregado` y una vez por pedido; el ADMINISTRADOR gestiona su sucursal y el SUPERADMINISTRADOR todo. El hilo vive en `QuejaMensajes`: el cliente responde hasta 5 veces (reabre a `PENDIENTE` si estaba resuelta/rechazada) y puede cerrar en cualquier momento (`CERRADA`, final). `RESUELTA`/`RECHAZADA` exigen respuesta. El negocio puede sumar mensajes al hilo sin cambiar de estado (`PUT /api/quejas/:id` con `respuesta` y sin `estado`); la bandeja ordena por última actividad (`updatedAt`) y el frontend la muestra como conversaciones. Detalle en `docs/quejas.md`. No hay seeder demo.
 - **Horarios de atención**: `HorarioSucursal` (migración `20261031000001-create-horario-sucursal.js`, modelo `lib/models/horario_sucursal.js`, `Sucursal.hasMany as: 'horarios'`) guarda una fila por día y franja (`diaSemana` 1..7, `apertura`/`cierre` `TIME`). La lógica vive en `lib/services/horarios_service.js` (`franjaVigente`, `agruparHorarios`, `formatearHorarios`, `normalizarHorarios`, `proximaApertura`). `Sucursal.horarios` (texto libre) **ya no existe**: se eliminó tras el backfill. El corte de pedidos se deriva restando el parámetro global `margenCierreMinutos` (default 30); no se persiste. La evaluación se hace en `America/Argentina/Buenos_Aires` con un único `ahora` por request. Los avisos del cliente son `POST /api/pedidos/disponibilidad` y `GET /api/pedidos/:id/disponibilidad`. El canal de tiempo real emite `sucursal_estado` (broadcast) al crear/editar/baja una sucursal, al cambiar `margenCierreMinutos` y desde `lib/services/horarios_vigia.js`, que programa un único temporizador al próximo límite (`proximaLimite`: apertura o corte) de las sucursales activas; se arranca en `bin/www.js`. Al confirmar el pago con la sucursal cerrada y sin alternativa, el pedido se **cancela automáticamente** (repone stock, historial) y la respuesta 409 trae `cancelado: true`.
 - **Datos demo**: el seeder `20261025000002-demo-clientes-compras.js` crea 43 clientes demo (`sunny@demo.com`, `nephis@demo.com`, ... `altelicia@demo.com`; password `123456`) con compras en volumen y entre 5 y 9 reseñas por producto, de clientes distintos; el seeder `20261025000003-stock-150.js` deja todo el stock en 150. Ambos son idempotentes y están documentados en `docs/resenas.md` §5.
 

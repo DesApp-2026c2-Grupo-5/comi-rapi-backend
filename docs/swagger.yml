@@ -76,6 +76,10 @@ tags:
     description: >-
       Reseñas de productos y combos: listado público por producto y CRUD de la
       propia reseña para el CLIENTE (solo sobre compras entregadas).
+  - name: Quejas
+    description: >-
+      Reclamos del CLIENTE sobre pedidos entregados y bandeja de gestión para
+      ADMINISTRADOR (su sucursal) y SUPERADMINISTRADOR (global).
   - name: Pedidos
     description: Registración, consulta y cambios de estado de pedidos
   - name: Sucursales
@@ -957,6 +961,228 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProductoElegibleResena'
+
+    MotivoQueja:
+      type: string
+      enum:
+        - PEDIDO_INCOMPLETO
+        - PRODUCTO_EN_MAL_ESTADO
+        - DEMORA_EN_LA_ENTREGA
+        - ERROR_DE_COBRO
+        - OTRO
+
+    EstadoQueja:
+      type: string
+      enum:
+        - PENDIENTE
+        - EN_REVISION
+        - RESUELTA
+        - RECHAZADA
+        - CERRADA
+
+    QuejaMensaje:
+      type: object
+      properties:
+        id:
+          type: integer
+        contenido:
+          type: string
+          maxLength: 1000
+        autorId:
+          type: integer
+        delCliente:
+          type: boolean
+        creadaEn:
+          type: string
+          format: date-time
+        autor:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            nombre:
+              type: string
+            apellido:
+              type: string
+
+    QuejaMensajeRequest:
+      type: object
+      required:
+        - contenido
+      properties:
+        contenido:
+          type: string
+          minLength: 1
+          maxLength: 1000
+
+    QuejaPedidoResumen:
+      type: object
+      properties:
+        id:
+          type: integer
+        fechaHora:
+          type: string
+          format: date-time
+        total:
+          type: string
+          example: '15200.00'
+
+    Queja:
+      type: object
+      properties:
+        id:
+          type: integer
+        pedidoId:
+          type: integer
+        motivo:
+          $ref: '#/components/schemas/MotivoQueja'
+        detalle:
+          type: string
+          minLength: 10
+          maxLength: 1000
+        estado:
+          $ref: '#/components/schemas/EstadoQueja'
+        respuesta:
+          type: string
+          nullable: true
+          maxLength: 1000
+        respondidaEn:
+          type: string
+          format: date-time
+          nullable: true
+        cerradaEn:
+          type: string
+          format: date-time
+          nullable: true
+        creadaEn:
+          type: string
+          format: date-time
+        actualizadaEn:
+          type: string
+          format: date-time
+        mensajes:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuejaMensaje'
+        respuestasCliente:
+          type: integer
+        maxRespuestasCliente:
+          type: integer
+        pedido:
+          $ref: '#/components/schemas/QuejaPedidoResumen'
+
+    QuejaBandejaItem:
+      allOf:
+        - $ref: '#/components/schemas/Queja'
+        - type: object
+          properties:
+            cliente:
+              type: object
+              properties:
+                id:
+                  type: integer
+                nombre:
+                  type: string
+                apellido:
+                  type: string
+                  nullable: true
+                email:
+                  type: string
+            respondidoPor:
+              type: object
+              nullable: true
+              properties:
+                id:
+                  type: integer
+                nombre:
+                  type: string
+                apellido:
+                  type: string
+                  nullable: true
+            pedido:
+              allOf:
+                - $ref: '#/components/schemas/QuejaPedidoResumen'
+                - type: object
+                  properties:
+                    sucursal:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        nombre:
+                          type: string
+
+    QuejaRequest:
+      type: object
+      required:
+        - pedidoId
+        - motivo
+        - detalle
+      properties:
+        pedidoId:
+          type: integer
+        motivo:
+          $ref: '#/components/schemas/MotivoQueja'
+        detalle:
+          type: string
+          minLength: 10
+          maxLength: 1000
+
+    QuejaUpdateRequest:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          $ref: '#/components/schemas/EstadoQueja'
+        respuesta:
+          type: string
+          nullable: true
+          maxLength: 1000
+          description: Obligatoria al pasar a RESUELTA o RECHAZADA.
+
+    RespuestaQueja:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Queja'
+
+    RespuestaListaMisQuejas:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Queja'
+
+    PaginaQuejas:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/QuejaBandejaItem'
+            total:
+              type: integer
+            pagina:
+              type: integer
+            paginas:
+              type: integer
+            limite:
+              type: integer
 
     Sucursal:
       type: object
@@ -3488,6 +3714,320 @@ paths:
                 $ref: '#/components/schemas/RespuestaError'
         '404':
           description: Reseña inexistente o de otro usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /quejas:
+    get:
+      tags:
+        - Quejas
+      summary: Bandeja de quejas (ADMINISTRADOR o SUPERADMINISTRADOR)
+      description: >-
+        El ADMINISTRADOR ve las quejas de pedidos de su sucursal; el
+        SUPERADMINISTRADOR ve todas y puede filtrar por sucursalId.
+      operationId: quejasListar
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: estado
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/EstadoQueja'
+        - name: q
+          in: query
+          required: false
+          description: Búsqueda por cliente o id de pedido.
+          schema:
+            type: string
+        - name: sucursalId
+          in: query
+          required: false
+          description: Solo aplica al SUPERADMINISTRADOR.
+          schema:
+            type: integer
+        - name: pagina
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limite
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Página de quejas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaQuejas'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol sin acceso a la bandeja
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    post:
+      tags:
+        - Quejas
+      summary: Crea un reclamo sobre un pedido entregado (CLIENTE)
+      description: >-
+        Solo el CLIENTE puede reclamar, únicamente sobre un pedido propio en
+        estado `entregado` y una sola vez por pedido (409).
+      operationId: quejasCreate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuejaRequest'
+      responses:
+        '201':
+          description: Queja creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaQueja'
+        '400':
+          description: Motivo o detalle inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE, pedido propio no entregado o CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Pedido inexistente o ajeno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '409':
+          description: El pedido ya tiene una queja
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /quejas/mias:
+    get:
+      tags:
+        - Quejas
+      summary: Quejas del cliente autenticado (CLIENTE)
+      operationId: quejasMias
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: pedidoId
+          in: query
+          required: false
+          description: Acota el resultado a un pedido.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Quejas propias
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaListaMisQuejas'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /quejas/{id}:
+    put:
+      tags:
+        - Quejas
+      summary: Responde o cambia el estado de una queja (ADMINISTRADOR o SUPERADMINISTRADOR)
+      description: >-
+        RESUELTA y RECHAZADA exigen respuesta y cierran el reclamo del lado del
+        negocio (el cliente puede reabrirlo respondiendo). CERRADA es final. El
+        ADMINISTRADOR solo gestiona quejas de pedidos de su sucursal.
+      operationId: quejasUpdate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuejaUpdateRequest'
+      responses:
+        '200':
+          description: Queja actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaQueja'
+        '400':
+          description: Transición inválida, respuesta faltante o estado inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol sin acceso o CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Queja inexistente o fuera del alcance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /quejas/{id}/mensajes:
+    post:
+      tags:
+        - Quejas
+      summary: Respuesta del cliente en el hilo (CLIENTE dueño)
+      description: >-
+        Máximo 5 respuestas del cliente. Si la queja estaba RESUELTA o
+        RECHAZADA, vuelve a PENDIENTE.
+      operationId: quejasResponder
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuejaMensajeRequest'
+      responses:
+        '201':
+          description: Mensaje agregado; devuelve la queja con el hilo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaQueja'
+        '400':
+          description: Mensaje vacío o demasiado largo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE o CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Queja inexistente o ajena
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '409':
+          description: Queja cerrada o tope de respuestas alcanzado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /quejas/{id}/cerrar:
+    post:
+      tags:
+        - Quejas
+      summary: Cierre del reclamo por el cliente (CLIENTE dueño)
+      description: Pasa la queja a CERRADA. Es final y no admite más respuestas.
+      operationId: quejasCerrar
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Queja cerrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaQueja'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE o CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Queja inexistente o ajena
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '409':
+          description: La queja ya está cerrada
           content:
             application/json:
               schema:
