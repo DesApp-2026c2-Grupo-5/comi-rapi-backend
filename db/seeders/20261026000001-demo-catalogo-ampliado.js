@@ -35,28 +35,28 @@ const PRODUCTOS = [
     precio: 11200,
     descripcion: 'Cheddar, pepinillos y sabor americano.',
     imagen:
-      '/imagenes/productos/royale-con-queso-pepinillos-1792978170721.webp',
+      '/api/imagenes/productos/royale-con-queso-pepinillos-1792978170721.webp',
   },
   {
     nombre: 'Pizza Pepperoni & Miel Picante',
     categoria: 'Pizzas',
     precio: 19400,
     descripcion: 'Pepperoni crocante con miel picante.',
-    imagen: '/imagenes/productos/pepperoni-miel-picante-1792977811017.webp',
+    imagen: '/api/imagenes/productos/pepperoni-miel-picante-1792977811017.webp',
   },
   {
     nombre: 'Pizza Cuatro Quesos',
     categoria: 'Pizzas',
     precio: 20400,
     descripcion: 'Cuatro quesos fundidos en cada porción.',
-    imagen: '/imagenes/productos/cuatro-quesos-1792978684687.webp',
+    imagen: '/api/imagenes/productos/cuatro-quesos-1792978684687.webp',
   },
   {
     nombre: 'Volcan de Chocolate',
     categoria: 'Postres',
     precio: 8400,
     descripcion: 'Chocolate caliente y una bocha de vainilla.',
-    imagen: '/imagenes/productos/volcan-de-chocolate-1792980320227.webp',
+    imagen: '/api/imagenes/productos/volcan-de-chocolate-1792980320227.webp',
   },
   {
     nombre: 'New York Cheesecake con Frutos Rojos',
@@ -64,35 +64,35 @@ const PRODUCTOS = [
     precio: 7900,
     descripcion: 'Estilo Nueva York, con frutos rojos frescos.',
     imagen:
-      '/imagenes/productos/new-york-cheesecake-con-frutos-rojos-1792980575576.webp',
+      '/api/imagenes/productos/new-york-cheesecake-con-frutos-rojos-1792980575576.webp',
   },
   {
     nombre: 'Tarta Rogel',
     categoria: 'Postres',
     precio: 7200,
     descripcion: 'Dulce de leche y merengue italiano.',
-    imagen: '/imagenes/productos/tarta-rogel-1792980915482.webp',
+    imagen: '/api/imagenes/productos/tarta-rogel-1792980915482.webp',
   },
   {
     nombre: 'Caramel Frappuccino.',
     categoria: 'Bebidas',
     precio: 7500,
     descripcion: 'Café, caramelo y crema batida.',
-    imagen: '/imagenes/productos/caramel-frappuccino-1792981142487.jpg',
+    imagen: '/api/imagenes/productos/caramel-frappuccino-1792981142487.jpg',
   },
   {
     nombre: 'Pumpkin Spice Latte',
     categoria: 'Bebidas',
     precio: 7200,
     descripcion: 'Café con especias de calabaza y crema.',
-    imagen: '/imagenes/productos/pumpkin-spice-latte-1792981436391.jpg',
+    imagen: '/api/imagenes/productos/pumpkin-spice-latte-1792981436391.jpg',
   },
   {
     nombre: 'The Pink Drink',
     categoria: 'Bebidas',
     precio: 6900,
     descripcion: 'Frutilla y açaí con leche de coco.',
-    imagen: '/imagenes/productos/the-pink-drink-1792981765929.webp',
+    imagen: '/api/imagenes/productos/the-pink-drink-1792981765929.webp',
   },
   {
     nombre: 'Combo Party',
@@ -100,7 +100,7 @@ const PRODUCTOS = [
     precio: 72900,
     descripcion:
       'Tres hamburguesas, pizza, dos papas y tres Coca-Cola. Para 5 o 6.',
-    imagen: '/imagenes/productos/combo-party-1792979719152.webp',
+    imagen: '/api/imagenes/productos/combo-party-1792979719152.webp',
     tipo: 'COMBO',
   },
 ];

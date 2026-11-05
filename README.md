@@ -18,7 +18,7 @@ API de Comi-Rapi, una aplicación de delivery de comida con tres roles: cliente,
 
 ## Instalación
 
-Requiere Node.js 14 y Docker Desktop en ejecución. Los repositorios `comi-rapi-backend` y `comi-rapi-fronted` tienen que quedar en carpetas hermanas, porque el backend guarda las imágenes en `../comi-rapi-fronted/public/imagenes`.
+Requiere Node.js 14 y Docker Desktop en ejecución. Las imágenes de catálogo y de perfiles viven en `public/imagenes` de este repositorio y se sirven en `/api/imagenes/...`; el frontend ya no necesita estar en una carpeta hermana.
 
 ```shell
 npm install

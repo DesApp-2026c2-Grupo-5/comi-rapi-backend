@@ -130,7 +130,39 @@ Devuelve los productos de pedidos entregados que el cliente todavía no reseñó
 }
 ```
 
-### 3.4 Crear
+### 3.4 Estado de reseña por producto
+
+`GET /api/productos/:id/resenas/mia` — solo `CLIENTE`.
+
+Devuelve el estado de la reseña del cliente para **ese** producto, sin pedir los
+listados globales de elegibles y mías. Si no compró el producto, no lo recibió o
+ya lo reseñó, `puedeResenar` es `false`.
+
+```json
+{
+  "success": true,
+  "data": {
+    "puedeResenar": false,
+    "miResena": {
+      "id": 12,
+      "productoId": 5,
+      "puntuacion": 5,
+      "comentario": "La mejor hamburguesa del barrio.",
+      "creadaEn": "2026-10-24T18:30:00.000Z",
+      "actualizadaEn": "2026-10-24T18:30:00.000Z",
+      "autor": { "nombre": "Sunny" },
+      "producto": {
+        "id": 5,
+        "nombre": "Hamburguesa clásica",
+        "imagen": "https://...",
+        "tipo": "SIMPLE"
+      }
+    }
+  }
+}
+```
+
+### 3.5 Crear
 
 `POST /api/resenas` — solo `CLIENTE`, requiere CSRF.
 
@@ -144,7 +176,7 @@ Devuelve los productos de pedidos entregados que el cliente todavía no reseñó
 
 Responde 201 con la reseña creada (`RespuestaResena`).
 
-### 3.5 Editar
+### 3.6 Editar
 
 `PUT /api/resenas/:id` — solo el autor, requiere CSRF.
 
@@ -157,11 +189,11 @@ Responde 201 con la reseña creada (`RespuestaResena`).
 
 Si `comentario` se omite, conserva el anterior. Responde 200 con la reseña actualizada.
 
-### 3.6 Eliminar
+### 3.7 Eliminar
 
 `DELETE /api/resenas/:id` — solo el autor, requiere CSRF. Responde 200 con `data: null`.
 
-### 3.7 Errores
+### 3.8 Errores
 
 | Status | Caso                                                              |
 | ------ | ----------------------------------------------------------------- |
