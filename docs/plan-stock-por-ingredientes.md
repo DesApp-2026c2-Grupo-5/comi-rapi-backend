@@ -698,7 +698,7 @@ Recordatorio: el backend corre desde `dist/`. Después de `npm run build` hay qu
 | Subtarea | Estado     |
 | -------- | ---------- |
 | BE-1     | Completado |
-| BE-2     | Pendiente  |
+| BE-2     | Completado |
 | BE-3     | Pendiente  |
 | BE-4     | Pendiente  |
 | BE-5     | Pendiente  |
@@ -712,3 +712,18 @@ Recordatorio: el backend corre desde `dist/`. Después de `npm run build` hay qu
 | FE-5     | Pendiente  |
 
 Este archivo se actualiza al cerrar cada subtarea, marcando el estado y agregando las decisiones o desvíos que hayan surgido durante la implementación.
+
+## 17. Registro de implementación
+
+- **BE-1 (completado):** `modelo-dominio.md` y `DER.md` documentan `Ingrediente`
+  (unidad `unidad`/`g`/`kg`/`ml`/`l`), `IngredienteStock`
+  `(sucursalId, ingredienteId)` con `DECIMAL(12,3) >= 0` y `ProductoIngrediente`
+  `(productoId, ingredienteId)` con `cantidad > 0` y `permiteQuitar`. Se
+  actualizaron entidades, relaciones, claves, reglas y el mermaid.
+- **BE-2 (completado):** migraciones `20261106000001-create-ingredientes`,
+  `20261106000002-create-ingrediente-stocks`,
+  `20261106000003-create-producto-ingredientes` y
+  `20261106000004-add-ingrediente-id-personalizacion-elementos`; modelos
+  `Ingrediente`, `IngredienteStock` y `ProductoIngrediente` con sus
+  asociaciones. El nombre del ingrediente es único con un índice funcional sobre
+  `LOWER(nombre)`. Tests de modelo en `lib/models/ingrediente.test.js`.
