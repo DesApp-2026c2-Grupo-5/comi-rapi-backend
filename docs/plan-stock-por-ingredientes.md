@@ -699,7 +699,7 @@ Recordatorio: el backend corre desde `dist/`. Después de `npm run build` hay qu
 | -------- | ---------- |
 | BE-1     | Completado |
 | BE-2     | Completado |
-| BE-3     | Pendiente  |
+| BE-3     | Completado |
 | BE-4     | Pendiente  |
 | BE-5     | Pendiente  |
 | BE-6     | Pendiente  |
@@ -727,3 +727,9 @@ Este archivo se actualiza al cerrar cada subtarea, marcando el estado y agregand
   `Ingrediente`, `IngredienteStock` y `ProductoIngrediente` con sus
   asociaciones. El nombre del ingrediente es único con un índice funcional sobre
   `LOWER(nombre)`. Tests de modelo en `lib/models/ingrediente.test.js`.
+- **BE-3 (completado):** service `lib/services/ingredientes_catalogo.js`,
+  controller y rutas `/api/ingredientes` (lectura pública de activos, escritura
+  SUPERADMINISTRADOR). El alta crea filas de stock en 0 para las sucursales
+  activas; la unidad se bloquea si hay stock positivo o recetas. Tests en
+  `lib/controllers/ingrediente_controller.test.js`. El `lib/services/ingredientes.js`
+  viejo se conserva para la sincronización de "Sin X" de BE-4.
