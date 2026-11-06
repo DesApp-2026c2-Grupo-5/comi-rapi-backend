@@ -695,20 +695,20 @@ Recordatorio: el backend corre desde `dist/`. Después de `npm run build` hay qu
 
 ## 16. Estado de avance
 
-| Subtarea | Estado    |
-| -------- | --------- |
-| BE-1     | Pendiente |
-| BE-2     | Pendiente |
-| BE-3     | Pendiente |
-| BE-4     | Pendiente |
-| BE-5     | Pendiente |
-| BE-6     | Pendiente |
-| BE-7     | Pendiente |
-| BE-8     | Pendiente |
-| FE-1     | Pendiente |
-| FE-2     | Pendiente |
-| FE-3     | Pendiente |
-| FE-4     | Pendiente |
-| FE-5     | Pendiente |
+| Subtarea | Estado     |
+| -------- | ---------- |
+| BE-1     | Completado |
+| BE-2     | Pendiente  |
+| BE-3     | Pendiente  |
+| BE-4     | Pendiente  |
+| BE-5     | Pendiente  |
+| BE-6     | Pendiente  |
+| BE-7     | Pendiente  |
+| BE-8     | Pendiente  |
+| FE-1     | Pendiente  |
+| FE-2     | Pendiente  |
+| FE-3     | Pendiente  |
+| FE-4     | Pendiente  |
+| FE-5     | Pendiente  |
 
 Este archivo se actualiza al cerrar cada subtarea, marcando el estado y agregando las decisiones o desvíos que hayan surgido durante la implementación.

@@ -10,7 +10,7 @@ Deriva directamente del modelo de dominio aprobado en `docs/modelo-dominio.md` (
 
 ## 2. Entidades
 
-El DER contempla las **26 entidades** del modelo actual (las 23 del modelo de dominio más `HorarioSucursal`, `PasswordResetToken` y `DistanciaRuta`). Para cada una se indica su PK, atributos principales, FKs y restricciones relevantes.
+El DER contempla las **29 entidades** del modelo actual (las 26 previas más `Ingrediente`, `IngredienteStock` y `ProductoIngrediente`). Para cada una se indica su PK, atributos principales, FKs y restricciones relevantes.
 
 ### 2.1 Usuario
 
@@ -127,6 +127,7 @@ El DER contempla las **26 entidades** del modelo actual (las 23 del modelo de do
 
 - PK: `id`
 - FK: `categoriaId → Categoria.id`
+- Relación: `Producto 1:N ProductoIngrediente` (receta; sólo `tipo = PRODUCTO`)
 
 ### 2.6 ComboComponente
 
@@ -240,6 +241,59 @@ Catálogo corporativo de extras y condimentos con existencia propia. No es un
   `condimento`.
 
 El detalle de reglas, endpoints y datos demo está en `docs/insumos.md`.
+
+### 2.10.3 Ingrediente (extensión implementada)
+
+Catálogo corporativo de materias primas que forman la receta de los productos.
+No es un `Producto` ni un `Insumo`.
+
+| Atributo       | Tipo de dato                           | Notas       |
+| -------------- | -------------------------------------- | ----------- |
+| `id`           | `INTEGER`                              | PK          |
+| `nombre`       | `STRING`                               | Obligatorio |
+| `unidadMedida` | `ENUM('unidad', 'g', 'kg', 'ml', 'l')` | Obligatorio |
+| `activo`       | `BOOLEAN`                              | Baja lógica |
+
+- UNIQUE: `nombre`.
+- No hay conversión automática entre unidades.
+- La `unidadMedida` no se puede cambiar si el ingrediente ya tiene stock o recetas.
+
+### 2.10.4 IngredienteStock (extensión implementada)
+
+| Atributo        | Tipo de dato    | Notas                             |
+| --------------- | --------------- | --------------------------------- |
+| `sucursalId`    | `INTEGER`       | PK (parte), FK → `Sucursal.id`    |
+| `ingredienteId` | `INTEGER`       | PK (parte), FK → `Ingrediente.id` |
+| `cantidad`      | `DECIMAL(12,3)` | `>= 0` (CHECK)                    |
+| `disponible`    | `BOOLEAN`       |                                   |
+
+- PK (compuesta): `(sucursalId, ingredienteId)`.
+- FK: `sucursalId → Sucursal.id`; `ingredienteId → Ingrediente.id` (borrado en cascada).
+- CHECK: `CK_IngredienteStocks_cantidad` (`cantidad >= 0`).
+- Misma semántica que `Stock`: `disponible = false` o la ausencia de fila equivale
+  a 0 para el cálculo y la venta.
+- Un ingrediente inactivo también equivale a 0.
+
+### 2.10.5 ProductoIngrediente (extensión implementada)
+
+Receta de un producto simple.
+
+| Atributo        | Tipo de dato    | Notas                             |
+| --------------- | --------------- | --------------------------------- |
+| `productoId`    | `INTEGER`       | PK (parte), FK → `Producto.id`    |
+| `ingredienteId` | `INTEGER`       | PK (parte), FK → `Ingrediente.id` |
+| `cantidad`      | `DECIMAL(12,3)` | `> 0` (CHECK)                     |
+| `permiteQuitar` | `BOOLEAN`       | default `true`                    |
+
+- PK (compuesta): `(productoId, ingredienteId)`.
+- FK: `productoId → Producto.id`; `ingredienteId → Ingrediente.id` (borrado en cascada).
+- CHECK: `CK_ProductoIngredientes_cantidad` (`cantidad > 0`).
+- Sólo aplica a `Producto` con `tipo = PRODUCTO`; un `COMBO` no tiene receta de
+  ingredientes.
+- `cantidad` es lo que lleva **una** unidad del producto, en la `unidadMedida`
+  del ingrediente.
+- `permiteQuitar` define si el ingrediente aparece como "Sin X" en el detalle y
+  no altera el descuento de stock.
 
 ### 2.11 Pedido
 
@@ -492,7 +546,7 @@ Hilo: tabla `QuejaMensajes` (`id`, `quejaId → Queja.id`, `autorId → Usuario.
 
 ## 3. Relaciones y cardinalidades
 
-A continuación se documentan las **36 relaciones únicas** del modelo.
+A continuación se documentan las **40 relaciones únicas** del modelo.
 
 ```
 Usuario 1:N Direccion
@@ -522,6 +576,11 @@ Insumo 1:N InsumoStock
 Insumo 1:N PersonalizacionElemento       (opcional, sólo extra/condimento)
 Insumo 1:N PersonalizacionCategoria      (opcional, sólo extra/condimento)
 
+Sucursal 1:N IngredienteStock
+Ingrediente 1:N IngredienteStock
+Producto 1:N ProductoIngrediente         (receta, sólo tipo PRODUCTO)
+Ingrediente 1:N ProductoIngrediente
+
 Pedido N:1 Sucursal
 Pedido N:1 EstadoPedido
 
@@ -544,49 +603,53 @@ Queja 1:N QuejaMensaje
 Usuario 1:N QuejaMensaje          (autor del mensaje)
 ```
 
-| #   | A                     | B                     | Cardinalidad | FK                                |
-| --- | --------------------- | --------------------- | ------------ | --------------------------------- |
-| 1   | Usuario               | Direccion             | 1:N          | `Direccion.usuarioId`             |
-| 2   | Sucursal              | Direccion             | 1:1          | `Direccion.sucursalId`            |
-| 3   | Usuario               | Pedido                | 1:N          | `Pedido.usuarioId`                |
-| 4   | Categoria             | Producto              | 1:N          | `Producto.categoriaId`            |
-| 5   | Producto              | ProductoOpcionGrupo   | 1:N          | `ProductoOpcionGrupo.productoId`  |
-| 6   | OpcionGrupo           | ProductoOpcionGrupo   | 1:N          | `ProductoOpcionGrupo.grupoId`     |
-| 7   | OpcionGrupo           | Opcion                | 1:N          | `Opcion.grupoId`                  |
-| 8   | Producto (combo)      | ComboComponente       | 1:N          | `ComboComponente.comboId`         |
-| 9   | Producto (componente) | ComboComponente       | 1:N          | `ComboComponente.productoId`      |
-| 10  | Sucursal              | Stock                 | 1:N          | `Stock.sucursalId`                |
-| 11  | Producto              | Stock                 | 1:N          | `Stock.productoId`                |
-| 12  | Sucursal              | Pedido                | 1:N          | `Pedido.sucursalId`               |
-| 13  | EstadoPedido          | Pedido                | 1:N          | `Pedido.estadoId`                 |
-| 14  | Pedido                | PedidoItem            | 1:N          | `PedidoItem.pedidoId`             |
-| 15  | Producto              | PedidoItem            | 1:N          | `PedidoItem.productoId`           |
-| 16  | PedidoItem            | PedidoItemOpcion      | 1:N          | `PedidoItemOpcion.pedidoItemId`   |
-| 17  | Opcion                | PedidoItemOpcion      | 1:N          | `PedidoItemOpcion.opcionId`       |
-| 18  | Pedido                | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.pedidoId`  |
-| 19  | EstadoPedido          | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.estadoId`  |
-| 20  | Usuario               | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.usuarioId` |
-| 21  | Promocion             | PromocionProducto     | 1:N          | `PromocionProducto.promocionId`   |
-| 22  | Producto              | PromocionProducto     | 1:N          | `PromocionProducto.productoId`    |
-| 23  | Pedido                | PedidoPromocion       | 1:N          | `PedidoPromocion.pedidoId`        |
-| 24  | Promocion             | PedidoPromocion       | 1:N          | `PedidoPromocion.promocionId`     |
-| 25  | Sucursal              | Usuario               | 1:N          | `Usuario.sucursalId`              |
-| 26  | Usuario               | Resena                | 1:N          | `Resena.usuarioId`                |
-| 27  | Producto              | Resena                | 1:N          | `Resena.productoId`               |
-| 28  | Pedido                | Resena                | 1:N          | `Resena.pedidoId`                 |
-| 29  | Sucursal              | InsumoStock           | 1:N          | `InsumoStock.sucursalId`          |
-| 30  | Insumo                | InsumoStock           | 1:N          | `InsumoStock.insumoId`            |
-| 31  | Sucursal              | HorarioSucursal       | 1:N          | `HorarioSucursal.sucursalId`      |
-| 32  | Usuario               | Queja                 | 1:N          | `Queja.usuarioId`                 |
-| 33  | Usuario               | Queja                 | 1:N          | `Queja.respondidoPorId`           |
-| 34  | Pedido                | Queja                 | 1:1          | `Queja.pedidoId`                  |
-| 35  | Queja                 | QuejaMensaje          | 1:N          | `QuejaMensaje.quejaId`            |
-| 36  | Usuario               | QuejaMensaje          | 1:N          | `QuejaMensaje.autorId`            |
+| #   | A                     | B                     | Cardinalidad | FK                                  |
+| --- | --------------------- | --------------------- | ------------ | ----------------------------------- |
+| 1   | Usuario               | Direccion             | 1:N          | `Direccion.usuarioId`               |
+| 2   | Sucursal              | Direccion             | 1:1          | `Direccion.sucursalId`              |
+| 3   | Usuario               | Pedido                | 1:N          | `Pedido.usuarioId`                  |
+| 4   | Categoria             | Producto              | 1:N          | `Producto.categoriaId`              |
+| 5   | Producto              | ProductoOpcionGrupo   | 1:N          | `ProductoOpcionGrupo.productoId`    |
+| 6   | OpcionGrupo           | ProductoOpcionGrupo   | 1:N          | `ProductoOpcionGrupo.grupoId`       |
+| 7   | OpcionGrupo           | Opcion                | 1:N          | `Opcion.grupoId`                    |
+| 8   | Producto (combo)      | ComboComponente       | 1:N          | `ComboComponente.comboId`           |
+| 9   | Producto (componente) | ComboComponente       | 1:N          | `ComboComponente.productoId`        |
+| 10  | Sucursal              | Stock                 | 1:N          | `Stock.sucursalId`                  |
+| 11  | Producto              | Stock                 | 1:N          | `Stock.productoId`                  |
+| 12  | Sucursal              | Pedido                | 1:N          | `Pedido.sucursalId`                 |
+| 13  | EstadoPedido          | Pedido                | 1:N          | `Pedido.estadoId`                   |
+| 14  | Pedido                | PedidoItem            | 1:N          | `PedidoItem.pedidoId`               |
+| 15  | Producto              | PedidoItem            | 1:N          | `PedidoItem.productoId`             |
+| 16  | PedidoItem            | PedidoItemOpcion      | 1:N          | `PedidoItemOpcion.pedidoItemId`     |
+| 17  | Opcion                | PedidoItemOpcion      | 1:N          | `PedidoItemOpcion.opcionId`         |
+| 18  | Pedido                | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.pedidoId`    |
+| 19  | EstadoPedido          | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.estadoId`    |
+| 20  | Usuario               | PedidoEstadoHistorial | 1:N          | `PedidoEstadoHistorial.usuarioId`   |
+| 21  | Promocion             | PromocionProducto     | 1:N          | `PromocionProducto.promocionId`     |
+| 22  | Producto              | PromocionProducto     | 1:N          | `PromocionProducto.productoId`      |
+| 23  | Pedido                | PedidoPromocion       | 1:N          | `PedidoPromocion.pedidoId`          |
+| 24  | Promocion             | PedidoPromocion       | 1:N          | `PedidoPromocion.promocionId`       |
+| 25  | Sucursal              | Usuario               | 1:N          | `Usuario.sucursalId`                |
+| 26  | Usuario               | Resena                | 1:N          | `Resena.usuarioId`                  |
+| 27  | Producto              | Resena                | 1:N          | `Resena.productoId`                 |
+| 28  | Pedido                | Resena                | 1:N          | `Resena.pedidoId`                   |
+| 29  | Sucursal              | InsumoStock           | 1:N          | `InsumoStock.sucursalId`            |
+| 30  | Insumo                | InsumoStock           | 1:N          | `InsumoStock.insumoId`              |
+| 31  | Sucursal              | HorarioSucursal       | 1:N          | `HorarioSucursal.sucursalId`        |
+| 32  | Usuario               | Queja                 | 1:N          | `Queja.usuarioId`                   |
+| 33  | Usuario               | Queja                 | 1:N          | `Queja.respondidoPorId`             |
+| 34  | Pedido                | Queja                 | 1:1          | `Queja.pedidoId`                    |
+| 35  | Queja                 | QuejaMensaje          | 1:N          | `QuejaMensaje.quejaId`              |
+| 36  | Usuario               | QuejaMensaje          | 1:N          | `QuejaMensaje.autorId`              |
+| 37  | Sucursal              | IngredienteStock      | 1:N          | `IngredienteStock.sucursalId`       |
+| 38  | Ingrediente           | IngredienteStock      | 1:N          | `IngredienteStock.ingredienteId`    |
+| 39  | Producto              | ProductoIngrediente   | 1:N          | `ProductoIngrediente.productoId`    |
+| 40  | Ingrediente           | ProductoIngrediente   | 1:N          | `ProductoIngrediente.ingredienteId` |
 
 ## 4. Claves y restricciones
 
-- **PK simples**: `Usuario`, `Direccion`, `Sucursal`, `HorarioSucursal`, `Categoria`, `Producto`, `ComboComponente`, `OpcionGrupo`, `Opcion`, `ProductoOpcionGrupo`, `Pedido`, `PedidoItem`, `PedidoItemOpcion`, `EstadoPedido`, `PedidoEstadoHistorial`, `Promocion`, `PromocionProducto`, `PedidoPromocion`, `ParametroSistema`, `Resena`, `Queja`, `QuejaMensaje`, `Insumo` (todas con `id`).
-- **PK compuesta**: `Stock (sucursalId, productoId)`, `InsumoStock (sucursalId, insumoId)`.
+- **PK simples**: `Usuario`, `Direccion`, `Sucursal`, `HorarioSucursal`, `Categoria`, `Producto`, `ComboComponente`, `OpcionGrupo`, `Opcion`, `ProductoOpcionGrupo`, `Pedido`, `PedidoItem`, `PedidoItemOpcion`, `EstadoPedido`, `PedidoEstadoHistorial`, `Promocion`, `PromocionProducto`, `PedidoPromocion`, `ParametroSistema`, `Resena`, `Queja`, `QuejaMensaje`, `Insumo`, `Ingrediente` (todas con `id`).
+- **PK compuesta**: `Stock (sucursalId, productoId)`, `InsumoStock (sucursalId, insumoId)`, `IngredienteStock (sucursalId, ingredienteId)`, `ProductoIngrediente (productoId, ingredienteId)`.
 - **UNIQUE**:
   - `Usuario.email`
   - `Categoria.nombre`
@@ -594,6 +657,9 @@ Usuario 1:N QuejaMensaje          (autor del mensaje)
   - `Stock (sucursalId, productoId)` — mediante PK compuesta
   - `Insumo (nombre, tipo)`
   - `InsumoStock (sucursalId, insumoId)` — mediante PK compuesta
+  - `Ingrediente.nombre`
+  - `IngredienteStock (sucursalId, ingredienteId)` — mediante PK compuesta
+  - `ProductoIngrediente (productoId, ingredienteId)` — mediante PK compuesta
   - `PromocionProducto (promocionId, productoId)`
   - `PedidoPromocion (pedidoId, promocionId)`
   - `ParametroSistema.clave`
@@ -605,6 +671,8 @@ Usuario 1:N QuejaMensaje          (autor del mensaje)
 - **CHECK**: `Resena`: `resenas_puntuacion_rango` — `puntuacion BETWEEN 1 AND 5`.
 - **CHECK**: `Queja`: `quejas_estado_valido` — `estado IN ('PENDIENTE', 'EN_REVISION', 'RESUELTA', 'RECHAZADA', 'CERRADA')`.
 - **CHECK**: `InsumoStock`: `CK_InsumoStocks_cantidad` — `cantidad >= 0`.
+- **CHECK**: `IngredienteStock`: `CK_IngredienteStocks_cantidad` — `cantidad >= 0`.
+- **CHECK**: `ProductoIngrediente`: `CK_ProductoIngredientes_cantidad` — `cantidad > 0`.
 - **Relaciones N:M resueltas por entidades asociativas**:
   - `Producto N:N OpcionGrupo` → `ProductoOpcionGrupo`
   - `Promocion N:N Producto` → `PromocionProducto`
@@ -620,6 +688,7 @@ Usuario 1:N QuejaMensaje          (autor del mensaje)
 - **Stock por sucursal**: `Stock (sucursalId, productoId)` con cantidad y `disponible`, independiente por sucursal.
 - **Horarios de atención**: `HorarioSucursal` guarda una fila por franja y día (`diaSemana` 1..7, `apertura`/`cierre` como `TIME`). Varias franjas por día y solapamientos permitidos; `cierre <= apertura` cruza la medianoche. El corte de pedidos no se persiste: se deriva del cierre real menos `margenCierreMinutos` (parámetro global, default 30). La evaluación se hace en `America/Argentina/Buenos_Aires`.
 - **Insumos**: `Insumo` (extra o condimento con precio y baja lógica) + `InsumoStock (sucursalId, insumoId)`. Sólo `extra` y `condimento` descuentan stock; se vinculan desde `PersonalizacionElementos.insumoId` y `PersonalizacionCategorias.insumoId`. "Agotado" significa sin stock en ninguna sucursal activa. El detalle está en `docs/insumos.md`.
+- **Stock por ingredientes y receta**: `Ingrediente` + `IngredienteStock (sucursalId, ingredienteId)` guardan el stock real por sucursal; `ProductoIngrediente (productoId, ingredienteId)` define la receta de cada `Producto` `tipo = PRODUCTO`. La cantidad de un producto se deriva de su receta y la de un combo de sus componentes. `Insumo`/`InsumoStock` siguen siendo independientes y no forman parte de la receta.
 - **Historial de estados**: `PedidoEstadoHistorial` registra cada cambio con `fechaHora`, `estadoId` y opcionalmente `usuarioId` y `observacion`. El estado actual se mantiene desnormalizado en `Pedido.estadoId`.
 - **Snapshot histórico de pedidos**:
   - `Pedido` conserva la dirección de entrega (calle, altura, ciudad, código postal, referencia, latitud, longitud).
@@ -634,7 +703,10 @@ Usuario 1:N QuejaMensaje          (autor del mensaje)
 
 - **Consistencia de estado**: cada cambio de estado de un pedido debe actualizar el estado actual de `Pedido` (`estadoId`) y generar simultáneamente un registro en `PedidoEstadoHistorial`.
 - **Asignación de sucursal**: es una regla de negocio (proximidad + disponibilidad de stock), no una entidad. Un administrador puede reasignar manualmente la sucursal como excepción operativa.
-- **Verificación de stock de combos**: queda pendiente de definición. Un combo es un `Producto` cuya disponibilidad puede depender de la disponibilidad de sus componentes; no se agrega entidad para resolverla en esta etapa.
+- **Verificación de stock de combos (resuelto)**: un combo es un `Producto` cuya cantidad se deriva de `min(floor(stock del componente / cantidad de la receta))`. Sus componentes, a su vez, derivan su cantidad de los ingredientes de su receta.
+- **Receta obligatoria**: todo `Producto` `tipo = PRODUCTO` debe tener al menos una fila en `ProductoIngrediente`; sin receta su cantidad derivada es 0 y no se vende. Un `COMBO` no admite receta de ingredientes.
+- **Stock derivado de ingredientes**: `Stock.cantidad` de un producto simple es `min(floor(IngredienteStock.cantidad / ProductoIngrediente.cantidad))` en cada sucursal. Un ingrediente inactivo, sin fila o con `disponible = false` aporta 0. El administrador sólo carga `IngredienteStock.cantidad` y `Stock.disponible`; la cantidad de productos y combos es de solo lectura.
+- **"Sin X" desde la receta**: los ingredientes del detalle salen de `ProductoIngrediente`; las opciones "Sin X" se generan para los ingredientes con `permiteQuitar = true`. `personalizar` deja de administrarse a mano y se sincroniza desde la receta; el tipo sigue existiendo para la API de lectura. "Sin X" no cambia el descuento: se descuenta la receta completa.
 - **Elegibilidad de reseñas**: solo un CLIENTE con un pedido en estado `entregado` que contenga el producto puede crearla. La regla vive en `lib/services/resenas.js`; la base solo refuerza el rango de puntuación y la unicidad.
 - **Elegibilidad de quejas**: solo el CLIENTE dueño de un pedido en estado `entregado` puede crearla, una vez por pedido. El alcance de la bandeja (admin por sucursal, superadmin global) y la máquina de estados viven en `lib/services/quejas.js`; la base refuerza la unicidad y el dominio de `estado`.
 - **Snapshots históricos**: los precios, nombres y dirección de un pedido no se reconstruyen desde el catálogo; se conservan como copia en el propio pedido/ítem.
@@ -667,6 +739,11 @@ erDiagram
 
     Sucursal ||--o{ InsumoStock : "1:N"
     Insumo ||--o{ InsumoStock : "1:N"
+
+    Sucursal ||--o{ IngredienteStock : "1:N"
+    Ingrediente ||--o{ IngredienteStock : "1:N"
+    Producto ||--o{ ProductoIngrediente : "1:N (receta)"
+    Ingrediente ||--o{ ProductoIngrediente : "1:N"
 
     Sucursal ||--o{ Usuario : "1:N (solo ADMINISTRADOR)"
     Sucursal ||--o{ HorarioSucursal : "1:N"
@@ -811,6 +888,27 @@ erDiagram
         boolean disponible
     }
 
+    Ingrediente {
+        int id PK
+        string nombre UK
+        string unidadMedida "unidad | g | kg | ml | l"
+        boolean activo
+    }
+
+    IngredienteStock {
+        int sucursalId PK
+        int ingredienteId PK
+        decimal cantidad "CHECK >= 0"
+        boolean disponible
+    }
+
+    ProductoIngrediente {
+        int productoId PK
+        int ingredienteId PK
+        decimal cantidad "CHECK > 0"
+        boolean permiteQuitar
+    }
+
     Pedido {
         int id PK
         int usuarioId FK
@@ -926,6 +1024,7 @@ erDiagram
 Las siguientes decisiones provienen directamente del modelo de dominio y afectan al diseño o implementación de la base de datos:
 
 - **Verificación de stock de combos (resuelto)**: un combo es un `Producto` cuya composición se define mediante `ComboComponente`. Su `cantidad` en `Stock` se **deriva del stock de sus componentes**: el valor es `min(floor(cantidad del componente / cantidad que lleva la receta))` en cada sucursal. No es un tope que cargue el administrador: el backend lo recalcula (`sincronizarCantidadDeCombos`) cuando cambia el stock o la disponibilidad de un componente, la receta del combo o la fila del combo, y lo devuelve derivado en `GET /api/stock`, así que no queda un número que el admin pueda dejar desfasado. El recálculo también corre al crear o cancelar un pedido, porque vender un componente simple baja los combos que lo usan en su receta. La fila del combo existe para estar en el catálogo de la sucursal y poder apagarse con `disponible`; si está apagada, no se vende aunque los componentes alcancen. Vender un combo descuenta su unidad y la de cada componente; como la cantidad del combo es derivada, la protección contra sobreventa se apoya en el descuento atómico de los componentes. No se agregó ninguna entidad ni se modificó la estructura.
+- **Stock por ingredientes (resuelto)**: el stock real pasa a `Ingrediente` + `IngredienteStock`, y la receta a `ProductoIngrediente`. La cantidad de un producto simple es `min(floor(stock del ingrediente / cantidad de la receta))`; un combo sigue derivando de sus componentes. La receta es obligatoria para `tipo = PRODUCTO`; sin ella el producto tiene cantidad 0 y no se vende. La cantidad de productos y combos es de solo lectura para el administrador, que sólo carga stock de ingredientes y `disponible`. `Insumo`/`InsumoStock` no forman parte de la receta.
 - **`Pedido.medioPago`**: valores `MERCADO_PAGO` y `TARJETA` (enunciado no define explícitamente el listado; conviene confirmarlo antes de implementar).
 - **Dominio de `Promocion.valor`**: no se especifica (porcentaje, monto fijo, etc.); conviene precisarlo.
 - **Tiempo estimado de entrega**: no requiere almacenamiento persistente; su cálculo se definirá como regla de negocio (dinámicamente a partir del estado del pedido y/o parámetros del sistema). `PedidoEstadoHistorial` permite calcular tiempos reales e históricos, pero no representa por sí mismo una estimación futura.
