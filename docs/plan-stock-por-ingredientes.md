@@ -703,7 +703,7 @@ Recordatorio: el backend corre desde `dist/`. Después de `npm run build` hay qu
 | BE-4     | Completado |
 | BE-5     | Completado |
 | BE-6     | Completado |
-| BE-7     | Pendiente  |
+| BE-7     | Completado |
 | BE-8     | Pendiente  |
 | FE-1     | Pendiente  |
 | FE-2     | Pendiente  |
@@ -736,3 +736,4 @@ Este archivo se actualiza al cerrar cada subtarea, marcando el estado y agregand
 - **BE-4 (completado):** receta obligatoria en productos, sincronización de "Sin X" desde la receta, `recetaIngredientes` en GET/POST/PUT, tests actualizados.
 - **BE-5 (completado):** endpoints `/api/stock/ingredientes`, `/api/stock/maximos-de-recetas`; derivación de `Stock.cantidad` de productos simples y combos desde ingredientes; inicialización de stock en el alta; sincronización en cambios de stock y receta.
 - **BE-6 (completado):** integración de ingredientes en `faltantesDeStock`, `faltantesDePedido`, `descontarStock` (descuento atómico de `IngredienteStock`) y `reponerStock`; sincronización de productos y combos afectados.
+- **BE-7 (completado):** seeder `20261106000005-demo-ingredientes-recetas.js` con ingredientes, recetas de los 23 productos simples, stock de ingredientes y filas de `Stocks`; sincronización de "Sin X".
