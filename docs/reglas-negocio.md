@@ -361,7 +361,7 @@ Regla de negocio, no entidad:
 
 ## 23. Reclamos del cliente sobre pedidos entregados
 
-> **Nota de cambio:** nueva sección. Se autorizó explícitamente sumar un canal de reclamos (`Queja`) aunque no figuraba en el modelo aprobado. No habilita `Notificacion`, `Repartidor` ni el rol `REPARTIDOR`.
+> **Nota de cambio:** nueva sección. Se autorizó explícitamente sumar un canal de reclamos (`Queja`) aunque no figuraba en el modelo aprobado. No habilita `Repartidor` ni el rol `REPARTIDOR`. Sus respuestas y cambios de estado alimentan el centro de notificaciones (`Notificacion`).
 
 - **Qué es**: un reclamo operativo de un CLIENTE sobre un pedido propio que ya fue entregado. Se distingue de `Resena`: la queja pide una respuesta del negocio y no se publica; la reseña es una opinión sobre un producto.
 - **Quién puede reclamar**: solo usuarios con rol `CLIENTE` autenticados. El ADMINISTRADOR y el SUPERADMINISTRADOR no crean quejas (403).
@@ -374,3 +374,21 @@ Regla de negocio, no entidad:
 - **Endpoints**: `POST /api/quejas`, `GET /api/quejas/mias?pedidoId=`, `POST /api/quejas/:id/mensajes`, `POST /api/quejas/:id/cerrar`, `GET /api/quejas?estado=&q=&sucursalId=&pagina=&limite=` (ADMIN/SUPERADMIN) y `PUT /api/quejas/:id` (ADMIN/SUPERADMIN). El detalle completo está en `docs/quejas.md`.
 - **Errores**: 400 validación (motivo inválido, detalle fuera de rango, respuesta faltante al cerrar, transición inválida), 401 sin sesión, 403 rol incorrecto o pedido no entregado, 404 queja/pedido inexistente o fuera del alcance, 409 queja duplicada, queja cerrada o tope de respuestas alcanzado.
 - **Frontend**: el cliente escribe desde el detalle de un pedido entregado, ve el hilo, responde y cierra; el panel (`/admin/quejas`) muestra la bandeja compartida con filtros y el hilo completo. No hay seeder demo: se prueba con los pedidos entregados existentes.
+
+## 24. Centro de notificaciones del cliente
+
+> **Nota de cambio:** nueva sección. Se autorizó explícitamente sumar el centro de notificaciones (`Notificacion`) aunque figuraba fuera del alcance de la Propuesta 2. No habilita `Repartidor` ni el rol `REPARTIDOR`.
+
+- **Qué es**: un aviso persistido y dirigido a un único usuario, que el CLIENTE ve en un panel lateral con contador de no leídas. No reemplaza a `PedidoEstadoHistorial` ni a `Queja`: es un derivado de esos cambios, pensado para que el cliente no tenga que refrescar la pantalla.
+- **Quién lo recibe**: solo usuarios con rol `CLIENTE`. El ADMINISTRADOR y el SUPERADMINISTRADOR reciben 403 y siguen usando los badges de Pedidos y Reclamos que ya existen.
+- **Origen de los avisos**:
+  - cambio de estado de un pedido propio (`confirmado`, `en_preparacion`, `listo_para_entregar`, `en_camino`, `entregado`, `cancelado`);
+  - cancelación automática por cierre de sucursal, con título y mensaje propios;
+  - respuesta del negocio en un reclamo, mensaje suelto en el hilo o cambio de estado a `EN_REVISION`, `RESUELTA` o `RECHAZADA`.
+- **Acciones propias**: el cliente no recibe aviso de sus propias acciones (cancelar su pedido, crear/responder/cerrar un reclamo). Sí recibe el aviso de una cancelación decidida por el sistema.
+- **Persistencia**: `leida` y `leidaEn` se guardan en la base, por lo que el contador es el mismo en cualquier dispositivo. El listado y el contador siempre se calculan en el backend.
+- **Estados del pedido sin texto**: si `MENSAJES_ESTADO` no tiene una entrada para el estado nuevo, no se crea aviso (`notificarEstadoPedido` devuelve `null`). Los textos viven en `lib/services/notificaciones.js`.
+- **Transacción**: el aviso de pedido se crea dentro de la transacción que cambia el estado; si falla, no queda. El evento de socket se emite después del commit.
+- **Endpoints**: `GET /api/notificaciones?tipo=&noLeidas=&pagina=&limite=`, `GET /api/notificaciones/no-leidas`, `PUT /api/notificaciones/:id/leida` y `PUT /api/notificaciones/leidas`. Todos exigen sesión de CLIENTE y CSRF en los PUT. El detalle completo está en `docs/notificaciones.md`.
+- **Tiempo real**: `notificacion_creada` va solo a la room privada `usuario:{id}` y no transporta datos; el frontend re-consulta el listado y el contador por REST.
+- **Frontend**: campanita con contador en el header (móvil y escritorio), panel lateral derecho con filtros Todas / Pedidos / Reclamos, y navegación al detalle del pedido al tocar un aviso. El menú de cuenta del logo concentra perfil, direcciones y cierre de sesión.

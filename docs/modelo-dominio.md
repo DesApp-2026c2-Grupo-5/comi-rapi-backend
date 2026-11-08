@@ -24,10 +24,11 @@ El dominio cubre:
 - promociones (Extensión 1);
 - reseñas de productos y combos comprados;
 - reclamos del cliente sobre pedidos entregados (`Queja`);
+- centro de notificaciones persistido del cliente (`Notificacion`);
 - parámetros del sistema;
 - reportes (mediante agregaciones, sin tablas propias).
 
-**No** incluye todavía las funcionalidades de la Propuesta 2 (notificaciones y repartidores), que se contemplan como evolución futura. Las reseñas sí se incorporaron como `Resena`: reemplazan la idea de "calificación" de la Propuesta 2 y se limitan a producto + estrellas + comentario, sin repartidor ni notificación. Los reclamos se incorporaron como `Queja`, autorizados explícitamente: son un canal de atención sobre un pedido entregado y **no** habilitan `Notificacion` ni `Repartidor`.
+**No** incluye todavía las funcionalidades de la Propuesta 2 de repartidores, que se contemplan como evolución futura. Las reseñas sí se incorporaron como `Resena`: reemplazan la idea de "calificación" de la Propuesta 2 y se limitan a producto + estrellas + comentario, sin repartidor. Los reclamos se incorporaron como `Queja` y las notificaciones como `Notificacion`, autorizados explícitamente: son un canal de atención y de avisos sobre un pedido entregado y **no** habilitan `Repartidor` ni el rol `REPARTIDOR`.
 
 ## 3. Principios de diseño
 
@@ -65,6 +66,7 @@ El dominio cubre:
 | 22  | `InsumoStock`           | Existencia de un insumo en una sucursal          |
 | 23  | `Queja`                 | Reclamo de un cliente sobre un pedido entregado  |
 | 24  | `QuejaMensaje`          | Mensaje del hilo de un reclamo                   |
+| 25  | `Notificacion`          | Aviso persistido para el centro del cliente      |
 
 ## 5. Atributos principales
 
@@ -566,6 +568,24 @@ Hilo: `QuejaMensajes` (`quejaId`, `autorId`, `contenido`) guarda las respuestas 
 
 Reglas: solo el CLIENTE dueño del pedido puede crear la queja, y únicamente si el pedido está `entregado`; **un pedido admite una sola queja** (UNIQUE `pedidoId`). El cliente consulta solo las suyas. El ADMINISTRADOR gestiona las quejas de pedidos de su sucursal y el SUPERADMINISTRADOR todas. Estados: `PENDIENTE → EN_REVISION → RESUELTA | RECHAZADA`; se puede resolver o rechazar directamente desde `PENDIENTE`. `RESUELTA` y `RECHAZADA` exigen `respuesta` y cierran del lado del negocio, pero el cliente puede reabrirlas respondiendo. El cliente puede cerrar en cualquier momento: pasa a `CERRADA` (final). No confundir con `Resena`: la queja es un reclamo operativo con respuesta del negocio, no una opinión pública.
 
+### 5.20 Notificacion
+
+| Atributo    | Tipo / Notas                                           |
+| ----------- | ------------------------------------------------------ |
+| `id`        | PK                                                     |
+| `usuarioId` | FK → `Usuario.id` (solo CLIENTE destinatario)          |
+| `tipo`      | ENUM: `PEDIDO`, `QUEJA`, `SISTEMA` (default `SISTEMA`) |
+| `titulo`    | STRING(160), obligatorio                               |
+| `mensaje`   | TEXT, opcional                                         |
+| `pedidoId`  | FK → `Pedido.id`, opcional (destino del clic)          |
+| `quejaId`   | FK → `Queja.id`, opcional (destino del clic)           |
+| `leida`     | BOOLEAN, default `false`                               |
+| `leidaEn`   | DATE, opcional (se completa al marcar leída)           |
+| `createdAt` |                                                        |
+| `updatedAt` |                                                        |
+
+Reglas: cada fila es un aviso dirigido a un único usuario. Se generan por cambios de estado de un pedido y por respuestas o cambios de estado de un reclamo; el cliente no recibe aviso de sus propias acciones. El estado leído se persiste por usuario, así que el contador es el mismo en cualquier dispositivo. No reemplaza a `Resena`, `Queja` ni `PedidoEstadoHistorial`; es un aviso derivado. El canal de tiempo real emite `notificacion_creada` a la room privada `usuario:{id}` y el listado se lee por REST. Detalle en `docs/notificaciones.md`.
+
 ## 6. Relaciones y cardinalidades
 
 ```
@@ -619,6 +639,10 @@ Usuario 1:N Queja                    (administrador que respondió)
 Pedido 1:1 Queja                     (UNIQUE pedidoId)
 Queja 1:N QuejaMensaje
 Usuario 1:N QuejaMensaje             (autor del mensaje)
+
+Usuario 1:N Notificacion
+Pedido 1:N Notificacion
+Queja 1:N Notificacion
 ```
 
 | A                     | B                     | Cardinalidad | FK                                |
@@ -659,6 +683,9 @@ Usuario 1:N QuejaMensaje             (autor del mensaje)
 | Pedido                | Queja                 | 1:1          | `Queja.pedidoId`                  |
 | Queja                 | QuejaMensaje          | 1:N          | `QuejaMensaje.quejaId`            |
 | Usuario               | QuejaMensaje          | 1:N          | `QuejaMensaje.autorId`            |
+| Usuario               | Notificacion          | 1:N          | `Notificacion.usuarioId`          |
+| Pedido                | Notificacion          | 1:N          | `Notificacion.pedidoId`           |
+| Queja                 | Notificacion          | 1:N          | `Notificacion.quejaId`            |
 
 ## 7. Reglas de negocio
 
@@ -721,6 +748,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - Promociones con tipos concretos iniciales (`DESCUENTO_PORCENTUAL`, `DOS_POR_UNO`).
 - Reseñas como `Resena` (producto + estrellas + comentario), no como la `Calificacion` de la Propuesta 2.
 - Quejas como `Queja`: reclamo del cliente sobre un pedido entregado, con motivo, detalle, estado y respuesta del administrador. Una por pedido.
+- Notificaciones como `Notificacion`: aviso persistido por usuario con estado leído en base, generado por cambios de pedidos y reclamos. No reemplaza a `Queja` ni a `PedidoEstadoHistorial`.
 - Reportes sin tablas propias.
 
 ## 10. Exclusiones / límites actuales
@@ -736,21 +764,19 @@ Este modelo **no** incluye:
 - motor genérico de promociones
 - `Cupon`
 - `Repartidor`
-- `Notificacion`
 - jerarquía de categorías
 - máquina de estados formal
 - entidad `Combo` separada
 
 ## 11. Consideraciones de escalabilidad futura
 
-La Propuesta 2 **no** forma parte del modelo implementado actualmente, pero las decisiones actuales deben permitir agregar posteriormente notificaciones y repartidores. Las reseñas ya están incluidas como `Resena`; no crear `Calificacion` ni las demás entidades ahora.
+La Propuesta 2 de repartidores **no** forma parte del modelo implementado actualmente, pero las decisiones actuales deben permitir agregarla posteriormente. Las reseñas ya están incluidas como `Resena`, las notificaciones como `Notificacion` y los reclamos como `Queja`; no crear `Calificacion` ni `Repartidor` ahora.
 
 La arquitectura futura podrá incorporar, por ejemplo:
 
 - un rol `REPARTIDOR`;
 - una entidad específica de repartidor asociada a `Usuario`;
-- asignación de repartidores a pedidos;
-- notificaciones asociadas a usuarios/pedidos o cambios de estado.
+- asignación de repartidores a pedidos.
 
 ## 12. Resumen general del modelo
 
@@ -780,6 +806,7 @@ La arquitectura futura podrá incorporar, por ejemplo:
 | `Resena`                | Opinión de un cliente              | N:1 `Usuario`, N:1 `Producto`, N:1 `Pedido`                                                                             |
 | `Queja`                 | Reclamo sobre pedido entregado     | N:1 `Usuario` (autor), N:1 `Usuario` (respondedor), 1:1 `Pedido`, 1:N `QuejaMensaje`                                    |
 | `QuejaMensaje`          | Mensaje del hilo                   | N:1 `Queja`, N:1 `Usuario` (autor)                                                                                      |
+| `Notificacion`          | Aviso del centro del cliente       | N:1 `Usuario` (destinatario), N:1 `Pedido` (opcional), N:1 `Queja` (opcional)                                           |
 
 ## 13. Observaciones pendientes
 

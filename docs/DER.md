@@ -10,7 +10,7 @@ Deriva directamente del modelo de dominio aprobado en `docs/modelo-dominio.md` (
 
 ## 2. Entidades
 
-El DER contempla las **26 entidades** del modelo actual (las 23 del modelo de dominio más `HorarioSucursal`, `PasswordResetToken` y `DistanciaRuta`). Para cada una se indica su PK, atributos principales, FKs y restricciones relevantes.
+El DER contempla las **27 entidades** del modelo actual (las 23 del modelo de dominio más `HorarioSucursal`, `PasswordResetToken`, `DistanciaRuta` y `Notificacion`). Para cada una se indica su PK, atributos principales, FKs y restricciones relevantes.
 
 ### 2.1 Usuario
 
@@ -442,7 +442,7 @@ Caché de distancias por ruta (A1-3). **Dato derivado y recomputable, no una ent
 
 ### 2.22 Resena
 
-Opinión de un CLIENTE sobre un producto o combo que ya compró y recibió. Reemplaza la idea de "Calificación" de la Propuesta 2: se limita a producto + estrellas + comentario, sin Repartidor ni Notificación.
+Opinión de un CLIENTE sobre un producto o combo que ya compró y recibió. Reemplaza la idea de "Calificación" de la Propuesta 2: se limita a producto + estrellas + comentario, sin Repartidor. Las notificaciones viven aparte, en `Notificacion`.
 
 | Atributo     | Tipo de dato | Notas                                                                |
 | ------------ | ------------ | -------------------------------------------------------------------- |
@@ -464,7 +464,7 @@ Opinión de un CLIENTE sobre un producto o combo que ya compró y recibió. Reem
 
 ### 2.23 Queja
 
-Reclamo de un CLIENTE sobre un pedido propio que ya fue entregado. Es un canal de atención con respuesta del negocio, distinto de `Resena` (opinión pública sobre un producto). Se autorizó explícitamente; no habilita `Notificacion` ni `Repartidor`.
+Reclamo de un CLIENTE sobre un pedido propio que ya fue entregado. Es un canal de atención con respuesta del negocio, distinto de `Resena` (opinión pública sobre un producto). Se autorizó explícitamente; no habilita `Repartidor`. Sus respuestas y cambios de estado generan filas en `Notificacion`.
 
 | Atributo          | Tipo de dato | Notas                                                                                                     |
 | ----------------- | ------------ | --------------------------------------------------------------------------------------------------------- |
@@ -490,9 +490,33 @@ Hilo: tabla `QuejaMensajes` (`id`, `quejaId → Queja.id`, `autorId → Usuario.
 - CHECK: `estado IN ('PENDIENTE', 'EN_REVISION', 'RESUELTA', 'RECHAZADA', 'CERRADA')` (además del ENUM).
 - Regla: solo el CLIENTE dueño de un pedido `entregado` puede crearla. El cliente solo ve las propias; el ADMINISTRADOR ve las de pedidos de su sucursal y el SUPERADMINISTRADOR todas. El cliente puede responder hasta 5 veces (reapertura a `PENDIENTE` si estaba resuelta o rechazada) y cerrar en cualquier momento (`CERRADA`, final). `RESUELTA` y `RECHAZADA` exigen `respuesta`. La máquina de estados y el alcance viven en `lib/services/quejas.js`; el detalle está en `docs/quejas.md`.
 
+### 2.24 Notificacion
+
+Aviso dirigido a un usuario del centro de notificaciones. La recibe únicamente el `CLIENTE` dueño del pedido o del reclamo: cambios de estado de sus pedidos y respuestas o cambios de estado de sus quejas. El negocio conserva sus contadores de Pedidos y Reclamos y no usa esta entidad.
+
+| Atributo    | Tipo de dato  | Notas                                                     |
+| ----------- | ------------- | --------------------------------------------------------- |
+| `id`        | `INTEGER`     | PK                                                        |
+| `usuarioId` | `INTEGER`     | FK a `Usuario.id` (NOT NULL); destinatario                |
+| `tipo`      | `ENUM`        | NOT NULL, default `SISTEMA`: `PEDIDO`, `QUEJA`, `SISTEMA` |
+| `titulo`    | `STRING(160)` | NOT NULL                                                  |
+| `mensaje`   | `TEXT`        | NULLABLE                                                  |
+| `pedidoId`  | `INTEGER`     | FK opcional a `Pedido.id`; destino del clic               |
+| `quejaId`   | `INTEGER`     | FK opcional a `Queja.id`; destino del clic                |
+| `leida`     | `BOOLEAN`     | NOT NULL, default `false`                                 |
+| `leidaEn`   | `DATE`        | NULLABLE; se completa al marcar leída                     |
+| `createdAt` | `DATE`        | NOT NULL                                                  |
+| `updatedAt` | `DATE`        | NOT NULL                                                  |
+
+- PK: `id`
+- FK: `usuarioId → Usuario.id` (`ON DELETE CASCADE`), `pedidoId → Pedido.id` (`ON DELETE SET NULL`), `quejaId → Queja.id` (`ON DELETE SET NULL`). Las FKs de origen son opcionales para que un aviso de sistema no dependa de una entidad de negocio.
+- Índices: `(usuarioId, leida)` para el badge, `(usuarioId, createdAt)` para el listado, `pedidoId` y `quejaId`.
+- CHECK: `notificaciones_tipo_valido` — `tipo IN ('PEDIDO', 'QUEJA', 'SISTEMA')` (además del ENUM).
+- Regla: el estado leído se persiste por usuario, así que el contador es el mismo desde cualquier dispositivo. El listado y el contador se calculan siempre en el backend; el canal de tiempo real sólo emite `notificacion_creada` a la room privada `usuario:{id}`. Detalle en `docs/notificaciones.md`.
+
 ## 3. Relaciones y cardinalidades
 
-A continuación se documentan las **36 relaciones únicas** del modelo.
+A continuación se documentan las **39 relaciones únicas** del modelo.
 
 ```
 Usuario 1:N Direccion
@@ -501,6 +525,7 @@ Usuario 1:N PasswordResetToken
 Usuario 1:N Resena
 Usuario 1:N Queja                 (autor del reclamo)
 Usuario 1:N Queja                 (administrador que respondió)
+Usuario 1:N Notificacion
 
 Sucursal 1:1 Direccion
 Sucursal 1:N Usuario              (sucursal asignada al ADMINISTRADOR)
@@ -542,6 +567,9 @@ Pedido 1:N Resena
 Pedido 1:1 Queja                  (UNIQUE pedidoId)
 Queja 1:N QuejaMensaje
 Usuario 1:N QuejaMensaje          (autor del mensaje)
+
+Pedido 1:N Notificacion
+Queja 1:N Notificacion
 ```
 
 | #   | A                     | B                     | Cardinalidad | FK                                |
@@ -582,10 +610,13 @@ Usuario 1:N QuejaMensaje          (autor del mensaje)
 | 34  | Pedido                | Queja                 | 1:1          | `Queja.pedidoId`                  |
 | 35  | Queja                 | QuejaMensaje          | 1:N          | `QuejaMensaje.quejaId`            |
 | 36  | Usuario               | QuejaMensaje          | 1:N          | `QuejaMensaje.autorId`            |
+| 37  | Usuario               | Notificacion          | 1:N          | `Notificacion.usuarioId`          |
+| 38  | Pedido                | Notificacion          | 1:N          | `Notificacion.pedidoId`           |
+| 39  | Queja                 | Notificacion          | 1:N          | `Notificacion.quejaId`            |
 
 ## 4. Claves y restricciones
 
-- **PK simples**: `Usuario`, `Direccion`, `Sucursal`, `HorarioSucursal`, `Categoria`, `Producto`, `ComboComponente`, `OpcionGrupo`, `Opcion`, `ProductoOpcionGrupo`, `Pedido`, `PedidoItem`, `PedidoItemOpcion`, `EstadoPedido`, `PedidoEstadoHistorial`, `Promocion`, `PromocionProducto`, `PedidoPromocion`, `ParametroSistema`, `Resena`, `Queja`, `QuejaMensaje`, `Insumo` (todas con `id`).
+- **PK simples**: `Usuario`, `Direccion`, `Sucursal`, `HorarioSucursal`, `Categoria`, `Producto`, `ComboComponente`, `OpcionGrupo`, `Opcion`, `ProductoOpcionGrupo`, `Pedido`, `PedidoItem`, `PedidoItemOpcion`, `EstadoPedido`, `PedidoEstadoHistorial`, `Promocion`, `PromocionProducto`, `PedidoPromocion`, `ParametroSistema`, `Resena`, `Queja`, `QuejaMensaje`, `Notificacion`, `Insumo` (todas con `id`).
 - **PK compuesta**: `Stock (sucursalId, productoId)`, `InsumoStock (sucursalId, insumoId)`.
 - **UNIQUE**:
   - `Usuario.email`
@@ -604,6 +635,7 @@ Usuario 1:N QuejaMensaje          (autor del mensaje)
 - **CHECK**: `Usuario`: `chk_usuarios_sucursal_solo_admin` — `sucursalId` solo puede estar informado cuando `rol = 'ADMINISTRADOR'` (`"rol" = 'ADMINISTRADOR' OR "sucursalId" IS NULL`).
 - **CHECK**: `Resena`: `resenas_puntuacion_rango` — `puntuacion BETWEEN 1 AND 5`.
 - **CHECK**: `Queja`: `quejas_estado_valido` — `estado IN ('PENDIENTE', 'EN_REVISION', 'RESUELTA', 'RECHAZADA', 'CERRADA')`.
+- **CHECK**: `Notificacion`: `notificaciones_tipo_valido` — `tipo IN ('PEDIDO', 'QUEJA', 'SISTEMA')`.
 - **CHECK**: `InsumoStock`: `CK_InsumoStocks_cantidad` — `cantidad >= 0`.
 - **Relaciones N:M resueltas por entidades asociativas**:
   - `Producto N:N OpcionGrupo` → `ProductoOpcionGrupo`
@@ -932,6 +964,7 @@ Las siguientes decisiones provienen directamente del modelo de dominio y afectan
 
 ## Observaciones
 
-- La relación `Usuario → Pedido` que estaba duplicada en `docs/modelo-dominio.md` (§6) fue corregida: ambos documentos listan ahora las relaciones únicas, incluida `Sucursal 1:1 Direccion` (`Direccion.sucursalId`), `Sucursal 1:N HorarioSucursal` y las tres de `Resena`.
-- `Resena` reemplaza la "Calificación" de la Propuesta 2. Se aprobó explícitamente sumarla al alcance porque el pedido la usa como funcionalidad real (estrellas + comentario sobre productos y combos comprados). No agrega `Repartidor` ni `Notificacion`.
-- `Queja` se agregó como canal de reclamos sobre pedidos entregados (autorización explícita). No habilita las entidades de la Propuesta 2 y se documenta en `docs/quejas.md`.
+- La relación `Usuario → Pedido` que estaba duplicada en `docs/modelo-dominio.md` (§6) fue corregida: ambos documentos listan ahora las relaciones únicas, incluida `Sucursal 1:1 Direccion` (`Direccion.sucursalId`), `Sucursal 1:N HorarioSucursal`, las tres de `Resena` y las tres de `Notificacion`.
+- `Resena` reemplaza la "Calificación" de la Propuesta 2. Se aprobó explícitamente sumarla al alcance porque el pedido la usa como funcionalidad real (estrellas + comentario sobre productos y combos comprados). No agrega `Repartidor`.
+- `Queja` se agregó como canal de reclamos sobre pedidos entregados (autorización explícita). No habilita `Repartidor` y se documenta en `docs/quejas.md`.
+- `Notificacion` se agregó como centro de notificaciones persistido del CLIENTE (autorización explícita). No habilita `Repartidor` ni el rol `REPARTIDOR`; se documenta en `docs/notificaciones.md`.
