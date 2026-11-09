@@ -101,7 +101,8 @@ En producción se cambia solo la configuración por las variables de un proveedo
 
 - `SESSION_SECRET`: firma las cookies de sesión. El valor de `.env.development` sirve para desarrollo; en producción hay que cambiarlo desde `.env.local`.
 - `CORS_ORIGIN`: origen del frontend permitido por el backend. Por defecto `http://localhost:5173`.
-- `IMAGENES_DIR`: carpeta donde el backend guarda las imágenes subidas. Por defecto `../comi-rapi-fronted/public/imagenes/productos`, por eso los dos repositorios tienen que quedar en carpetas hermanas.
+- `IMAGENES_PUBLIC_DIR`: carpeta raíz que Express publica en `/api/imagenes`. Por defecto `public/imagenes`.
+- `IMAGENES_DIR`, `IMAGENES_CATEGORIAS_DIR` e `IMAGENES_PERFILES_DIR`: carpetas donde el backend guarda las imágenes subidas. Por defecto `public/imagenes/productos`, `public/imagenes/categorias` y `public/imagenes/perfiles`. Ya no dependen del repo del frontend.
 - En el frontend, `VITE_API_URL` y `VITE_SOCKET_URL` (archivo `.env`) sirven para apuntar a un backend remoto en lugar de `localhost:3000`.
 
 ## Qué hace falta para cada cosa

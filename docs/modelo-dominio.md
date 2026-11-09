@@ -187,13 +187,13 @@ Relaciones:
 
 ### 5.4 Categoria
 
-| Atributo      | Tipo / Notas                                  |
-| ------------- | --------------------------------------------- |
-| `id`          | PK                                            |
-| `nombre`      | único                                         |
-| `descripcion` |                                               |
-| `imagen`      | ruta relativa en `public/imagenes/categorias` |
-| `activa`      | booleano                                      |
+| Atributo      | Tipo / Notas                                        |
+| ------------- | --------------------------------------------------- |
+| `id`          | PK                                                  |
+| `nombre`      | único                                               |
+| `descripcion` |                                                     |
+| `imagen`      | ruta relativa servida en `/api/imagenes/categorias` |
+| `activa`      | booleano                                            |
 
 Reglas:
 
@@ -204,16 +204,16 @@ Relación: `Categoria 1:N Producto`
 
 ### 5.5 Producto
 
-| Atributo      | Tipo / Notas              |
-| ------------- | ------------------------- |
-| `id`          | PK                        |
-| `categoriaId` | FK → `Categoria.id`       |
-| `nombre`      |                           |
-| `descripcion` |                           |
-| `precio`      | precio vigente            |
-| `imagen`      |                           |
-| `activo`      | booleano                  |
-| `tipo`        | enum: `PRODUCTO`, `COMBO` |
+| Atributo      | Tipo / Notas                                       |
+| ------------- | -------------------------------------------------- |
+| `id`          | PK                                                 |
+| `categoriaId` | FK → `Categoria.id`                                |
+| `nombre`      |                                                    |
+| `descripcion` |                                                    |
+| `precio`      | precio vigente                                     |
+| `imagen`      | ruta relativa servida en `/api/imagenes/productos` |
+| `activo`      | booleano                                           |
+| `tipo`        | enum: `PRODUCTO`, `COMBO`                          |
 
 El precio en `Producto` representa el precio vigente. El precio histórico de un pedido **no** debe obtenerse nuevamente desde `Producto`.
 

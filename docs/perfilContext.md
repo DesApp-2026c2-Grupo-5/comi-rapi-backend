@@ -192,7 +192,7 @@ POST /api/perfil/foto (multipart, campo "imagen")
   │     ├─ usuario.update({ fotoPerfilUrl })   ← primero la base
   │     └─ eliminarImagenEnCarpeta(anterior)   ← después el archivo viejo
   │
-  └─ 201 { url: "/imagenes/perfiles/avatar-1790740211935.png" }
+  └─ 201 { url: "/api/imagenes/perfiles/avatar-1790740211935.png" }
 ```
 
 El nombre del archivo es el original normalizado más un timestamp
@@ -204,25 +204,27 @@ el borrado falla, el perfil sigue apuntando a una imagen que existe. El borrado 
 envuelto en `try/catch` con un `console.warn`, porque un archivo huérfano es desorden
 de disco, no un error de negocio que deba convertir un éxito en `500`.
 
-### 8.2 Por qué el archivo se escribe en el repo del frontend
+### 8.2 Por qué el archivo se escribe en el backend
 
-Es la decisión que ya tenía el proyecto con productos y categorías: la imagen se
-guarda como archivo en `comi-rapi-fronted/public/imagenes/<carpeta>` y se devuelve la
-ruta relativa, que Vite sirve en la raíz. Así el resto del equipo la ve tras un `pull`,
-sin depender de un bucket ni de credenciales. La carpeta y la URL son configurables
-por `IMAGENES_PERFILES_DIR` y `imagenes.perfilesUrlBase`.
+La imagen se guarda como archivo en `comi-rapi-backend/public/imagenes/<carpeta>` y se
+devuelve la ruta relativa que Express publica en `/api/imagenes/<carpeta>`. Así el
+backend es la única fuente de verdad, sin depender de un bucket ni de credenciales, y el
+frontend puede pedir la imagen al mismo origen de la API. La carpeta raíz, las carpetas
+de destino y las URLs son configurables por `IMAGENES_PUBLIC_DIR`,
+`IMAGENES_PERFILES_DIR` y `imagenes.perfilesUrlBase`.
 
 Consecuencias que conviene tener presentes:
 
-- `fotoPerfilUrl` guarda una ruta **relativa** (`/imagenes/perfiles/...`), no absoluta,
-  igual que `Producto.imagen`. La resuelve el frontend, no el backend.
-- Pedir la imagen al backend en `:3000` da `404`: el archivo no lo sirve Express. Se
-  sirve desde el origen del frontend (`:5173` en desarrollo).
-- `public/imagenes/perfiles/` está en el `.gitignore` del frontend. A diferencia de
+- `fotoPerfilUrl` guarda una ruta **relativa** (`/api/imagenes/perfiles/...`), no
+  absoluta, igual que `Producto.imagen`. El frontend la resuelve contra el origen de
+  `VITE_API_URL`.
+- La imagen la sirve el backend en `:3000` mediante `express.static`, montado antes del
+  logger para que cada GET de imagen no ensucie la consola.
+- `public/imagenes/perfiles/` está en el `.gitignore` del backend. A diferencia de
   productos y categorías, que son del seed y sí se versionan, estas son **datos de
   usuarios** y no corresponde commitearlas.
 - El archivo se nombra a partir del `nombreOriginal` que manda el cliente, normalizado a
-  minúsculas y con guiones, más `Date.now()`: `/imagenes/perfiles/10002-1790745616801.jpg`.
+  minúsculas y con guiones, más `Date.now()`: `/api/imagenes/perfiles/10002-1790745616801.jpg`.
   Los tests no tocan esa carpeta: `.env.test` apunta `IMAGENES_PERFILES_DIR` a
   `./test/tmp/perfiles`.
 
@@ -326,9 +328,9 @@ Con el backend en `:3000` se ejecutó el flujo completo por HTTP:
 | `PUT /api/perfil {"nombre": ...}`   | `400 nombre no puede modificarse en este endpoint`                                |
 | `PUT /api/perfil {"apellido": ...}` | `400 apellido no puede modificarse en este endpoint`                              |
 | `PUT` con email/teléfono/fecha      | `200`, con nombre y apellido intactos                                             |
-| `POST /api/perfil/foto`             | `201` con `/imagenes/perfiles/10002-<ts>.jpg`                                     |
+| `POST /api/perfil/foto`             | `201` con `/api/imagenes/perfiles/10002-<ts>.jpg`                                 |
 | `GET /api/auth/me`                  | Trae `fotoPerfilUrl` (la del avatar del navbar)                                   |
-| Pedir esa URL al frontend (`:5173`) | `200 image/png`                                                                   |
+| Pedir esa URL al backend (`:3000`)  | `200 image/png`                                                                   |
 | `DELETE /api/perfil/foto`           | `200`, perfil completo con `fotoPerfilUrl` en `null`, archivo eliminado del disco |
 | `POST /cambiar-password`            | `200`                                                                             |
 | Login con la contraseña vieja/nueva | `401` / `200`                                                                     |
@@ -478,7 +480,7 @@ Detalles que siguen las convenciones del proyecto:
    `routes/auth.js`, que ya traía su propio limitador y no se modificó.
 7. No guardar archivos fuera de `config.imagenes.perfilesDir` ni borrar rutas sin validar
    el `basename`.
-8. No versionar `public/imagenes/perfiles/`.
+8. No versionar `public/imagenes/perfiles/` (está en el `.gitignore` del backend).
 9. La ficha arranca siempre en modo lectura: la edición se habilita a pedido, no por
    defecto.
 10. No dejar `POST /api/perfil/cambiar-password` sin `perfilPasswordLimiter`: exigir la
