@@ -9,6 +9,7 @@ import http from 'http';
 import app from '../lib/app';
 import db from '../lib/models';
 import { configurarSocketIO } from '../lib/realtime';
+import { iniciarVigiaHorarios } from '../lib/services/horarios_vigia';
 
 const debug = debugPkg('js/www:server');
 
@@ -36,6 +37,9 @@ function startServer() {
   server.listen(port, () => {
     console.log(`¡Aplicación iniciada! ====> 🌎 http://localhost:${port}`);
   });
+  // El vigía emite `sucursal_estado` al abrir/cerrar por horario. Si la base no
+  // está disponible todavía, reintenta solo (no bloquea el arranque).
+  iniciarVigiaHorarios();
 }
 
 db.sequelize

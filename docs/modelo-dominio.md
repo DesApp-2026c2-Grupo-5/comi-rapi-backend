@@ -23,10 +23,12 @@ El dominio cubre:
 - stock por sucursal (Extensión 1);
 - promociones (Extensión 1);
 - reseñas de productos y combos comprados;
+- reclamos del cliente sobre pedidos entregados (`Queja`);
+- centro de notificaciones persistido del cliente (`Notificacion`);
 - parámetros del sistema;
 - reportes (mediante agregaciones, sin tablas propias).
 
-**No** incluye todavía las funcionalidades de la Propuesta 2 (notificaciones y repartidores), que se contemplan como evolución futura. Las reseñas sí se incorporaron como `Resena`: reemplazan la idea de "calificación" de la Propuesta 2 y se limitan a producto + estrellas + comentario, sin repartidor ni notificación.
+**No** incluye todavía las funcionalidades de la Propuesta 2 de repartidores, que se contemplan como evolución futura. Las reseñas sí se incorporaron como `Resena`: reemplazan la idea de "calificación" de la Propuesta 2 y se limitan a producto + estrellas + comentario, sin repartidor. Los reclamos se incorporaron como `Queja` y las notificaciones como `Notificacion`, autorizados explícitamente: son un canal de atención y de avisos sobre un pedido entregado y **no** habilitan `Repartidor` ni el rol `REPARTIDOR`.
 
 ## 3. Principios de diseño
 
@@ -62,6 +64,9 @@ El dominio cubre:
 | 20  | `Resena`                | Opinión de un cliente sobre un producto comprado |
 | 21  | `Insumo`                | Extra o condimento con precio y baja lógica      |
 | 22  | `InsumoStock`           | Existencia de un insumo en una sucursal          |
+| 23  | `Queja`                 | Reclamo de un cliente sobre un pedido entregado  |
+| 24  | `QuejaMensaje`          | Mensaje del hilo de un reclamo                   |
+| 25  | `Notificacion`          | Aviso persistido para el centro del cliente      |
 
 ## 5. Atributos principales
 
@@ -144,21 +149,39 @@ Importante: la dirección utilizada en un pedido **no debe depender de esta enti
 
 ### 5.3 Sucursal
 
-| Atributo   | Tipo / Notas                      |
-| ---------- | --------------------------------- |
-| `id`       | PK                                |
-| `nombre`   |                                   |
-| `telefono` |                                   |
-| `horarios` | información propia de la sucursal |
-| `activa`   | booleano                          |
+| Atributo   | Tipo / Notas |
+| ---------- | ------------ |
+| `id`       | PK           |
+| `nombre`   |              |
+| `telefono` |              |
+| `activa`   | booleano     |
 
 `Sucursal` **no** almacena `direccion` ni `latitud`/`longitud`: esos datos quedan centralizados en `Direccion` mediante la relación `Sucursal 1:1 Direccion` (FK `Direccion.sucursalId`). Antes de esta alineación, `Sucursal` los duplicaba como `direccion STRING` + coordenadas; dichas columnas fueron eliminadas.
 
-`horarios` se documenta como información de la sucursal, no como entidad independiente. No crear `HorarioSucursal`. La decisión podrá revisarse si se requiere gestionar horarios de forma estructurada.
+### 5.3.1 HorarioSucursal
+
+El horario de atención es **estructurado**. `Sucursales.horarios` (texto libre) se eliminó tras el backfill a `HorarioSucursal`:
+
+| Atributo     | Tipo / Notas                                   |
+| ------------ | ---------------------------------------------- |
+| `id`         | PK                                             |
+| `sucursalId` | FK → `Sucursal.id` (`ON DELETE CASCADE`)       |
+| `diaSemana`  | entero 1..7 (lunes = 1, domingo = 7, ISO-8601) |
+| `apertura`   | `TIME` — hora real de apertura del local       |
+| `cierre`     | `TIME` — hora real de cierre del local         |
+
+Reglas:
+
+- Varias franjas por día y solapamientos permitidos: "abierta" es caer en cualquiera. Se rechazan franjas exactamente duplicadas (UNIQUE `(sucursalId, diaSemana, apertura, cierre)`) y `apertura = cierre`.
+- `cierre <= apertura` representa una franja que **cruza la medianoche** (ej. 19:00–02:00) y pertenece al día de apertura; se evalúan también las franjas del día anterior.
+- Un día sin franjas está cerrado. Para cerrar todo el local se usa `activa = false`, no la ausencia de franjas.
+- La franja guarda el horario del local. El **corte de pedidos** se deriva restando el parámetro global `margenCierreMinutos` (default 30): el local cierra 23:00 y la página deja de tomar pedidos 22:30.
+- La evaluación se hace siempre en `America/Argentina/Buenos_Aires`.
 
 Relaciones:
 
 - `Sucursal 1:1 Direccion`
+- `Sucursal 1:N HorarioSucursal`
 - `Sucursal 1:N Stock`
 - `Sucursal 1:N Pedido`
 
@@ -524,6 +547,45 @@ Regla: `clave` debe ser única. No crear entidades específicas para cada parám
 
 Reglas: un cliente deja **una sola reseña por producto** (UNIQUE `usuarioId + productoId`); solo puede crearla si tiene un pedido `entregado` que incluya ese producto; puede editarla o eliminarla. El autor se muestra como "Nombre I." (nombre + inicial del apellido), nunca con email. No es la `Calificacion` de la Propuesta 2: no evalúa al repartidor ni al pedido en general.
 
+### 5.19 Queja
+
+| Atributo          | Tipo / Notas                                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------------------------- |
+| `id`              | PK                                                                                                    |
+| `usuarioId`       | FK → `Usuario.id` (solo CLIENTE autor del reclamo)                                                    |
+| `pedidoId`        | FK → `Pedido.id` (pedido propio y `entregado`), UNIQUE                                                |
+| `motivo`          | ENUM: `PEDIDO_INCOMPLETO`, `PRODUCTO_EN_MAL_ESTADO`, `DEMORA_EN_LA_ENTREGA`, `ERROR_DE_COBRO`, `OTRO` |
+| `detalle`         | TEXT, obligatorio, 10 a 1000 caracteres                                                               |
+| `estado`          | ENUM: `PENDIENTE` (default), `EN_REVISION`, `RESUELTA`, `RECHAZADA`, `CERRADA`                        |
+| `respuesta`       | TEXT, opcional, máximo 1000 caracteres (última del negocio)                                           |
+| `respondidoPorId` | FK → `Usuario.id` (ADMINISTRADOR o SUPERADMINISTRADOR), opcional                                      |
+| `respondidaEn`    | DATE, opcional (se completa al responder)                                                             |
+| `cerradaEn`       | DATE, opcional (cierre del cliente)                                                                   |
+| `createdAt`       |                                                                                                       |
+| `updatedAt`       |                                                                                                       |
+
+Hilo: `QuejaMensajes` (`quejaId`, `autorId`, `contenido`) guarda las respuestas del cliente (hasta 5) y del negocio.
+
+Reglas: solo el CLIENTE dueño del pedido puede crear la queja, y únicamente si el pedido está `entregado`; **un pedido admite una sola queja** (UNIQUE `pedidoId`). El cliente consulta solo las suyas. El ADMINISTRADOR gestiona las quejas de pedidos de su sucursal y el SUPERADMINISTRADOR todas. Estados: `PENDIENTE → EN_REVISION → RESUELTA | RECHAZADA`; se puede resolver o rechazar directamente desde `PENDIENTE`. `RESUELTA` y `RECHAZADA` exigen `respuesta` y cierran del lado del negocio, pero el cliente puede reabrirlas respondiendo. El cliente puede cerrar en cualquier momento: pasa a `CERRADA` (final). No confundir con `Resena`: la queja es un reclamo operativo con respuesta del negocio, no una opinión pública.
+
+### 5.20 Notificacion
+
+| Atributo    | Tipo / Notas                                           |
+| ----------- | ------------------------------------------------------ |
+| `id`        | PK                                                     |
+| `usuarioId` | FK → `Usuario.id` (solo CLIENTE destinatario)          |
+| `tipo`      | ENUM: `PEDIDO`, `QUEJA`, `SISTEMA` (default `SISTEMA`) |
+| `titulo`    | STRING(160), obligatorio                               |
+| `mensaje`   | TEXT, opcional                                         |
+| `pedidoId`  | FK → `Pedido.id`, opcional (destino del clic)          |
+| `quejaId`   | FK → `Queja.id`, opcional (destino del clic)           |
+| `leida`     | BOOLEAN, default `false`                               |
+| `leidaEn`   | DATE, opcional (se completa al marcar leída)           |
+| `createdAt` |                                                        |
+| `updatedAt` |                                                        |
+
+Reglas: cada fila es un aviso dirigido a un único usuario. Se generan por cambios de estado de un pedido y por respuestas o cambios de estado de un reclamo; el cliente no recibe aviso de sus propias acciones. El estado leído se persiste por usuario, así que el contador es el mismo en cualquier dispositivo. No reemplaza a `Resena`, `Queja` ni `PedidoEstadoHistorial`; es un aviso derivado. El canal de tiempo real emite `notificacion_creada` a la room privada `usuario:{id}` y el listado se lee por REST. Detalle en `docs/notificaciones.md`.
+
 ## 6. Relaciones y cardinalidades
 
 ```
@@ -532,6 +594,7 @@ Usuario 1:N Pedido
 
 Sucursal 1:1 Direccion
 Sucursal 1:N Usuario              (sucursal asignada al ADMINISTRADOR)
+Sucursal 1:N HorarioSucursal      (franjas de atención por día)
 
 Categoria 1:N Producto
 
@@ -570,6 +633,16 @@ Pedido N:N Promocion
 Usuario 1:N Resena
 Producto 1:N Resena
 Pedido 1:N Resena
+
+Usuario 1:N Queja                    (autor del reclamo)
+Usuario 1:N Queja                    (administrador que respondió)
+Pedido 1:1 Queja                     (UNIQUE pedidoId)
+Queja 1:N QuejaMensaje
+Usuario 1:N QuejaMensaje             (autor del mensaje)
+
+Usuario 1:N Notificacion
+Pedido 1:N Notificacion
+Queja 1:N Notificacion
 ```
 
 | A                     | B                     | Cardinalidad | FK                                |
@@ -588,6 +661,7 @@ Pedido 1:N Resena
 | Producto              | Stock                 | 1:N          | `Stock.productoId`                |
 | Sucursal              | InsumoStock           | 1:N          | `InsumoStock.sucursalId`          |
 | Insumo                | InsumoStock           | 1:N          | `InsumoStock.insumoId`            |
+| Sucursal              | HorarioSucursal       | 1:N          | `HorarioSucursal.sucursalId`      |
 | Sucursal              | Pedido                | 1:N          | `Pedido.sucursalId`               |
 | EstadoPedido          | Pedido                | 1:N          | `Pedido.estadoId`                 |
 | Pedido                | PedidoItem            | 1:N          | `PedidoItem.pedidoId`             |
@@ -604,19 +678,28 @@ Pedido 1:N Resena
 | Usuario               | Resena                | 1:N          | `Resena.usuarioId`                |
 | Producto              | Resena                | 1:N          | `Resena.productoId`               |
 | Pedido                | Resena                | 1:N          | `Resena.pedidoId`                 |
+| Usuario               | Queja                 | 1:N          | `Queja.usuarioId`                 |
+| Usuario               | Queja                 | 1:N          | `Queja.respondidoPorId`           |
+| Pedido                | Queja                 | 1:1          | `Queja.pedidoId`                  |
+| Queja                 | QuejaMensaje          | 1:N          | `QuejaMensaje.quejaId`            |
+| Usuario               | QuejaMensaje          | 1:N          | `QuejaMensaje.autorId`            |
+| Usuario               | Notificacion          | 1:N          | `Notificacion.usuarioId`          |
+| Pedido                | Notificacion          | 1:N          | `Notificacion.pedidoId`           |
+| Queja                 | Notificacion          | 1:N          | `Notificacion.quejaId`            |
 
 ## 7. Reglas de negocio
 
 ### 7.1 Asignación de sucursal (regla de negocio, no entidad)
 
 1. Obtener las sucursales activas.
-2. Ordenarlas por proximidad geográfica a la dirección de entrega.
-3. Comprobar si la sucursal más cercana dispone del stock necesario.
-4. Si no dispone del stock, evaluar la siguiente sucursal más cercana.
-5. Continuar hasta encontrar una sucursal capaz de satisfacer el pedido.
-6. Si ninguna sucursal puede satisfacerlo, el pedido no puede confirmarse.
+2. **Descartar las que están fuera del horario de atención** en el momento del pedido (franjas de `HorarioSucursal` menos el margen de cierre global). Si la más cercana está cerrada se saltea a la siguiente.
+3. Ordenarlas por proximidad geográfica a la dirección de entrega.
+4. Comprobar si la sucursal más cercana dispone del stock necesario.
+5. Si no dispone del stock, evaluar la siguiente sucursal más cercana.
+6. Continuar hasta encontrar una sucursal capaz de satisfacer el pedido.
+7. Si ninguna sucursal puede satisfacerlo, el pedido no puede confirmarse.
 
-Además, un administrador puede reasignar manualmente la sucursal de un pedido como excepción operativa. No crear una entidad para esta regla.
+Además, un administrador puede reasignar manualmente la sucursal de un pedido como excepción operativa, siempre que el destino esté abierto y tenga stock. No crear una entidad para esta regla.
 
 ### 7.2 Otras reglas
 
@@ -628,6 +711,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - `Categoria.nombre` único; sin jerarquía de categorías.
 - `ParametroSistema.clave` único.
 - **Reseñas**: solo un CLIENTE con un pedido `entregado` que contenga el producto puede crearla, y solo una por producto (UNIQUE `usuarioId + productoId`). La puntuación es obligatoria (1 a 5) y el comentario opcional (máximo 500 caracteres). El autor puede editarla o eliminarla; el listado público muestra "Nombre I." y nunca el email. El promedio y la cantidad se calculan sobre las reseñas existentes.
+- **Quejas**: solo el CLIENTE dueño de un pedido `entregado` puede reclamar, y solo una vez por pedido (UNIQUE `pedidoId`). `motivo` es un enum fijo y `detalle` es obligatorio (10 a 1000 caracteres). El cliente solo ve las propias; el ADMINISTRADOR ve las de su sucursal y el SUPERADMINISTRADOR todas. El cliente puede responder hasta 5 veces (reabre a `PENDIENTE` si estaba resuelta o rechazada) y cerrar en cualquier momento (`CERRADA`, final). `RESUELTA` y `RECHAZADA` exigen `respuesta` (máximo 1000 caracteres). Ver `docs/quejas.md`.
 - `Stock`: PK compuesta `(sucursalId, productoId)` única.
 - **Insumos**: `Insumo` con UNIQUE `(nombre, tipo)`; `InsumoStock` con PK compuesta `(sucursalId, insumoId)` y `cantidad >= 0`. Sólo `extra` y `condimento` se vinculan desde la personalización (`insumoId`) y descuentan stock. "Agotado" = sin stock en ninguna sucursal activa. La baja de un insumo es lógica y no permite cambiar su `tipo` si ya está vinculado. Ver `docs/insumos.md`.
 - El carrito es estado temporal y se revalida contra la BD al confirmar.
@@ -652,7 +736,7 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - Una sola entidad `Usuario` con `rol` (sin `Cliente`/`Administrador` separados).
 - `Direccion` como única entidad de ubicación (domicilio + coordenadas), compartida por usuarios y sucursales; `Sucursal 1:1 Direccion` (sin `direccion STRING` ni coordenadas en `Sucursal`).
 - Dirección histórica por snapshot dentro de `Pedido` (sin `PedidoDireccion`).
-- `horarios` como información de `Sucursal` (sin `HorarioSucursal`).
+- `horarios` como entidad `HorarioSucursal` (franjas por día), no como texto en `Sucursal`. El corte de pedidos se deriva del cierre real menos `margenCierreMinutos`.
 - Combos como `Producto` con `tipo = COMBO` + `ComboComponente` (sin entidad `Combo`).
 - Precio del combo es propio en `Producto.precio`, no suma de componentes.
 - Personalización con `OpcionGrupo` + `Opcion` + `ProductoOpcionGrupo`.
@@ -663,6 +747,8 @@ Además, un administrador puede reasignar manualmente la sucursal de un pedido c
 - Carrito no persistido.
 - Promociones con tipos concretos iniciales (`DESCUENTO_PORCENTUAL`, `DOS_POR_UNO`).
 - Reseñas como `Resena` (producto + estrellas + comentario), no como la `Calificacion` de la Propuesta 2.
+- Quejas como `Queja`: reclamo del cliente sobre un pedido entregado, con motivo, detalle, estado y respuesta del administrador. Una por pedido.
+- Notificaciones como `Notificacion`: aviso persistido por usuario con estado leído en base, generado por cambios de pedidos y reclamos. No reemplaza a `Queja` ni a `PedidoEstadoHistorial`.
 - Reportes sin tablas propias.
 
 ## 10. Exclusiones / límites actuales
@@ -673,27 +759,24 @@ Este modelo **no** incluye:
 - `Administrador` separado de `Usuario`
 - `Carrito`
 - `CarritoItem`
-- `HorarioSucursal`
 - `PrecioHistorico`
 - tablas específicas de reportes
 - motor genérico de promociones
 - `Cupon`
 - `Repartidor`
-- `Notificacion`
 - jerarquía de categorías
 - máquina de estados formal
 - entidad `Combo` separada
 
 ## 11. Consideraciones de escalabilidad futura
 
-La Propuesta 2 **no** forma parte del modelo implementado actualmente, pero las decisiones actuales deben permitir agregar posteriormente notificaciones y repartidores. Las reseñas ya están incluidas como `Resena`; no crear `Calificacion` ni las demás entidades ahora.
+La Propuesta 2 de repartidores **no** forma parte del modelo implementado actualmente, pero las decisiones actuales deben permitir agregarla posteriormente. Las reseñas ya están incluidas como `Resena`, las notificaciones como `Notificacion` y los reclamos como `Queja`; no crear `Calificacion` ni `Repartidor` ahora.
 
 La arquitectura futura podrá incorporar, por ejemplo:
 
 - un rol `REPARTIDOR`;
 - una entidad específica de repartidor asociada a `Usuario`;
-- asignación de repartidores a pedidos;
-- notificaciones asociadas a usuarios/pedidos o cambios de estado.
+- asignación de repartidores a pedidos.
 
 ## 12. Resumen general del modelo
 
@@ -721,6 +804,9 @@ La arquitectura futura podrá incorporar, por ejemplo:
 | `PedidoPromocion`       | Promoción aplicada                 | N:1 `Pedido`, N:1 `Promocion`                                                                                           |
 | `ParametroSistema`      | Configuración del sistema          | —                                                                                                                       |
 | `Resena`                | Opinión de un cliente              | N:1 `Usuario`, N:1 `Producto`, N:1 `Pedido`                                                                             |
+| `Queja`                 | Reclamo sobre pedido entregado     | N:1 `Usuario` (autor), N:1 `Usuario` (respondedor), 1:1 `Pedido`, 1:N `QuejaMensaje`                                    |
+| `QuejaMensaje`          | Mensaje del hilo                   | N:1 `Queja`, N:1 `Usuario` (autor)                                                                                      |
+| `Notificacion`          | Aviso del centro del cliente       | N:1 `Usuario` (destinatario), N:1 `Pedido` (opcional), N:1 `Queja` (opcional)                                           |
 
 ## 13. Observaciones pendientes
 

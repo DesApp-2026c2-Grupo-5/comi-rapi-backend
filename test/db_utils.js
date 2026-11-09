@@ -49,6 +49,30 @@ export async function crearUsuario({
 }
 
 /**
+ * Carga el horario de atención de una sucursal de prueba. Por defecto usa una
+ * franja "00:00–00:00" (cruza la medianoche = abierta las 24 h) para que los
+ * tests no dependan de la hora real a la que corren. Combinado con
+ * `crearParametros({ margenCierreMinutos: 0 })` la sucursal está siempre
+ * tomando pedidos.
+ *
+ * @param {number} sucursalId
+ * @param {object} [opciones] - { apertura, cierre }.
+ */
+export async function crearHorarioSucursal(
+  sucursalId,
+  { apertura = '00:00:00', cierre = '00:00:00' } = {}
+) {
+  return db.HorarioSucursal.bulkCreate(
+    Array.from({ length: 7 }, (_, indice) => ({
+      sucursalId,
+      diaSemana: indice + 1,
+      apertura,
+      cierre,
+    }))
+  );
+}
+
+/**
  * Carga parámetros de negocio en la base para aislar una suite de los valores
  * por defecto del catálogo. Solo escribe las claves indicadas; las demás siguen
  * cayendo al valor por defecto del catálogo.

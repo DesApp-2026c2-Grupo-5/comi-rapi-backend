@@ -36,7 +36,9 @@ const sucursales = [
   {
     nombre: 'Sucursal Oeste',
     telefono: '011-4627-0000',
-    horarios: 'Lun-Dom 10:00-23:00',
+    // Horario REAL del local (el corte de pedidos lo deriva el backend con el
+    // parámetro global `margenCierreMinutos`: 10:00–23:00 → pedidos hasta 22:30).
+    horario: { apertura: '10:00:00', cierre: '23:00:00' },
     direccion: {
       calle: 'J. M. de Rosas',
       altura: 600,
@@ -51,7 +53,8 @@ const sucursales = [
   {
     nombre: 'Sucursal Palermo',
     telefono: '011-5777-3000',
-    horarios: 'Lun-Dom 11:00-00:00',
+    // Cruza la medianoche: abre 11:00 y cierra 00:00 del día siguiente.
+    horario: { apertura: '11:00:00', cierre: '00:00:00' },
     direccion: {
       calle: 'Av. Santa Fe',
       altura: 3253,
@@ -70,7 +73,7 @@ const sucursales = [
   {
     nombre: 'Sucursal Vergara',
     telefono: '011-4659-4000',
-    horarios: 'Lun-Dom 10:00-23:00',
+    horario: { apertura: '10:00:00', cierre: '23:00:00' },
     direccion: {
       calle: 'AV GDOR VERGARA',
       altura: 3547,
@@ -109,7 +112,6 @@ module.exports = {
       sucursales.map((s) => ({
         nombre: s.nombre,
         telefono: s.telefono,
-        horarios: s.horarios,
         activa: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -121,6 +123,23 @@ module.exports = {
         replacements: { nombres: sucursales.map((s) => s.nombre) },
       }
     );
+    // Franjas de atención: el mismo horario para los siete días, como el texto
+    // viejo ("Lun-Dom ..."). Palermo cruza la medianoche (11:00–00:00).
+    const franjas = [];
+    creadas.forEach((sucursal) => {
+      const { horario } = sucursales.find((x) => x.nombre === sucursal.nombre);
+      for (let diaSemana = 1; diaSemana <= 7; diaSemana += 1) {
+        franjas.push({
+          sucursalId: sucursal.id,
+          diaSemana,
+          apertura: horario.apertura,
+          cierre: horario.cierre,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+    });
+    await queryInterface.bulkInsert('HorarioSucursales', franjas);
     await queryInterface.bulkInsert(
       'Direcciones',
       creadas.map((s) => {
@@ -151,6 +170,9 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
+    await queryInterface.sequelize.query(
+      `DELETE FROM "HorarioSucursales" WHERE "sucursalId" IN (SELECT id FROM "Sucursales")`
+    );
     await queryInterface.sequelize.query(
       `DELETE FROM "Direcciones" WHERE "sucursalId" IN (SELECT id FROM "Sucursales")`
     );

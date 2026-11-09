@@ -76,6 +76,10 @@ tags:
     description: >-
       Reseñas de productos y combos: listado público por producto y CRUD de la
       propia reseña para el CLIENTE (solo sobre compras entregadas).
+  - name: Quejas
+    description: >-
+      Reclamos del CLIENTE sobre pedidos entregados y bandeja de gestión para
+      ADMINISTRADOR (su sucursal) y SUPERADMINISTRADOR (global).
   - name: Pedidos
     description: Registración, consulta y cambios de estado de pedidos
   - name: Sucursales
@@ -115,6 +119,29 @@ components:
           example: false
         error:
           type: string
+    RespuestaCancelacionPorCierre:
+      type: object
+      description: >-
+        Confirmación del pago con la sucursal cerrada y sin alternativa. El
+        pedido ya quedó `cancelado`, el stock volvió y el frontend debe regresar
+        al carrito.
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: >-
+            La sucursal cerró y no hay otra abierta con stock. Cancelamos el
+            pedido y las unidades volvieron al stock.
+        pedidoId:
+          type: integer
+        estado:
+          type: string
+          example: cancelado
+        cancelado:
+          type: boolean
+          example: true
     RolUsuario:
       type: string
       enum:
@@ -459,11 +486,11 @@ components:
               description: Top 10 por facturaci\u00f3n
               items:
                 $ref: '#/components/schemas/ProductoReporte'
-            menosVendido:
-              description: Producto con menos unidades vendidas (null si no hubo ventas)
-              nullable: true
-              allOf:
-                - $ref: '#/components/schemas/ProductoReporte'
+            menosVendidos:
+              type: array
+              description: Top 10 por menos unidades vendidas (ascendente)
+              items:
+                $ref: '#/components/schemas/ProductoReporte'
         stock:
           type: object
           properties:
@@ -537,6 +564,29 @@ components:
                     format: date
                   cantidad:
                     type: integer
+            productos:
+              type: array
+              description: >-
+                Top 10 productos de pedidos cancelados, ordenados por unidades
+                canceladas
+              items:
+                type: object
+                properties:
+                  productoId:
+                    type: integer
+                  nombre:
+                    type: string
+                  categoria:
+                    type: string
+                    nullable: true
+                  unidades:
+                    type: integer
+                  pedidos:
+                    type: integer
+                    description: Pedidos cancelados distintos que incluyen el producto
+                  importe:
+                    type: number
+                    description: Suma de subtotales de los ítems cancelados
         promociones:
           type: object
           properties:
@@ -915,19 +965,235 @@ components:
     RespuestaEstadoResenaProducto:
       type: object
       properties:
+        puedeResenar:
+          type: boolean
+          example: false
+        miResena:
+          allOf:
+            - $ref: '#/components/schemas/ResenaConProducto'
+          nullable: true
+
+    MotivoQueja:
+      type: string
+      enum:
+        - PEDIDO_INCOMPLETO
+        - PRODUCTO_EN_MAL_ESTADO
+        - DEMORA_EN_LA_ENTREGA
+        - ERROR_DE_COBRO
+        - OTRO
+
+    EstadoQueja:
+      type: string
+      enum:
+        - PENDIENTE
+        - EN_REVISION
+        - RESUELTA
+        - RECHAZADA
+        - CERRADA
+
+    QuejaMensaje:
+      type: object
+      properties:
+        id:
+          type: integer
+        contenido:
+          type: string
+          maxLength: 1000
+        autorId:
+          type: integer
+        delCliente:
+          type: boolean
+        creadaEn:
+          type: string
+          format: date-time
+        autor:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            nombre:
+              type: string
+            apellido:
+              type: string
+
+    QuejaMensajeRequest:
+      type: object
+      required:
+        - contenido
+      properties:
+        contenido:
+          type: string
+          minLength: 1
+          maxLength: 1000
+
+    QuejaPedidoResumen:
+      type: object
+      properties:
+        id:
+          type: integer
+        fechaHora:
+          type: string
+          format: date-time
+        total:
+          type: string
+          example: '15200.00'
+
+    Queja:
+      type: object
+      properties:
+        id:
+          type: integer
+        pedidoId:
+          type: integer
+        motivo:
+          $ref: '#/components/schemas/MotivoQueja'
+        detalle:
+          type: string
+          minLength: 10
+          maxLength: 1000
+        estado:
+          $ref: '#/components/schemas/EstadoQueja'
+        respuesta:
+          type: string
+          nullable: true
+          maxLength: 1000
+        respondidaEn:
+          type: string
+          format: date-time
+          nullable: true
+        cerradaEn:
+          type: string
+          format: date-time
+          nullable: true
+        creadaEn:
+          type: string
+          format: date-time
+        actualizadaEn:
+          type: string
+          format: date-time
+        mensajes:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuejaMensaje'
+        respuestasCliente:
+          type: integer
+        maxRespuestasCliente:
+          type: integer
+        pedido:
+          $ref: '#/components/schemas/QuejaPedidoResumen'
+
+    QuejaBandejaItem:
+      allOf:
+        - $ref: '#/components/schemas/Queja'
+        - type: object
+          properties:
+            cliente:
+              type: object
+              properties:
+                id:
+                  type: integer
+                nombre:
+                  type: string
+                apellido:
+                  type: string
+                  nullable: true
+                email:
+                  type: string
+            respondidoPor:
+              type: object
+              nullable: true
+              properties:
+                id:
+                  type: integer
+                nombre:
+                  type: string
+                apellido:
+                  type: string
+                  nullable: true
+            pedido:
+              allOf:
+                - $ref: '#/components/schemas/QuejaPedidoResumen'
+                - type: object
+                  properties:
+                    sucursal:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        nombre:
+                          type: string
+
+    QuejaRequest:
+      type: object
+      required:
+        - pedidoId
+        - motivo
+        - detalle
+      properties:
+        pedidoId:
+          type: integer
+        motivo:
+          $ref: '#/components/schemas/MotivoQueja'
+        detalle:
+          type: string
+          minLength: 10
+          maxLength: 1000
+
+    QuejaUpdateRequest:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          $ref: '#/components/schemas/EstadoQueja'
+        respuesta:
+          type: string
+          nullable: true
+          maxLength: 1000
+          description: Obligatoria al pasar a RESUELTA o RECHAZADA.
+
+    RespuestaQueja:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Queja'
+
+    RespuestaListaMisQuejas:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Queja'
+
+    PaginaQuejas:
+      type: object
+      properties:
         success:
           type: boolean
           example: true
         data:
           type: object
           properties:
-            puedeResenar:
-              type: boolean
-              example: false
-            miResena:
-              allOf:
-                - $ref: '#/components/schemas/ResenaConProducto'
-              nullable: true
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/QuejaBandejaItem'
+            total:
+              type: integer
+            pagina:
+              type: integer
+            paginas:
+              type: integer
+            limite:
+              type: integer
 
     Sucursal:
       type: object
@@ -950,8 +1216,38 @@ components:
           type: string
           nullable: true
         horarios:
+          type: array
+          description: >-
+            Franjas de atención agrupadas por día. Siempre vienen los siete días;
+            un día sin franjas está cerrado. Las franjas guardan el horario real
+            del local (ver `HorarioSucursal`); el corte de pedidos se obtiene
+            restando `margenCierreMinutos`.
+          items:
+            $ref: '#/components/schemas/HorarioDia'
+        horariosTexto:
+          type: string
+          description: Resumen legible de las franjas ("Lun-Dom 10:00-23:00").
+          nullable: true
+        abiertaAhora:
+          type: boolean
+          description: >-
+            true si en este momento la sucursal está tomando pedidos (dentro de
+            una franja menos el margen de cierre global). Lo calcula el backend
+            en America/Argentina/Buenos_Aires.
+        cierrePedidos:
           type: string
           nullable: true
+          description: Hora (HH:MM) del corte de pedidos de la franja vigente.
+          example: '22:30'
+        segundosRestantes:
+          type: integer
+          description: Segundos que faltan para el corte de pedidos (0 si está cerrada).
+        proximaApertura:
+          type: string
+          format: date-time
+          nullable: true
+          description: >-
+            Próxima apertura cuando está cerrada; null si está abierta ahora.
         activa:
           type: boolean
         createdAt:
@@ -960,6 +1256,65 @@ components:
         updatedAt:
           type: string
           format: date-time
+
+    HorarioDia:
+      type: object
+      description: Franjas de un día de la semana (HorarioSucursal agrupado).
+      required: [diaSemana, franjas]
+      properties:
+        diaSemana:
+          type: integer
+          minimum: 1
+          maximum: 7
+          description: 1 = lunes … 7 = domingo (ISO-8601).
+        franjas:
+          type: array
+          description: >-
+            Franjas del día. Varias franjas y solapamientos permitidos: alcanza
+            con caer en una. Si `cierre` es menor o igual que `apertura`, la
+            franja cruza la medianoche (ej. 19:00-02:00).
+          items:
+            type: object
+            required: [apertura, cierre]
+            properties:
+              apertura:
+                type: string
+                pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+                example: '10:00'
+              cierre:
+                type: string
+                pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+                example: '23:00'
+
+    SucursalViable:
+      type: object
+      description: >-
+        Sucursal que puede tomar el pedido en este momento: activa, abierta
+        (horario vigente menos el margen), con stock para los ítems y dentro de
+        la cobertura de la dirección.
+      properties:
+        id:
+          type: integer
+        nombre:
+          type: string
+        distanciaMetros:
+          type: integer
+          nullable: true
+          description: Distancia por ruta desde la dirección de entrega.
+        cierrePedidos:
+          type: string
+          nullable: true
+          example: '22:30'
+        segundosRestantes:
+          type: integer
+          description: Segundos hasta el corte de pedidos de esa sucursal.
+        direccion:
+          allOf:
+            - $ref: '#/components/schemas/Direccion'
+          nullable: true
+          description: >-
+            Dirección de la sucursal, para que la pantalla de pago pueda mostrar
+            la sucursal nueva cuando la asignada cerró y el pedido se reasigna.
 
     # Iteración 1-geo (direcciones y geolocalización): se agrega
     # `departamento` (partido/comuna según Georef) y `nomenclatura`
@@ -1081,6 +1436,17 @@ components:
         observacion:
           type: string
           nullable: true
+          description: >-
+            Snapshot de la personalización elegida, serializado como JSON
+            (extras, acompanamientos, sin, condimentos). Lo consume el descuento
+            de stock de insumos.
+        nota:
+          type: string
+          nullable: true
+          maxLength: 140
+          description: >-
+            Nota libre del cliente para cocina ("sin sal", "bien cocida").
+            Columna independiente de `observacion`.
         Producto:
           $ref: '#/components/schemas/ProductoResumen'
           nullable: true
@@ -1294,6 +1660,15 @@ components:
           default: 1
         observacion:
           type: string
+          description: >-
+            Uso interno: snapshot de personalización serializado. Para la nota
+            del cliente usar `nota`.
+        nota:
+          type: string
+          maxLength: 140
+          description: >-
+            Nota libre para cocina. Se recortan los extremos y se colapsan los
+            espacios; vacía equivale a null.
         personalizacion:
           $ref: '#/components/schemas/PersonalizacionInput'
         extras:
@@ -1443,7 +1818,14 @@ components:
         telefono:
           type: string
         horarios:
-          type: string
+          type: array
+          description: >-
+            Horario estructurado agrupado por día. Si se omite en el alta, el
+            backend aplica lunes a domingo de 10:00 a 23:00. Cada franja guarda
+            el horario real del local; el corte de pedidos se deriva restando
+            `margenCierreMinutos`.
+          items:
+            $ref: '#/components/schemas/HorarioDia'
         activa:
           type: boolean
           default: true
@@ -1453,7 +1835,15 @@ components:
         latitud: -34.6083
         longitud: -58.3812
         telefono: '11-5555-0001'
-        horarios: Lun a Dom 10:00-23:00
+        horarios:
+          - diaSemana: 1
+            franjas:
+              - apertura: '10:00'
+                cierre: '23:00'
+          - diaSemana: 2
+            franjas:
+              - apertura: '10:00'
+                cierre: '23:00'
 
     # Iteración 1-geo (direcciones y geolocalización): contrato del nuevo
     # flujo territorial. Obligatorios: calle, altura y provincia. En la
@@ -3468,6 +3858,320 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
 
+  /quejas:
+    get:
+      tags:
+        - Quejas
+      summary: Bandeja de quejas (ADMINISTRADOR o SUPERADMINISTRADOR)
+      description: >-
+        El ADMINISTRADOR ve las quejas de pedidos de su sucursal; el
+        SUPERADMINISTRADOR ve todas y puede filtrar por sucursalId.
+      operationId: quejasListar
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: estado
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/EstadoQueja'
+        - name: q
+          in: query
+          required: false
+          description: Búsqueda por cliente o id de pedido.
+          schema:
+            type: string
+        - name: sucursalId
+          in: query
+          required: false
+          description: Solo aplica al SUPERADMINISTRADOR.
+          schema:
+            type: integer
+        - name: pagina
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limite
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Página de quejas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaQuejas'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol sin acceso a la bandeja
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+    post:
+      tags:
+        - Quejas
+      summary: Crea un reclamo sobre un pedido entregado (CLIENTE)
+      description: >-
+        Solo el CLIENTE puede reclamar, únicamente sobre un pedido propio en
+        estado `entregado` y una sola vez por pedido (409).
+      operationId: quejasCreate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuejaRequest'
+      responses:
+        '201':
+          description: Queja creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaQueja'
+        '400':
+          description: Motivo o detalle inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE, pedido propio no entregado o CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Pedido inexistente o ajeno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '409':
+          description: El pedido ya tiene una queja
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /quejas/mias:
+    get:
+      tags:
+        - Quejas
+      summary: Quejas del cliente autenticado (CLIENTE)
+      operationId: quejasMias
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: pedidoId
+          in: query
+          required: false
+          description: Acota el resultado a un pedido.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Quejas propias
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaListaMisQuejas'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /quejas/{id}:
+    put:
+      tags:
+        - Quejas
+      summary: Responde o cambia el estado de una queja (ADMINISTRADOR o SUPERADMINISTRADOR)
+      description: >-
+        RESUELTA y RECHAZADA exigen respuesta y cierran el reclamo del lado del
+        negocio (el cliente puede reabrirlo respondiendo). CERRADA es final. El
+        ADMINISTRADOR solo gestiona quejas de pedidos de su sucursal.
+      operationId: quejasUpdate
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuejaUpdateRequest'
+      responses:
+        '200':
+          description: Queja actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaQueja'
+        '400':
+          description: Transición inválida, respuesta faltante o estado inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol sin acceso o CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Queja inexistente o fuera del alcance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /quejas/{id}/mensajes:
+    post:
+      tags:
+        - Quejas
+      summary: Respuesta del cliente en el hilo (CLIENTE dueño)
+      description: >-
+        Máximo 5 respuestas del cliente. Si la queja estaba RESUELTA o
+        RECHAZADA, vuelve a PENDIENTE.
+      operationId: quejasResponder
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuejaMensajeRequest'
+      responses:
+        '201':
+          description: Mensaje agregado; devuelve la queja con el hilo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaQueja'
+        '400':
+          description: Mensaje vacío o demasiado largo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE o CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Queja inexistente o ajena
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '409':
+          description: Queja cerrada o tope de respuestas alcanzado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /quejas/{id}/cerrar:
+    post:
+      tags:
+        - Quejas
+      summary: Cierre del reclamo por el cliente (CLIENTE dueño)
+      description: Pasa la queja a CERRADA. Es final y no admite más respuestas.
+      operationId: quejasCerrar
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Queja cerrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaQueja'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE o CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Queja inexistente o ajena
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '409':
+          description: La queja ya está cerrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
   /pedidos:
     post:
       tags:
@@ -3505,9 +4209,11 @@ paths:
         '422':
           description: >-
             Ninguna sucursal activa dentro de la cobertura de la dirección de
-            entrega tiene stock suficiente (regla D1: cobertura hard). Si se
-            evaluaron candidatas con stock parcial, el mensaje informa los
-            faltantes de la mejor (el máximo realmente entregable).
+            entrega puede tomar el pedido: todas cerradas (horario menos
+            `margenCierreMinutos`) o sin stock suficiente (regla D1: cobertura
+            hard). Si se evaluaron candidatas con stock parcial, el mensaje
+            informa los faltantes de la mejor (el máximo realmente entregable);
+            si la razón es el horario, informa la próxima apertura.
           content:
             application/json:
               schema:
@@ -3546,6 +4252,98 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
 
+  /pedidos/disponibilidad:
+    post:
+      tags:
+        - Pedidos
+      summary: Aviso de disponibilidad del carrito
+      description: >-
+        Con la dirección y los ítems del carrito informa si hay alguna sucursal
+        abierta (horario vigente menos `margenCierreMinutos`), con stock
+        suficiente y dentro de la cobertura de la dirección. No reserva stock ni
+        crea nada: el `POST /pedidos` revalida con las mismas reglas. `unica` es
+        true cuando hay exactamente una sucursal viable; el frontend muestra el
+        contador sólo en ese caso, porque con más de una el backend puede
+        reasignar al confirmar el pago.
+      operationId: pedidosDisponibilidadCarrito
+      security:
+        - cookieAuth: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productos]
+              properties:
+                direccionId:
+                  type: integer
+                  description: >-
+                    Dirección guardada del usuario. Alternativa a
+                    `direccionEntrega`; debe ser propia.
+                direccionEntrega:
+                  $ref: '#/components/schemas/DireccionEntregaInput'
+                productos:
+                  type: array
+                  minItems: 1
+                  items:
+                    $ref: '#/components/schemas/PedidoItemInput'
+      responses:
+        '200':
+          description: >-
+            Evaluación de disponibilidad. Se devuelve también con
+            `disponible: false` (dirección sin cobertura o todas cerradas): es
+            un aviso, no un error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      disponible:
+                        type: boolean
+                      unica:
+                        type: boolean
+                        description: >-
+                          Exactamente una sucursal viable. Con más de una no se
+                          muestra contador: el backend puede reasignar.
+                      sucursal:
+                        $ref: '#/components/schemas/SucursalViable'
+                      sucursales:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SucursalViable'
+                      proximaApertura:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      proximaAperturaTexto:
+                        type: string
+                        nullable: true
+                      margenCierreMinutos:
+                        type: integer
+                      mensaje:
+                        type: string
+                        nullable: true
+                        description: null si hay alguna sucursal viable.
+        '400':
+          description: Carrito vacío, dirección inválida o ítems no disponibles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Sin sesión de CLIENTE o token CSRF inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
   /pedidos/{id}:
     get:
       tags:
@@ -3568,6 +4366,91 @@ paths:
                 $ref: '#/components/schemas/RespuestaPedido'
         '403':
           description: Acceso denegado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: Pedido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /pedidos/{id}/disponibilidad:
+    get:
+      tags:
+        - Pedidos
+      summary: Aviso de disponibilidad al pagar
+      description: >-
+        Para un pedido ya creado, informa si su sucursal asignada sigue tomando
+        pedidos y si hay otra abierta con stock a la que reasignarlo. Sólo el
+        CLIENTE dueño. Al confirmar el pago el backend revalida con las mismas
+        reglas: si la sucursal cerró y hay alternativa, reasigna solo; si no hay
+        ninguna, cancela automáticamente el pedido (repone el stock) y responde
+        409 con `cancelado: true`. La pantalla de pago escucha además el evento
+        `sucursal_estado` para re-consultar y cancelar sin esperar al intento.
+      operationId: pedidosDisponibilidadPedido
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Estado de la sucursal del pedido y alternativas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      estado:
+                        type: string
+                        nullable: true
+                      sucursalId:
+                        type: integer
+                      sucursal:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: integer
+                          nombre:
+                            type: string
+                      abierta:
+                        type: boolean
+                      cierrePedidos:
+                        type: string
+                        nullable: true
+                        description: Corte de pedidos de la franja vigente.
+                      segundosRestantes:
+                        type: integer
+                        description: Segundos hasta el corte (0 si ya cerró).
+                      hayAlternativa:
+                        type: boolean
+                        description: >-
+                          Hay otra sucursal abierta con stock a la que se puede
+                          reasignar al pagar.
+                      alternativas:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SucursalViable'
+                      proximaApertura:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      proximaAperturaTexto:
+                        type: string
+                        nullable: true
+                      mensaje:
+                        type: string
+                        nullable: true
+        '403':
+          description: El pedido no pertenece al usuario o no es CLIENTE
           content:
             application/json:
               schema:
@@ -3606,10 +4489,11 @@ paths:
           description: >-
             Pedido con el nuevo estado e histórico actualizado. En la
             confirmación del pago (pendiente→confirmado), si la reserva de
-            stock de la sucursal original venció, el pedido se reasigna
-            automáticamente a la sucursal MÁS CERCANA por ruta con stock
-            suficiente dentro de la cobertura (mismas reglas D1, excluyendo
-            la original).
+            stock de la sucursal original venció o la sucursal cerró (horario
+            vigente menos `margenCierreMinutos`), el pedido se reasigna
+            automáticamente a la sucursal MÁS CERCANA por ruta que esté abierta
+            y con stock suficiente dentro de la cobertura (mismas reglas D1,
+            excluyendo la original).
           content:
             application/json:
               schema:
@@ -3636,14 +4520,18 @@ paths:
                 $ref: '#/components/schemas/RespuestaError'
         '409':
           description: >-
-            Confirmación del pago rechazada: ninguna sucursal dentro de la
-            cobertura tiene stock suficiente para reasignar el pedido. El
-            mensaje informa los faltantes de la mejor candidata; el pedido
-            queda pendiente con su sucursal original y puede cancelarse.
+            Confirmación del pago sin sucursal que pueda preparar el pedido.
+            Puede ser por stock (el pedido queda `pendiente` y puede
+            cancelarse) o por horario: si la sucursal asignada cerró y ninguna
+            otra abierta dentro de la cobertura tiene stock, el pedido se
+            CANCELA automáticamente (repone el stock y deja el historial) y la
+            respuesta trae `cancelado: true`; el cliente vuelve al carrito.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RespuestaError'
+                oneOf:
+                  - $ref: '#/components/schemas/RespuestaError'
+                  - $ref: '#/components/schemas/RespuestaCancelacionPorCierre'
 
   /pedidos/{id}/sucursal:
     patch:
@@ -3655,11 +4543,12 @@ paths:
         con contexto de sucursal elegido (POST /auth/sucursal-contexto): el
         ADMINISTRADOR de sucursal ya no reasigna (403 siempre). El pedido
         debe pertenecer a la sucursal del contexto (aislamiento); la nueva
-        sucursal debe estar activa, tener stock suficiente (transfiere la
-        reserva atómicamente) y estar dentro de la cobertura de la dirección
-        del pedido (radio vigente por ruta). El ETA se recalcula después del
-        commit (degradación a null si el proveedor falla) y la trazabilidad
-        queda en el historial ("Reasignado de X a Y por admin Z").
+        sucursal debe estar activa, abierta ahora (horario vigente menos
+        `margenCierreMinutos`), tener stock suficiente (transfiere la reserva
+        atómicamente) y estar dentro de la cobertura de la dirección del pedido
+        (radio vigente por ruta). El ETA se recalcula después del commit
+        (degradación a null si el proveedor falla) y la trazabilidad queda en el
+        historial ("Reasignado de X a Y por admin Z").
       operationId: pedidosReasignarSucursal
       security:
         - cookieAuth: []
@@ -3711,7 +4600,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
         '422':
-          description: La sucursal destino está fuera de cobertura o el snapshot no tiene coordenadas
+          description: >-
+            La sucursal destino está fuera de cobertura, cerrada en este momento
+            o el snapshot no tiene coordenadas
           content:
             application/json:
               schema:
@@ -3724,9 +4615,9 @@ paths:
       summary: Candidatas de reasignación (solo SUPERADMIN con contexto)
       description: >-
         Sucursales activas dentro de la cobertura de la dirección del
-        pedido (mismo ranking cache-first del service) y con stock suficiente
-        para satisfacerlo, excluyendo la sucursal actual. Es la lista del
-        selector del panel; el PATCH re-valida todo al confirmar.
+        pedido (mismo ranking cache-first del service), abiertas ahora y con
+        stock suficiente para satisfacerlo, excluyendo la sucursal actual. Es la
+        lista del selector del panel; el PATCH re-valida todo al confirmar.
       operationId: pedidosSucursalesCandidatas
       security:
         - cookieAuth: []
@@ -3778,7 +4669,12 @@ paths:
       tags:
         - Sucursales
       summary: Lista sucursales (público)
-      description: Por defecto solo sucursales activas. Con activa=false y sesión de administrador o superadministrador se incluyen las inactivas.
+      description: >-
+        Por defecto solo sucursales activas. Con activa=false y sesión de
+        administrador o superadministrador se incluyen las inactivas. Cada
+        sucursal se devuelve con su horario estructurado (`horarios`,
+        `horariosTexto`) y el estado calculado (`abiertaAhora`,
+        `cierrePedidos`, `segundosRestantes`, `proximaApertura`).
       operationId: sucursalesIndex
       parameters:
         - name: activa
