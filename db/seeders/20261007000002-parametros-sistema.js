@@ -65,6 +65,12 @@ const parametros = [
     descripcion: 'Máximo de unidades de un mismo producto dentro de un pedido.',
   },
   {
+    clave: 'minutosReservaStock',
+    valor: '15',
+    descripcion:
+      'Minutos que se reserva el stock de un pedido pendiente antes de cancelarlo automáticamente.',
+  },
+  {
     clave: 'porcentajeMaximoDescuento',
     valor: '50',
     descripcion:
