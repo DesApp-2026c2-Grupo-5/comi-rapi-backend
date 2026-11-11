@@ -10,6 +10,7 @@ import app from '../lib/app';
 import db from '../lib/models';
 import { configurarSocketIO } from '../lib/realtime';
 import { iniciarVigiaHorarios } from '../lib/services/horarios_vigia';
+import { iniciarVigiaReservas } from '../lib/services/reserva_vigia';
 
 const debug = debugPkg('js/www:server');
 
@@ -40,6 +41,10 @@ function startServer() {
   // El vigía emite `sucursal_estado` al abrir/cerrar por horario. Si la base no
   // está disponible todavía, reintenta solo (no bloquea el arranque).
   iniciarVigiaHorarios();
+  // El vigía de reservas cancela los pedidos PENDIENTES que no se pagaron
+  // dentro de `minutosReservaStock` y libera su stock. También reintenta solo si
+  // la base todavía no está disponible.
+  iniciarVigiaReservas();
 }
 
 db.sequelize
