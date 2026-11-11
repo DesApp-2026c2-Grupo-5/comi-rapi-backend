@@ -171,10 +171,12 @@ Fuentes de emisión (todas post-commit):
 | `stock_controller` (alta/ajuste/baja)         | la sucursal del ajuste                                                           |
 | `stock_controller.updateInsumo`               | la sucursal del ajuste (con `insumoIds`)                                         |
 
-El `productoIds` (y el `insumoIds`) del payload es **orientativo** (los ids tocados
-directamente); el frontend recarga la tabla entera de su sucursal, que es más
-simple y siempre correcto. Un ajuste de insumo puede mandar sólo `insumoIds`, sin
-`productoIds`; `GestionStock` filtra por el array que venga.
+El `productoIds` y el `insumoIds` del payload listan **sólo las filas que
+cambiaron**. El frontend no relee la colección: pide por REST únicamente esas
+filas (`GET /api/stock/:sucursalId/:productoId` y
+`GET /api/stock/insumos/:insumoId`) y las fusiona en la caché. Un ajuste de
+insumo puede mandar sólo `insumoIds`, sin `productoIds`. La lista completa queda
+sólo como resincronización ante una reconexión o un aviso sin detalle.
 
 ### 6.6 Límite conocido: sin sesión no hay tiempo real
 
@@ -444,7 +446,7 @@ Lo que quedó descartado, y por qué:
 
 Comprobado en navegador (sección 9 de `scripts/verificar-tiempo-real.js`): la tabla de gestión relee sólo el producto editado, **no** re-pide la colección, no se re-enciende el `.spinner-border` y `performance.getEntriesByType('navigation')` sigue en 1 (hubo un solo `goto`, cero recargas).
 
-El **stock** sigue la misma idea con otro evento (`stock_actualizado {sucursalId, productoIds, insumoIds}`, room de la sucursal, sin datos: restricción 9): `GestionStock` relee sólo `GET /api/stock/:sucursalId/:productoId` (o `GET /api/stock/insumos`) por cada id notificado y fusiona la fila (sección 10 del E2E: cantidad N→N-1, tabla viva, cero spinners, cero pedidos a la colección `/api/stock`). El `PUT /api/stock` de un guardado manual hace lo mismo: se aplica la fila que devuelve el backend, sin `cargar()`.
+El **stock** sigue la misma idea con otro evento (`stock_actualizado {sucursalId, productoIds, insumoIds}`, room de la sucursal, sin datos: restricción 9): el puente de tiempo real relee sólo `GET /api/stock/:sucursalId/:productoId` (o `GET /api/stock/insumos/:insumoId`) por cada id notificado y fusiona la fila (sección 10 del E2E: cantidad N→N-1, tabla viva, cero spinners, cero pedidos a la colección `/api/stock`). El `PUT /api/stock` de un guardado manual hace lo mismo: se aplica la fila que devuelve el backend, sin `cargar()`.
 
 ## 10. Verificación manual
 
