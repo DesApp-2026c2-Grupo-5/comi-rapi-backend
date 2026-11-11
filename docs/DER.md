@@ -542,7 +542,7 @@ Hilo: tabla `QuejaMensajes` (`id`, `quejaId â†’ Queja.id`, `autorId â†�
 - UNIQUE: `pedidoId` â€” un pedido admite una sola queja.
 - Ãndices: `usuarioId`, `estado`.
 - CHECK: `estado IN ('PENDIENTE', 'EN_REVISION', 'RESUELTA', 'RECHAZADA', 'CERRADA')` (ademÃ¡s del ENUM).
-- Regla: solo el CLIENTE dueÃ±o de un pedido `entregado` puede crearla. El cliente solo ve las propias; el ADMINISTRADOR ve las de pedidos de su sucursal y el SUPERADMINISTRADOR todas. El cliente puede responder hasta 5 veces (reapertura a `PENDIENTE` si estaba resuelta o rechazada) y cerrar en cualquier momento (`CERRADA`, final). `RESUELTA` y `RECHAZADA` exigen `respuesta`. La mÃ¡quina de estados y el alcance viven en `lib/services/quejas.js`; el detalle estÃ¡ en `docs/quejas.md`.
+- Regla: solo el CLIENTE dueÃ±o de un pedido `entregado` puede crearla. El cliente solo ve las propias; el ADMINISTRADOR ve las de pedidos de su sucursal y el SUPERADMINISTRADOR todas. El cliente puede responder hasta 5 veces mientras la queja siga `PENDIENTE` o `EN_REVISION` (en `RESUELTA`, `RECHAZADA` o `CERRADA` recibe 409) y cerrar en cualquier momento (`CERRADA`, final). `RESUELTA` y `RECHAZADA` exigen `respuesta`. La mÃ¡quina de estados y el alcance viven en `lib/services/quejas.js`; el detalle estÃ¡ en `docs/quejas.md`.
 
 ### 2.24 Notificacion
 

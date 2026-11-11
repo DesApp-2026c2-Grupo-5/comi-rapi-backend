@@ -42,7 +42,7 @@ Restricciones de base: FK `ON DELETE RESTRICT`, UNIQUE `pedidoId`, índices por 
 - **Una por pedido**: UNIQUE `pedidoId`. Un segundo reclamo sobre el mismo pedido responde 409.
 - **Detalle obligatorio**: entre 10 y 1000 caracteres, recortado de espacios al guardar.
 - **Inmutabilidad del motivo**: el cliente no edita ni elimina la queja original.
-- **Respuestas del cliente**: puede responder hasta 5 veces; cada respuesta queda en el hilo. Si la queja estaba `RESUELTA` o `RECHAZADA`, vuelve a `PENDIENTE` (reaparece en la bandeja y en el badge).
+- **Respuestas del cliente**: puede responder hasta 5 veces mientras la queja siga `PENDIENTE` o `EN_REVISION`; cada respuesta queda en el hilo. Cuando el negocio la resuelve o rechaza, la conversación se cierra para el cliente: `POST /api/quejas/:id/mensajes` responde 409 y no guarda el mensaje.
 - **Mensajes del negocio**: el ADMINISTRADOR o SUPERADMINISTRADOR puede sumar mensajes al hilo **sin cambiar de estado**. Se actualiza `respuesta`, `respondidoPorId` y `respondidaEn`, pero la queja sigue `PENDIENTE` o `EN_REVISION`. Es lo que permite la bandeja tipo chat. En `RESUELTA`, `RECHAZADA` o `CERRADA` no se admiten mensajes del negocio.
 - **Cierre del cliente**: puede cerrar el reclamo en cualquier estado; pasa a `CERRADA` (final). No admite más respuestas ni cambios del negocio.
 - **Alcance de la bandeja**:
@@ -58,12 +58,11 @@ PENDIENTE ──> EN_REVISION ──> RESUELTA
     └────────────────┴──────> RECHAZADA
 
 Cualquier estado (salvo CERRADA) ──> CERRADA   (cierre del cliente)
-RESUELTA / RECHAZADA ── respuesta del cliente ──> PENDIENTE
 ```
 
 - `PENDIENTE`: estado inicial al crear la queja.
 - `EN_REVISION`: el negocio tomó el reclamo.
-- `RESUELTA` / `RECHAZADA`: el negocio respondió; son finales para el negocio, pero el cliente puede reabrirlas respondiendo.
+- `RESUELTA` / `RECHAZADA`: el negocio respondió; son finales y cierran la conversación: ni el negocio ni el cliente pueden seguir escribiendo.
 - `CERRADA`: cierre del cliente; nadie puede responder ni reabrir.
 - Se permite cerrar directamente desde `PENDIENTE`.
 - Un mensaje del negocio sin `estado` no mueve la máquina: el reclamo permanece en `PENDIENTE` o `EN_REVISION`.
@@ -192,7 +191,7 @@ En ese caso se agrega el mensaje al hilo y se actualizan `respuesta`, `respondid
 { "contenido": "Sigue sin llegarme el reintegro." }
 ```
 
-Responde 201 con la queja y su hilo. Tope de 5 respuestas del cliente (409 al superarlo). Reabre a `PENDIENTE` si estaba `RESUELTA` o `RECHAZADA`.
+Responde 201 con la queja y su hilo. Tope de 5 respuestas del cliente (409 al superarlo). Solo se admite mientras la queja esté `PENDIENTE` o `EN_REVISION`: en `RESUELTA`, `RECHAZADA` o `CERRADA` responde 409 y no agrega el mensaje.
 
 ### 4.6 Cerrar (cliente)
 
@@ -206,7 +205,7 @@ Responde 201 con la queja y su hilo. Tope de 5 respuestas del cliente (409 al su
 | 401    | Sin sesión                                                                                                                                   |
 | 403    | Rol distinto de `CLIENTE` al crear o responder, pedido propio no entregado                                                                   |
 | 404    | Pedido inexistente o ajeno, queja inexistente o fuera del alcance                                                                            |
-| 409    | El pedido ya tiene una queja, queja `CERRADA` o tope de respuestas alcanzado                                                                 |
+| 409    | El pedido ya tiene una queja, queja `CERRADA`/`RESUELTA`/`RECHAZADA` al responder o tope de respuestas alcanzado                             |
 
 El controller traduce `QuejaError.codigo` al status HTTP; cualquier otro error sigue el middleware general (500).
 
@@ -216,7 +215,7 @@ El controller traduce `QuejaError.codigo` al status HTTP; cualquier otro error s
 - `src/utils/constants.js` — `MOTIVOS_QUEJA`, `ESTADOS_QUEJA` (incluye `CERRADA`), `ETIQUETAS_MOTIVO_QUEJA`, `ETIQUETAS_ESTADO_QUEJA` y variantes de badge.
 - `src/components/cliente/FormularioQueja.jsx` — select de motivo y detalle con validación de longitud.
 - `src/components/cliente/QuejaModal.jsx` — modal que monta el formulario recién al abrir.
-- `src/pages/cliente/DetallePedido.jsx` — en pedidos `entregado`, tarjeta "Reclamos": sin queja ofrece "Hacer un reclamo"; con queja muestra el hilo, permite responder (hasta 5) y cerrar. Escucha `queja_actualizada` para refrescar el hilo.
+- `src/pages/cliente/DetallePedido.jsx` — en pedidos `entregado`, tarjeta "Reclamos": sin queja ofrece "Hacer un reclamo"; con queja muestra el hilo, permite responder (hasta 5) y cerrar mientras siga `PENDIENTE` o `EN_REVISION`. En `RESUELTA`, `RECHAZADA` o `CERRADA` el compositor queda bloqueado con el aviso correspondiente. Escucha `queja_actualizada` para refrescar el hilo.
 - `src/pages/admin/GestionQuejas.jsx` — bandeja compartida en `/admin/quejas`. Es un espacio de conversaciones: lista de chats con búsqueda, filtros por estado y sucursal (solo superadmin), contador de mensajes sin responder y panel de conversación con el hilo completo y el compositor. El compositor permite responder sin cambiar de estado o elegir la transición (`EN_REVISION`, `RESUELTA`, `RECHAZADA`). Componentes en `src/components/admin/quejas/`.
 - `src/hooks/useIndicadoresNav.js` — badge y pulso del ícono de Reclamos: cuenta las quejas `PENDIENTE` por REST y se refresca con `queja_actualizada`.
 - `src/routes/AppRoutes.jsx` y `src/components/comunes/Navbar.jsx` — ruta y entradas de menú para ADMINISTRADOR y SUPERADMINISTRADOR. La barra inferior (`NavInferior.jsx`) muestra Reclamos en ambos roles; el ADMINISTRADOR entra a Clientes desde el botón "Ver clientes" del panel de reportes.

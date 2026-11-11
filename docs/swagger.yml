@@ -3884,8 +3884,8 @@ paths:
         - Quejas
       summary: Responde o cambia el estado de una queja (ADMINISTRADOR o SUPERADMINISTRADOR)
       description: >-
-        RESUELTA y RECHAZADA exigen respuesta y cierran el reclamo del lado del
-        negocio (el cliente puede reabrirlo respondiendo). CERRADA es final. El
+        RESUELTA y RECHAZADA exigen respuesta y cierran el reclamo para ambas
+        partes (el cliente ya no puede responder). CERRADA es final. El
         ADMINISTRADOR solo gestiona quejas de pedidos de su sucursal.
       operationId: quejasUpdate
       security:
@@ -3937,8 +3937,8 @@ paths:
         - Quejas
       summary: Respuesta del cliente en el hilo (CLIENTE dueño)
       description: >-
-        Máximo 5 respuestas del cliente. Si la queja estaba RESUELTA o
-        RECHAZADA, vuelve a PENDIENTE.
+        Máximo 5 respuestas del cliente. Solo se admite mientras la queja esté
+        PENDIENTE o EN_REVISION; en RESUELTA, RECHAZADA o CERRADA responde 409.
       operationId: quejasResponder
       security:
         - cookieAuth: []
@@ -3983,7 +3983,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespuestaError'
         '409':
-          description: Queja cerrada o tope de respuestas alcanzado
+          description: Queja cerrada, resuelta, rechazada o tope de respuestas alcanzado
           content:
             application/json:
               schema:
