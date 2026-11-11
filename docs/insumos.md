@@ -94,13 +94,18 @@ público siempre ve activos.
 | Método | Ruta                           | Rol                                | Descripción                        |
 | ------ | ------------------------------ | ---------------------------------- | ---------------------------------- |
 | `GET`  | `/api/stock/insumos`           | ADMINISTRADOR / SUPERADMINISTRADOR | Stock de la sucursal operativa     |
+| `GET`  | `/api/stock/insumos/:insumoId` | ADMINISTRADOR / SUPERADMINISTRADOR | Stock de un solo insumo            |
 | `PUT`  | `/api/stock/insumos/:insumoId` | ADMINISTRADOR / SUPERADMINISTRADOR | Ajusta `cantidad` y/o `disponible` |
 
 - La sucursal sale de la sesión (`sucursalOperativaDeSesion`), no de la URL. Un
   admin no puede tocar otra sucursal cambiando parámetros.
 - Sin sucursal operativa el backend responde 403. El superadmin debe elegir un
   contexto (`POST /api/auth/sucursal-contexto`).
-- `GET` acepta `?tipo=extra|condimento`.
+- `GET /api/stock/insumos` acepta `?tipo=extra|condimento`. El `GET` de un solo
+  insumo existe para que el tiempo real refresque únicamente la fila afectada.
+- Los avisos `stock_actualizado` llevan sólo los IDs que cambiaron
+  (`{ sucursalId, productoIds?, insumoIds? }`). La pantalla de Stock pide por
+  REST esos insumos puntuales y parchea la caché, sin releer la lista completa.
 - Un `PUT` emite `stock_actualizado` con `{ sucursalId, insumoIds }` para que la
   pantalla de Stock se actualice en vivo.
 - No hay `DELETE` de insumos por sucursal: `GET` recrea las filas faltantes de

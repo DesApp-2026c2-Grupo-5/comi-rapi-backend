@@ -29,7 +29,7 @@ Entidad `Notificacion` (tabla `Notificaciones`), definida en `docs/DER.md` §2.2
 - **Destinatario**: solo un `CLIENTE`. Las rutas exigen `verificarSesion` + `permitirRoles('CLIENTE')`; ADMINISTRADOR y SUPERADMINISTRADOR reciben 403. El negocio conserva sus badges de Pedidos y Reclamos.
 - **Estado leído persistido**: `leida` y `leidaEn` viven en la base, así que el contador es el mismo desde cualquier dispositivo. El frontend no usa `localStorage` para esto.
 - **Avisos de pedido**: se crean al cambiar de estado un pedido, con el texto de `MENSAJES_ESTADO` (en `lib/services/notificaciones.js`). La fila se crea **dentro de la transacción** que cambia el estado: si la transacción falla, el aviso no queda. El evento de socket se emite después del commit.
-- **Cancelación del cliente**: el cliente no recibe aviso de su propia cancelación (la acaba de hacer y el frontend ya le mostró el resultado). Sí se notifica la **cancelación automática por cierre de la sucursal**, porque la decide el sistema.
+- **Cancelación del cliente**: el cliente no recibe aviso de su propia cancelación (la acaba de hacer y el frontend ya le mostró el resultado). Sí se notifica la **cancelación automática por cierre de la sucursal**, porque la decide el sistema. La **cancelación automática por vencimiento de la reserva de stock** (`docs/reglas-negocio.md` §25) **no genera notificación persistida**: la pantalla de pago vuelve al carrito con un único mensaje simple (`Tiempo de pago excedido.`).
 - **Avisos de reclamo**: se crean cuando el negocio responde un reclamo, suma un mensaje al hilo o cambia su estado (`EN_REVISION`, `RESUELTA`, `RECHAZADA`). Las acciones del propio cliente (crear, responder, cerrar) no se auto-notifican.
 - **Alcance de lectura**: el listado, el contador y el marcado siempre filtran por `usuarioId`. Marcar una notificación ajena responde 404 (no se revela que existe).
 - **Sin borrado**: el cliente marca leídas, no elimina. La baja de un pedido o una queja deja `pedidoId`/`quejaId` en `NULL` para no perder el aviso histórico.
@@ -45,7 +45,7 @@ Entidad `Notificacion` (tabla `Notificaciones`), definida en `docs/DER.md` §2.2
 | `entregado`           | Pedido entregado              | Tu pedido fue entregado. ¡Que lo disfrutes!             |
 | `cancelado`           | Pedido cancelado              | El pedido fue cancelado.                                |
 
-La cancelación automática por cierre usa un título y un mensaje propios (`Pedido cancelado por cierre de la sucursal`). Los estados sin texto en `MENSAJES_ESTADO` no generan aviso: `notificarEstadoPedido` devuelve `null`.
+La cancelación automática por cierre usa un título y un mensaje propios (`Pedido cancelado por cierre de la sucursal`). El vencimiento de la reserva de stock (`docs/reglas-negocio.md` §25) no crea aviso persistido. Los estados sin texto en `MENSAJES_ESTADO` no generan aviso: `notificarEstadoPedido` devuelve `null`.
 
 ## 3. Endpoints
 

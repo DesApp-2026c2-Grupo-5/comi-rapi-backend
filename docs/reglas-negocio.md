@@ -134,6 +134,7 @@ Regla de negocio, no entidad:
   | `montoMaximoPedido`                   | pedido      | 500000      | `pedido_controller` (límites del pedido)                                        |
   | `cantidadMaximaItemsPedido`           | pedido      | 50          | `pedido_controller` (límites del pedido)                                        |
   | `cantidadMaximaUnidadesProducto`      | pedido      | 20          | `pedido_controller` (límites del pedido)                                        |
+  | `minutosReservaStock`                 | pedido      | 15          | `reserva_pedidos` (§25): plazo para pagar antes de liberar el stock             |
   | `porcentajeMaximoDescuento`           | promociones | 50          | `promocion_controller` (§11)                                                    |
   | `cantidadMaximaPromocionesAplicables` | promociones | 3           | reservado: el motor aplica el mejor descuento por línea sin acumular            |
 
@@ -348,7 +349,7 @@ Regla de negocio, no entidad:
 - **Reasignación manual**: el destino debe estar abierto ahora; si no, 422 (§20.4).
 - **Avisos al cliente**:
   - `POST /api/pedidos/disponibilidad` (CLIENTE autenticado) recibe `{ direccionId, productos }` y devuelve `{ disponible, unica, sucursal, sucursales, proximaApertura, proximaAperturaTexto, margenCierreMinutos, mensaje }`. No reserva stock: es la foto previa a confirmar. `unica` indica que hay exactamente una sucursal viable; el frontend muestra el contador sólo en ese caso, porque con más de una el backend puede reasignar.
-  - `GET /api/pedidos/:id/disponibilidad` (dueño del pedido) devuelve `{ estado, sucursalId, sucursal, abierta, cierrePedidos, segundosRestantes, hayAlternativa, alternativas, proximaApertura, proximaAperturaTexto, mensaje }`. Es lo que usa la pantalla de pago.
+  - `GET /api/pedidos/:id/disponibilidad` (dueño del pedido) devuelve `{ estado, sucursalId, sucursal, abierta, cierrePedidos, segundosRestantes, reservaExpiraEn, segundosReserva, reservaVencida, hayAlternativa, alternativas, proximaApertura, proximaAperturaTexto, mensaje }`. Es lo que usa la pantalla de pago; los campos de reserva se explican en §25.
   - **Umbral del contador**: el aviso de "última chance" (sucursal única en el carrito, o pedido sin alternativa en el pago) se muestra sólo cuando faltan **10 minutos o menos** para el corte (`MINUTOS_AVISO_CIERRE` en `comi-rapi-fronted/src/utils/horarios.js`). Antes de ese umbral no se muestra, aunque el backend ya informe `segundosRestantes`.
   - El catálogo muestra un único banner cuando **todas** las sucursales activas están cerradas; no hay estado por producto ni chequeo por dirección en el catálogo.
   - En la pantalla de pago, si la sucursal asignada cerró y hay alternativa, el panel "Tu pedido será preparado en" muestra directamente la sucursal nueva (nombre y dirección) y se actualiza con el evento de tiempo real; el aviso "La sucursal cerró" queda reservado para cuando no hay ninguna otra sucursal disponible.
@@ -385,10 +386,27 @@ Regla de negocio, no entidad:
   - cambio de estado de un pedido propio (`confirmado`, `en_preparacion`, `listo_para_entregar`, `en_camino`, `entregado`, `cancelado`);
   - cancelación automática por cierre de sucursal, con título y mensaje propios;
   - respuesta del negocio en un reclamo, mensaje suelto en el hilo o cambio de estado a `EN_REVISION`, `RESUELTA` o `RECHAZADA`.
-- **Acciones propias**: el cliente no recibe aviso de sus propias acciones (cancelar su pedido, crear/responder/cerrar un reclamo). Sí recibe el aviso de una cancelación decidida por el sistema.
+- **Acciones propias**: el cliente no recibe aviso de sus propias acciones (cancelar su pedido, crear/responder/cerrar un reclamo). Sí recibe el aviso de una cancelación automática por cierre de sucursal. La cancelación por vencimiento de la reserva de stock (§25) **no genera aviso persistido**: solo se muestra el mensaje simple al volver al carrito.
 - **Persistencia**: `leida` y `leidaEn` se guardan en la base, por lo que el contador es el mismo en cualquier dispositivo. El listado y el contador siempre se calculan en el backend.
 - **Estados del pedido sin texto**: si `MENSAJES_ESTADO` no tiene una entrada para el estado nuevo, no se crea aviso (`notificarEstadoPedido` devuelve `null`). Los textos viven en `lib/services/notificaciones.js`.
 - **Transacción**: el aviso de pedido se crea dentro de la transacción que cambia el estado; si falla, no queda. El evento de socket se emite después del commit.
 - **Endpoints**: `GET /api/notificaciones?tipo=&noLeidas=&pagina=&limite=`, `GET /api/notificaciones/no-leidas`, `PUT /api/notificaciones/:id/leida` y `PUT /api/notificaciones/leidas`. Todos exigen sesión de CLIENTE y CSRF en los PUT. El detalle completo está en `docs/notificaciones.md`.
 - **Tiempo real**: `notificacion_creada` va solo a la room privada `usuario:{id}` y no transporta datos; el frontend re-consulta el listado y el contador por REST.
 - **Frontend**: campanita con contador en el header (móvil y escritorio), panel lateral derecho con filtros Todas / Pedidos / Reclamos, y navegación al detalle del pedido al tocar un aviso. El menú de cuenta del logo concentra perfil, direcciones y cierre de sesión.
+
+## 25. Reserva de stock y vencimiento del pago
+
+> **Nota de cambio:** nueva sección. El pedido descuenta stock al crearse (esa es su reserva) y ahora tiene un plazo para pagarse. No agrega entidades ni columnas: el inicio de la reserva es `Pedido.fechaHora`.
+
+- **Qué reserva**: al crear el pedido (`POST /api/pedidos`), `descontarStock` baja las unidades de la sucursal asignada dentro de la transacción. Esa es la reserva: el pedido queda en `pendiente` con el stock ya tomado.
+- **Plazo**: el parámetro `minutosReservaStock` (grupo `pedido`, default 15, rango 1–120) define cuánto tiene el cliente para completar el pago desde `Pedido.fechaHora`. Se edita en `/superadmin/parametros`.
+- **Vencimiento**: se calcula en `lib/services/reserva_pedidos.js` (`expiracionReserva`, `reservaVencida`, `segundosRestantesReserva`). No hay columna extra: el vencimiento es `fechaHora + minutosReservaStock`.
+- **Cancelación automática**: `lib/services/reserva_vigia.js` barre cada 10 s los pedidos `pendiente` vencidos (hasta 100 por pasada) y llama a `cancelarPedidoVencido`, que abre su propia transacción y bloquea la fila (`FOR UPDATE`). Si el pedido ya no está `pendiente`, no hace nada.
+  - Deja el pedido en `cancelado`, repone el stock de la sucursal (`reponerStock`, incluye insumos y combos) y registra el historial con `usuarioId: null` y la observación `Cancelado automáticamente: no se completó el pago dentro del plazo de reserva de stock.` (constante `OBSERVACION_CANCELACION_RESERVA`).
+  - Después del commit emite `stock_actualizado` y `pedido_actualizado`. No crea un aviso en el centro de notificaciones: el cliente no recibe más mensaje que el de la pantalla al volver al carrito.
+  - Si la base no está disponible, reintenta en 60 s y no bloquea el arranque del server. Se arranca desde `bin/www.js` (`iniciarVigiaReservas`); en los tests no corre.
+- **Pago (autoridad)**: al confirmar el pago, `pedido_controller.cambiarEstado` revalida el plazo dentro de la transacción y con la fila bloqueada. Si venció, cancela el pedido con el mismo service, repone el stock y responde **409** con `{ cancelado: true, motivo: 'reserva_vencida', estado: 'cancelado' }`. Si el vigía canceló justo antes, la fila bloqueada ya no está `pendiente`: se responde 409 con el mismo `motivo` y no se repone el stock dos veces.
+- **Motivos de cancelación automática**: la respuesta 409 distingue `motivo: 'reserva_vencida'` (venció el plazo) de `motivo: 'sucursal_cerrada'` (§22).
+- **Avisos al cliente**: `GET /api/pedidos/:id/disponibilidad` suma `reservaExpiraEn` (ISO), `segundosReserva` y `reservaVencida`. La pantalla de pago **no muestra la cuenta regresiva ni avisos preventivos**: solo bloquea el pago cuando vence y, cuando la cancelación llega por socket (o por el sondeo de respaldo), vuelve al carrito con los mismos productos y un único mensaje: `Tiempo de pago excedido.`.
+- **Carrito**: el carrito no se vacía al vencer la reserva (solo se vacía con el pago aprobado), así que el cliente rehace el pedido con los mismos ítems.
+- **Historial**: la cancelación del sistema no la firma ningún usuario; el frontend la reconoce por `usuarioId` nulo en el registro del historial.
