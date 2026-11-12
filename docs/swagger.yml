@@ -962,6 +962,17 @@ components:
           items:
             $ref: '#/components/schemas/ProductoElegibleResena'
 
+    RespuestaEstadoResenaProducto:
+      type: object
+      properties:
+        puedeResenar:
+          type: boolean
+          example: false
+        miResena:
+          allOf:
+            - $ref: '#/components/schemas/ResenaConProducto'
+          nullable: true
+
     MotivoQueja:
       type: string
       enum:
@@ -2031,6 +2042,47 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/LoQueMasComprado'
+    RespuestaResumenCliente:
+      type: object
+      description: >-
+        Formato de GET /api/usuarios/{id}/resumen (carece del wrapper success)
+      properties:
+        data:
+          type: object
+          properties:
+            cliente:
+              $ref: '#/components/schemas/Usuario'
+            direcciones:
+              type: array
+              items:
+                $ref: '#/components/schemas/Direccion'
+            ultimosPedidos:
+              type: array
+              description: >-
+                Ultimos 3 pedidos, sin items, ordenados por fecha descendente
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  fecha:
+                    type: string
+                    format: date-time
+                  fechaHora:
+                    type: string
+                    format: date-time
+                  total:
+                    type: number
+                    format: float
+                  estado:
+                    type: string
+                    nullable: true
+                  estadoId:
+                    type: integer
+                  sucursalId:
+                    type: integer
+            masComprados:
+              $ref: '#/components/schemas/LoQueMasComprado'
     RespuestaCategoria:
       type: object
       properties:
@@ -2956,6 +3008,53 @@ paths:
                   message:
                     type: string
 
+  /usuarios/{id}/resumen:
+    get:
+      tags:
+        - Usuarios
+      summary: Ficha del cliente en una sola llamada
+      description: >-
+        Administradores y superadministradores. Devuelve datos del cliente, sus
+        direcciones activas, los ultimos 3 pedidos (sin items) y el ranking de
+        productos/categorias, con el mismo alcance que GET /usuarios/{id}:
+        el administrador solo ve clientes que hayan comprado en su sucursal;
+        el superadministrador ve todo.
+      operationId: usuariosResumen
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Ficha del cliente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaResumenCliente'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Acceso denegado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '404':
+          description: >-
+            Usuario no encontrado, no es cliente o nunca compro en la sucursal
+            del administrador
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
   /usuarios/{id}/mas-comprados:
     get:
       tags:
@@ -3499,6 +3598,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginaResenas'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+
+  /productos/{id}/resenas/mia:
+    get:
+      tags:
+        - Resenas
+      summary: Estado de la reseña del cliente para un producto (CLIENTE)
+      description: >-
+        Indica si el cliente puede reseñar este producto y, si ya lo hizo,
+        devuelve su reseña. Evita pedir los listados globales de elegibles y
+        mías desde el detalle del producto.
+      operationId: productosResenasMia
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Estado de la reseña del producto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaEstadoResenaProducto'
+        '401':
+          description: Sin sesión
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
+        '403':
+          description: Rol distinto de CLIENTE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespuestaError'
         '404':
           description: Producto no encontrado
           content:

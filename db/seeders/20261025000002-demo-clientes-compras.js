@@ -720,7 +720,7 @@ module.exports = {
          FROM "Productos" p
          JOIN "Categorias" c ON c.id = p."categoriaId"
         WHERE p.activo = TRUE
-          AND (p.imagen IS NULL OR p.imagen NOT LIKE '%via.placeholder.com%')
+          AND (p.imagen IS NULL OR (p.imagen NOT LIKE '%via.placeholder.com%' AND p.imagen NOT LIKE '%placeholder-producto%'))
         ORDER BY p.id`
     );
     if (!productos.length) {

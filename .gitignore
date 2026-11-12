@@ -65,5 +65,9 @@ typings/
 # Docker
 docker/postgres/data
 
+# Imágenes de perfil subidas por los usuarios: son datos en runtime y no se
+# versionan. Las de productos/categorías sí forman parte del catálogo.
+public/imagenes/perfiles/
+
 # Sesiones en cache de la verificación end-to-end del canal de tiempo real
 test/tiempo-real/.sesiones.json

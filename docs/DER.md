@@ -101,33 +101,33 @@ El DER contempla las **30 entidades** del modelo actual (las 23 del modelo de do
 
 ### 2.4 Categoria
 
-| Atributo      | Tipo de dato | Notas                                         |
-| ------------- | ------------ | --------------------------------------------- |
-| `id`          | `INTEGER`    | PK                                            |
-| `nombre`      | `STRING`     | UNIQUE                                        |
-| `descripcion` | `TEXT`       |                                               |
-| `imagen`      | `STRING`     | ruta relativa en `public/imagenes/categorias` |
-| `activa`      | `BOOLEAN`    |                                               |
+| Atributo      | Tipo de dato | Notas                                               |
+| ------------- | ------------ | --------------------------------------------------- |
+| `id`          | `INTEGER`    | PK                                                  |
+| `nombre`      | `STRING`     | UNIQUE                                              |
+| `descripcion` | `TEXT`       |                                                     |
+| `imagen`      | `STRING`     | ruta relativa servida en `/api/imagenes/categorias` |
+| `activa`      | `BOOLEAN`    |                                                     |
 
 - PK: `id`
 - UNIQUE: `nombre`
 
 ### 2.5 Producto
 
-| Atributo      | Tipo de dato                | Notas                 |
-| ------------- | --------------------------- | --------------------- |
-| `id`          | `INTEGER`                   | PK                    |
-| `categoriaId` | `INTEGER`                   | FK â†’ `Categoria.id` |
-| `nombre`      | `STRING`                    |                       |
-| `descripcion` | `TEXT`                      |                       |
-| `precio`      | `DECIMAL(10,2)`             | precio vigente        |
-| `imagen`      | `STRING`                    |                       |
-| `activo`      | `BOOLEAN`                   |                       |
-| `tipo`        | `ENUM('PRODUCTO', 'COMBO')` |                       |
+| Atributo      | Tipo de dato                | Notas                                              |
+| ------------- | --------------------------- | -------------------------------------------------- |
+| `id`          | `INTEGER`                   | PK                                                 |
+| `categoriaId` | `INTEGER`                   | FK → `Categoria.id`                                |
+| `nombre`      | `STRING`                    |                                                    |
+| `descripcion` | `TEXT`                      |                                                    |
+| `precio`      | `DECIMAL(10,2)`             | precio vigente                                     |
+| `imagen`      | `STRING`                    | ruta relativa servida en `/api/imagenes/productos` |
+| `activo`      | `BOOLEAN`                   |                                                    |
+| `tipo`        | `ENUM('PRODUCTO', 'COMBO')` |                                                    |
 
 - PK: `id`
-- FK: `categoriaId â†’ Categoria.id`
-- RelaciÃ³n: `Producto 1:N ProductoIngrediente` (receta; sÃ³lo `tipo = PRODUCTO`)
+- FK: `categoriaId → Categoria.id`
+- Relación: `Producto 1:N ProductoIngrediente` (receta; sólo `tipo = PRODUCTO`)
 
 ### 2.6 ComboComponente
 

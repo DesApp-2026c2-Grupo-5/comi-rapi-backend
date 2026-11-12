@@ -13,7 +13,7 @@
 // (`docker compose down -v` + seed) lo borra. Por eso las imágenes van
 // declaradas acá y no se dejan "en la base".
 //
-// Ojo con la imagen: el archivo tiene que estar en el repo del frontend, en
+// Ojo con la imagen: el archivo tiene que estar en el backend, en
 // `public/imagenes/productos/`. Si subís una imagen desde la pantalla, el
 // archivo queda sin trackear (git lo muestra como `??`) y un compañero que
 // clonee no la va a tener: la combo le sale con la imagen rota. Hay que
@@ -34,7 +34,7 @@ const combos = [
     descripcion:
       'Hamburguesa Clásica, papas grandes y Coca-Cola. Por menos que sueltos.',
     imagen:
-      '/imagenes/productos/combo-cl-sico-1790808917969-1791229635931.webp',
+      '/api/imagenes/productos/combo-cl-sico-1790808917969-1791229635931.webp',
     componentes: [
       { producto: 'Hamburguesa Clásica', cantidad: 1 },
       { producto: 'Papas Fritas Grandes', cantidad: 1 },
@@ -48,7 +48,7 @@ const combos = [
     descripcion:
       'Pizza muzzarella, papas fritas y Coca-Cola. La noche resuelta.',
     imagen:
-      '/imagenes/productos/combo-pizza-papas-bebida-1790809471048-1791229758604.webp',
+      '/api/imagenes/productos/combo-pizza-papas-bebida-1790809471048-1791229758604.webp',
     componentes: [
       { producto: 'Pizza Muzzarella', cantidad: 1 },
       { producto: 'Papas Fritas Grandes', cantidad: 1 },
