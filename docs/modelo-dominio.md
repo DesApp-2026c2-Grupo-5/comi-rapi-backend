@@ -40,56 +40,56 @@ El dominio cubre:
 
 ## 4. Entidades
 
-| #   | Entidad                 | Responsabilidad                                   |
-| --- | ----------------------- | ------------------------------------------------- |
-| 1   | `Usuario`               | Actor autenticado (cliente o administrador)       |
+| #   | Entidad                 | Responsabilidad                                  |
+| --- | ----------------------- | ------------------------------------------------ |
+| 1   | `Usuario`               | Actor autenticado (cliente o administrador)      |
 | 2   | `Direccion`             | Dirección de un usuario o una sucursal           |
 | 3   | `Sucursal`              | Local físico                                     |
-| 4   | `Categoria`             | Agrupar productos                                 |
+| 4   | `Categoria`             | Agrupar productos                                |
 | 5   | `Producto`              | Artículo vendible (normal o combo)               |
 | 6   | `ComboComponente`       | Composición de un combo                          |
 | 7   | `OpcionGrupo`           | Grupo de opciones de personalización             |
 | 8   | `Opcion`                | Opción concreta dentro de un grupo               |
-| 9   | `ProductoOpcionGrupo`   | Vínculo producto ↔ grupo de opciones           |
-| 10  | `Stock`                 | Disponibilidad de un producto en una sucursal     |
-| 11  | `Pedido`                | Pedido realizado por un cliente                   |
+| 9   | `ProductoOpcionGrupo`   | Vínculo producto ↔ grupo de opciones             |
+| 10  | `Stock`                 | Disponibilidad de un producto en una sucursal    |
+| 11  | `Pedido`                | Pedido realizado por un cliente                  |
 | 12  | `PedidoItem`            | Línea de un pedido                               |
-| 13  | `PedidoItemOpcion`      | Opción seleccionada en una línea                |
+| 13  | `PedidoItemOpcion`      | Opción seleccionada en una línea                 |
 | 14  | `EstadoPedido`          | Catálogo de estados                              |
-| 15  | `PedidoEstadoHistorial` | Trazabilidad de cambios de estado                 |
+| 15  | `PedidoEstadoHistorial` | Trazabilidad de cambios de estado                |
 | 16  | `Promocion`             | Beneficio aplicable al catálogo                  |
-| 17  | `PromocionProducto`     | Vínculo promoción ↔ producto                  |
+| 17  | `PromocionProducto`     | Vínculo promoción ↔ producto                     |
 | 18  | `PedidoPromocion`       | Promoción aplicada a un pedido                   |
 | 19  | `ParametroSistema`      | Configuración general del sistema                |
 | 20  | `Resena`                | Opinión de un cliente sobre un producto comprado |
 | 21  | `Insumo`                | Extra o condimento con precio y baja lógica      |
-| 22  | `InsumoStock`           | Existencia de un insumo en una sucursal           |
-| 23  | `Queja`                 | Reclamo de un cliente sobre un pedido entregado   |
-| 24  | `QuejaMensaje`          | Mensaje del hilo de un reclamo                    |
-| 25  | `Notificacion`          | Aviso persistido para el centro del cliente       |
-| 26  | `Ingrediente`           | Materia prima con unidad de medida                |
-| 27  | `IngredienteStock`      | Existencia de un ingrediente en una sucursal      |
-| 28  | `ProductoIngrediente`   | Receta: ingredientes y cantidades de un producto  |
+| 22  | `InsumoStock`           | Existencia de un insumo en una sucursal          |
+| 23  | `Queja`                 | Reclamo de un cliente sobre un pedido entregado  |
+| 24  | `QuejaMensaje`          | Mensaje del hilo de un reclamo                   |
+| 25  | `Notificacion`          | Aviso persistido para el centro del cliente      |
+| 26  | `Ingrediente`           | Materia prima con unidad de medida               |
+| 27  | `IngredienteStock`      | Existencia de un ingrediente en una sucursal     |
+| 28  | `ProductoIngrediente`   | Receta: ingredientes y cantidades de un producto |
 
 ## 5. Atributos principales
 
 ### 5.1 Usuario
 
-| Atributo          | Tipo / Notas                                                |
-| ----------------- | ----------------------------------------------------------- |
-| `id`              | PK                                                          |
-| `nombre`          |                                                             |
-| `apellido`        |                                                             |
-| `email`           | único                                                      |
-| `password`        | hash (posterior)                                            |
-| `telefono`        |                                                             |
-| `rol`             | enum: `CLIENTE`, `ADMINISTRADOR`, `SUPERADMINISTRADOR`      |
-| `activo`          | booleano                                                    |
-| `fechaNacimiento` | `DATEONLY`, opcional                                        |
-| `fotoPerfilUrl`   | STRING, opcional                                            |
+| Atributo          | Tipo / Notas                                              |
+| ----------------- | --------------------------------------------------------- |
+| `id`              | PK                                                        |
+| `nombre`          |                                                           |
+| `apellido`        |                                                           |
+| `email`           | único                                                     |
+| `password`        | hash (posterior)                                          |
+| `telefono`        |                                                           |
+| `rol`             | enum: `CLIENTE`, `ADMINISTRADOR`, `SUPERADMINISTRADOR`    |
+| `activo`          | booleano                                                  |
+| `fechaNacimiento` | `DATEONLY`, opcional                                      |
+| `fotoPerfilUrl`   | STRING, opcional                                          |
 | `sucursalId`      | INTEGER, FK opcional → `Sucursal.id` (solo ADMINISTRADOR) |
-| `createdAt`       |                                                             |
-| `updatedAt`       |                                                             |
+| `createdAt`       |                                                           |
+| `updatedAt`       |                                                           |
 
 `edad` es un atributo derivado/calculado a partir de `fechaNacimiento`; **no** se persiste.
 
@@ -111,23 +111,23 @@ No crear entidades separadas `Cliente` ni `Administrador`.
 
 `Direccion` es la única entidad que almacena los datos de ubicación (domicilio textual y, posteriormente, coordenadas) tanto de un **usuario** como de una **sucursal**. Puede pertenecer a un usuario o a una sucursal, pero **no a ambos simultáneamente ni a ninguno**.
 
-| Atributo       | Tipo / Notas                  |
-| -------------- | ----------------------------- |
-| `id`           | PK                            |
+| Atributo       | Tipo / Notas                |
+| -------------- | --------------------------- |
+| `id`           | PK                          |
 | `usuarioId`    | FK opcional → `Usuario.id`  |
 | `sucursalId`   | FK opcional → `Sucursal.id` |
-| `calle`        | obligatorio                   |
-| `altura`       | obligatorio                   |
-| `provincia`    | obligatorio                   |
-| `departamento` | opcional (iteración 1-geo)   |
-| `localidad`    | opcional (iteración 1-geo)   |
-| `codigoPostal` | opcional (iteración 1-geo)   |
-| `nomenclatura` | opcional (iteración 1-geo)   |
-| `referencia`   | opcional                      |
-| `latitud`      | opcional                      |
-| `longitud`     | opcional                      |
-| `alias`        | opcional                      |
-| `activa`       | booleano                      |
+| `calle`        | obligatorio                 |
+| `altura`       | obligatorio                 |
+| `provincia`    | obligatorio                 |
+| `departamento` | opcional (iteración 1-geo)  |
+| `localidad`    | opcional (iteración 1-geo)  |
+| `codigoPostal` | opcional (iteración 1-geo)  |
+| `nomenclatura` | opcional (iteración 1-geo)  |
+| `referencia`   | opcional                    |
+| `latitud`      | opcional                    |
+| `longitud`     | opcional                    |
+| `alias`        | opcional                    |
+| `activa`       | booleano                    |
 
 Relaciones:
 
@@ -168,15 +168,15 @@ El horario de atención es **estructurado**. `Sucursales.horarios` (texto libre)
 | Atributo     | Tipo / Notas                                   |
 | ------------ | ---------------------------------------------- |
 | `id`         | PK                                             |
-| `sucursalId` | FK → `Sucursal.id` (`ON DELETE CASCADE`)     |
+| `sucursalId` | FK → `Sucursal.id` (`ON DELETE CASCADE`)       |
 | `diaSemana`  | entero 1..7 (lunes = 1, domingo = 7, ISO-8601) |
-| `apertura`   | `TIME` — hora real de apertura del local     |
-| `cierre`     | `TIME` — hora real de cierre del local       |
+| `apertura`   | `TIME` — hora real de apertura del local       |
+| `cierre`     | `TIME` — hora real de cierre del local         |
 
 Reglas:
 
 - Varias franjas por día y solapamientos permitidos: "abierta" es caer en cualquiera. Se rechazan franjas exactamente duplicadas (UNIQUE `(sucursalId, diaSemana, apertura, cierre)`) y `apertura = cierre`.
-- `cierre <= apertura` representa una franja que **cruza la medianoche** (ej. 19:00–02:00) y pertenece al día de apertura; se evalúan también las franjas del día anterior.
+- `cierre > apertura`: la franja empieza y termina el **mismo día**. El horario del lunes no puede pasar del lunes, así que 19:00–02:00 (o 11:00–00:00) se rechaza en el alta. Las filas históricas que cruzaban la medianoche se normalizan a las 23:59 en la migración `20261112000001-normalizar-horarios-mismo-dia.js`.
 - Un día sin franjas está cerrado. Para cerrar todo el local se usa `activa = false`, no la ausencia de franjas.
 - La franja guarda el horario del local. El **corte de pedidos** se deriva restando el parámetro global `margenCierreMinutos` (default 30): el local cierra 23:00 y la página deja de tomar pedidos 22:30.
 - La evaluación se hace siempre en `America/Argentina/Buenos_Aires`.
@@ -190,7 +190,6 @@ Relaciones:
 
 ### 5.4 Categoria
 
-
 Reglas:
 
 - `nombre` debe ser único.
@@ -199,7 +198,6 @@ Reglas:
 Relación: `Categoria 1:N Producto`
 
 ### 5.5 Producto
-
 
 El precio en `Producto` representa el precio vigente. El precio histórico de un pedido **no** debe obtenerse nuevamente desde `Producto`.
 
@@ -215,12 +213,12 @@ Relaciones:
 
 ### 5.6 ComboComponente
 
-| Atributo     | Tipo / Notas         |
-| ------------ | -------------------- |
-| `id`         | PK                   |
+| Atributo     | Tipo / Notas       |
+| ------------ | ------------------ |
+| `id`         | PK                 |
 | `comboId`    | FK → `Producto.id` |
 | `productoId` | FK → `Producto.id` |
-| `cantidad`   |                      |
+| `cantidad`   |                    |
 
 Relaciones:
 
@@ -257,13 +255,13 @@ Ejemplos conceptuales: Extras, Personalización, Acompañamientos, Condimentos.
 
 #### 5.7.2 Opcion
 
-| Atributo               | Tipo / Notas                   |
-| ---------------------- | ------------------------------ |
-| `id`                   | PK                             |
+| Atributo               | Tipo / Notas                 |
+| ---------------------- | ---------------------------- |
+| `id`                   | PK                           |
 | `grupoId`              | FK → `OpcionGrupo.id`        |
-| `nombre`               |                                |
-| `precioAdicional`      |                                |
-| `activo`               | booleano                       |
+| `nombre`               |                              |
+| `precioAdicional`      |                              |
+| `activo`               | booleano                     |
 | `productoReferenciaId` | opcional, FK → `Producto.id` |
 
 Relación: `Opcion.grupoId → OpcionGrupo.id`
@@ -272,9 +270,9 @@ Relación: `Opcion.grupoId → OpcionGrupo.id`
 
 #### 5.7.3 ProductoOpcionGrupo
 
-| Atributo     | Tipo / Notas            |
-| ------------ | ----------------------- |
-| `id`         | PK                      |
+| Atributo     | Tipo / Notas          |
+| ------------ | --------------------- |
+| `id`         | PK                    |
 | `productoId` | FK → `Producto.id`    |
 | `grupoId`    | FK → `OpcionGrupo.id` |
 
@@ -293,12 +291,12 @@ El diseño debe permitir que diferentes productos tengan diferentes grupos de pe
 
 ### 5.8 Stock
 
-| Atributo     | Tipo / Notas                     |
-| ------------ | -------------------------------- |
+| Atributo     | Tipo / Notas                   |
+| ------------ | ------------------------------ |
 | `sucursalId` | PK (parte), FK → `Sucursal.id` |
 | `productoId` | PK (parte), FK → `Producto.id` |
-| `cantidad`   |                                  |
-| `disponible` | booleano                         |
+| `cantidad`   |                                |
+| `disponible` | booleano                       |
 
 Clave: `(sucursalId, productoId)` — la combinación sucursal + producto debe ser única.
 
@@ -348,12 +346,12 @@ los ingredientes:
 
 ### 5.8.3 ProductoIngrediente (receta)
 
-| Atributo        | Tipo / Notas                        |
-| --------------- | ----------------------------------- |
+| Atributo        | Tipo / Notas                      |
+| --------------- | --------------------------------- |
 | `productoId`    | PK (parte), FK → `Producto.id`    |
 | `ingredienteId` | PK (parte), FK → `Ingrediente.id` |
-| `cantidad`      | `DECIMAL(12,3) > 0`                 |
-| `permiteQuitar` | booleano, default `true`            |
+| `cantidad`      | `DECIMAL(12,3) > 0`               |
+| `permiteQuitar` | booleano, default `true`          |
 
 Clave: `(productoId, ingredienteId)` — no se repite un ingrediente en la misma
 receta.
@@ -378,10 +376,10 @@ Reglas:
 | Atributo      | Tipo / Notas                            |
 | ------------- | --------------------------------------- |
 | `id`          | PK                                      |
-| `usuarioId`   | FK → `Usuario.id`                     |
-| `sucursalId`  | FK → `Sucursal.id`                    |
+| `usuarioId`   | FK → `Usuario.id`                       |
+| `sucursalId`  | FK → `Sucursal.id`                      |
 | `fechaHora`   |                                         |
-| `estadoId`    | FK → `EstadoPedido.id`                |
+| `estadoId`    | FK → `EstadoPedido.id`                  |
 | `costoEnvio`  |                                         |
 | `total`       |                                         |
 | `medioPago`   | enum inicial: `MERCADO_PAGO`, `TARJETA` |
@@ -412,16 +410,16 @@ El pago es simulado. La dirección almacenada en `Pedido` constituye la fuente h
 
 ### 5.10 PedidoItem
 
-| Atributo         | Tipo / Notas         |
-| ---------------- | -------------------- |
-| `id`             | PK                   |
+| Atributo         | Tipo / Notas       |
+| ---------------- | ------------------ |
+| `id`             | PK                 |
 | `pedidoId`       | FK → `Pedido.id`   |
 | `productoId`     | FK → `Producto.id` |
-| `nombreProducto` | snapshot             |
-| `precioUnitario` | snapshot             |
-| `cantidad`       |                      |
-| `subtotal`       |                      |
-| `observacion`    |                      |
+| `nombreProducto` | snapshot           |
+| `precioUnitario` | snapshot           |
+| `cantidad`       |                    |
+| `subtotal`       |                    |
+| `observacion`    |                    |
 
 Relaciones:
 
@@ -432,14 +430,14 @@ Relaciones:
 
 ### 5.11 PedidoItemOpcion
 
-| Atributo          | Tipo / Notas           |
-| ----------------- | ---------------------- |
-| `id`              | PK                     |
+| Atributo          | Tipo / Notas         |
+| ----------------- | -------------------- |
+| `id`              | PK                   |
 | `pedidoItemId`    | FK → `PedidoItem.id` |
 | `opcionId`        | FK → `Opcion.id`     |
-| `nombre`          | snapshot               |
-| `precioAdicional` | snapshot               |
-| `cantidad`        |                        |
+| `nombre`          | snapshot             |
+| `precioAdicional` | snapshot             |
+| `cantidad`        |                      |
 
 Relaciones:
 
@@ -475,14 +473,14 @@ CANCELADO
 
 ### 5.13 PedidoEstadoHistorial
 
-| Atributo      | Tipo / Notas             |
-| ------------- | ------------------------ |
-| `id`          | PK                       |
+| Atributo      | Tipo / Notas           |
+| ------------- | ---------------------- |
+| `id`          | PK                     |
 | `pedidoId`    | FK → `Pedido.id`       |
 | `estadoId`    | FK → `EstadoPedido.id` |
 | `usuarioId`   | FK → `Usuario.id`      |
-| `fechaHora`   |                          |
-| `observacion` |                          |
+| `fechaHora`   |                        |
+| `observacion` |                        |
 
 Relaciones:
 
@@ -516,9 +514,9 @@ No implementar todavía: cupones, envío gratis, descuentos por monto, reglas po
 
 ### 5.15 PromocionProducto
 
-| Atributo      | Tipo / Notas          |
-| ------------- | --------------------- |
-| `id`          | PK                    |
+| Atributo      | Tipo / Notas        |
+| ------------- | ------------------- |
+| `id`          | PK                  |
 | `promocionId` | FK → `Promocion.id` |
 | `productoId`  | FK → `Producto.id`  |
 
@@ -537,12 +535,12 @@ Los combos, al ser productos, también pueden ser alcanzados por una promoción.
 
 ### 5.16 PedidoPromocion
 
-| Atributo            | Tipo / Notas          |
-| ------------------- | --------------------- |
-| `id`                | PK                    |
+| Atributo            | Tipo / Notas        |
+| ------------------- | ------------------- |
+| `id`                | PK                  |
 | `pedidoId`          | FK → `Pedido.id`    |
 | `promocionId`       | FK → `Promocion.id` |
-| `descuentoAplicado` | snapshot              |
+| `descuentoAplicado` | snapshot            |
 
 Restricción: `UNIQUE(pedidoId, promocionId)` — la combinación pedido + promoción debe ser única.
 
@@ -558,7 +556,7 @@ Relaciones:
 | Atributo      | Tipo / Notas |
 | ------------- | ------------ |
 | `id`          | PK           |
-| `clave`       | único       |
+| `clave`       | único        |
 | `valor`       |              |
 | `descripcion` |              |
 
@@ -566,16 +564,16 @@ Regla: `clave` debe ser única. No crear entidades específicas para cada parám
 
 ### 5.18 Resena
 
-| Atributo     | Tipo / Notas                                                     |
-| ------------ | ---------------------------------------------------------------- |
-| `id`         | PK                                                               |
-| `usuarioId`  | FK → `Usuario.id` (solo CLIENTE)                               |
-| `productoId` | FK → `Producto.id` (producto simple o combo)                   |
+| Atributo     | Tipo / Notas                                                 |
+| ------------ | ------------------------------------------------------------ |
+| `id`         | PK                                                           |
+| `usuarioId`  | FK → `Usuario.id` (solo CLIENTE)                             |
+| `productoId` | FK → `Producto.id` (producto simple o combo)                 |
 | `pedidoId`   | FK → `Pedido.id` (pedido `entregado` que habilitó la reseña) |
-| `puntuacion` | INTEGER, 1 a 5                                                   |
-| `comentario` | TEXT, opcional, máximo 500 caracteres                           |
-| `createdAt`  |                                                                  |
-| `updatedAt`  |                                                                  |
+| `puntuacion` | INTEGER, 1 a 5                                               |
+| `comentario` | TEXT, opcional, máximo 500 caracteres                        |
+| `createdAt`  |                                                              |
+| `updatedAt`  |                                                              |
 
 Reglas: un cliente deja **una sola reseña por producto** (UNIQUE `usuarioId + productoId`); solo puede crearla si tiene un pedido `entregado` que incluya ese producto; puede editarla o eliminarla. El autor se muestra como "Nombre I." (nombre + inicial del apellido), nunca con email. No es la `Calificacion` de la Propuesta 2: no evalúa al repartidor ni al pedido en general.
 
@@ -584,13 +582,13 @@ Reglas: un cliente deja **una sola reseña por producto** (UNIQUE `usuarioId + p
 | Atributo          | Tipo / Notas                                                                                          |
 | ----------------- | ----------------------------------------------------------------------------------------------------- |
 | `id`              | PK                                                                                                    |
-| `usuarioId`       | FK → `Usuario.id` (solo CLIENTE autor del reclamo)                                                  |
-| `pedidoId`        | FK → `Pedido.id` (pedido propio y `entregado`), UNIQUE                                              |
+| `usuarioId`       | FK → `Usuario.id` (solo CLIENTE autor del reclamo)                                                    |
+| `pedidoId`        | FK → `Pedido.id` (pedido propio y `entregado`), UNIQUE                                                |
 | `motivo`          | ENUM: `PEDIDO_INCOMPLETO`, `PRODUCTO_EN_MAL_ESTADO`, `DEMORA_EN_LA_ENTREGA`, `ERROR_DE_COBRO`, `OTRO` |
 | `detalle`         | TEXT, obligatorio, 10 a 1000 caracteres                                                               |
 | `estado`          | ENUM: `PENDIENTE` (default), `EN_REVISION`, `RESUELTA`, `RECHAZADA`, `CERRADA`                        |
-| `respuesta`       | TEXT, opcional, máximo 1000 caracteres (última del negocio)                                         |
-| `respondidoPorId` | FK → `Usuario.id` (ADMINISTRADOR o SUPERADMINISTRADOR), opcional                                    |
+| `respuesta`       | TEXT, opcional, máximo 1000 caracteres (última del negocio)                                           |
+| `respondidoPorId` | FK → `Usuario.id` (ADMINISTRADOR o SUPERADMINISTRADOR), opcional                                      |
 | `respondidaEn`    | DATE, opcional (se completa al responder)                                                             |
 | `cerradaEn`       | DATE, opcional (cierre del cliente)                                                                   |
 | `createdAt`       |                                                                                                       |
@@ -605,14 +603,14 @@ Reglas: solo el CLIENTE dueño del pedido puede crear la queja, y únicamente si
 | Atributo    | Tipo / Notas                                           |
 | ----------- | ------------------------------------------------------ |
 | `id`        | PK                                                     |
-| `usuarioId` | FK → `Usuario.id` (solo CLIENTE destinatario)        |
+| `usuarioId` | FK → `Usuario.id` (solo CLIENTE destinatario)          |
 | `tipo`      | ENUM: `PEDIDO`, `QUEJA`, `SISTEMA` (default `SISTEMA`) |
 | `titulo`    | STRING(160), obligatorio                               |
 | `mensaje`   | TEXT, opcional                                         |
-| `pedidoId`  | FK → `Pedido.id`, opcional (destino del clic)        |
-| `quejaId`   | FK → `Queja.id`, opcional (destino del clic)         |
+| `pedidoId`  | FK → `Pedido.id`, opcional (destino del clic)          |
+| `quejaId`   | FK → `Queja.id`, opcional (destino del clic)           |
 | `leida`     | BOOLEAN, default `false`                               |
-| `leidaEn`   | DATE, opcional (se completa al marcar leída)          |
+| `leidaEn`   | DATE, opcional (se completa al marcar leída)           |
 | `createdAt` |                                                        |
 | `updatedAt` |                                                        |
 
@@ -828,36 +826,36 @@ La arquitectura futura podrá incorporar, por ejemplo:
 
 ## 12. Resumen general del modelo
 
-| Entidad                 | Responsabilidad                     | Relaciones principales                                                                                                      |
-| ----------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `Usuario`               | Actor autenticado                   | 1:N `Direccion`, 1:N `Pedido`, N:1 `Sucursal` (opcional, solo ADMINISTRADOR)                                                |
+| Entidad                 | Responsabilidad                    | Relaciones principales                                                                                                      |
+| ----------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `Usuario`               | Actor autenticado                  | 1:N `Direccion`, 1:N `Pedido`, N:1 `Sucursal` (opcional, solo ADMINISTRADOR)                                                |
 | `Direccion`             | Dirección de usuario o sucursal    | N:1 `Usuario` (opcional), 1:1 `Sucursal` (opcional)                                                                         |
 | `Sucursal`              | Local físico                       | 1:1 `Direccion`, 1:N `Stock`, 1:N `IngredienteStock`, 1:N `Pedido`, 1:N `Usuario` (administradores)                         |
-| `Categoria`             | Agrupar productos                   | 1:N `Producto`                                                                                                              |
+| `Categoria`             | Agrupar productos                  | 1:N `Producto`                                                                                                              |
 | `Producto`              | Artículo vendible (normal o combo) | N:1 `Categoria`, 1:N `ProductoOpcionGrupo`, 1:N `ProductoIngrediente`, 1:N `ComboComponente`, 1:N `Stock`, 1:N `PedidoItem` |
 | `ComboComponente`       | Composición de combo               | N:1 `Producto` (combo), N:1 `Producto` (componente)                                                                         |
-| `OpcionGrupo`           | Grupo de opciones                   | 1:N `Opcion`                                                                                                                |
+| `OpcionGrupo`           | Grupo de opciones                  | 1:N `Opcion`                                                                                                                |
 | `Opcion`                | Opción concreta                    | N:1 `OpcionGrupo`                                                                                                           |
-| `ProductoOpcionGrupo`   | Vínculo producto ↔ grupo         | N:1 `Producto`, N:1 `OpcionGrupo`                                                                                           |
+| `ProductoOpcionGrupo`   | Vínculo producto ↔ grupo           | N:1 `Producto`, N:1 `OpcionGrupo`                                                                                           |
 | `Stock`                 | Disponibilidad producto×sucursal   | N:1 `Sucursal`, N:1 `Producto`                                                                                              |
-| `Insumo`                | Extra o condimento con precio       | 1:N `InsumoStock`, 1:N `PersonalizacionElemento` (opcional)                                                                 |
+| `Insumo`                | Extra o condimento con precio      | 1:N `InsumoStock`, 1:N `PersonalizacionElemento` (opcional)                                                                 |
 | `InsumoStock`           | Existencia insumo×sucursal         | N:1 `Sucursal`, N:1 `Insumo`                                                                                                |
-| `Ingrediente`           | Materia prima con unidad            | 1:N `IngredienteStock`, 1:N `ProductoIngrediente`                                                                           |
+| `Ingrediente`           | Materia prima con unidad           | 1:N `IngredienteStock`, 1:N `ProductoIngrediente`                                                                           |
 | `IngredienteStock`      | Existencia ingrediente×sucursal    | N:1 `Sucursal`, N:1 `Ingrediente`                                                                                           |
 | `ProductoIngrediente`   | Receta producto×ingrediente        | N:1 `Producto`, N:1 `Ingrediente`                                                                                           |
-| `Pedido`                | Pedido realizado/registrado         | N:1 `Usuario`, N:1 `Sucursal`, N:1 `EstadoPedido`, 1:N `PedidoItem`, 1:N `PedidoEstadoHistorial`, 1:N `PedidoPromocion`     |
+| `Pedido`                | Pedido realizado/registrado        | N:1 `Usuario`, N:1 `Sucursal`, N:1 `EstadoPedido`, 1:N `PedidoItem`, 1:N `PedidoEstadoHistorial`, 1:N `PedidoPromocion`     |
 | `PedidoItem`            | Línea de pedido                    | N:1 `Pedido`, N:1 `Producto`, 1:N `PedidoItemOpcion`                                                                        |
 | `PedidoItemOpcion`      | Opción seleccionada                | N:1 `PedidoItem`, N:1 `Opcion`                                                                                              |
 | `EstadoPedido`          | Catálogo de estados                | 1:N `Pedido`, 1:N `PedidoEstadoHistorial`                                                                                   |
-| `PedidoEstadoHistorial` | Trazabilidad de estados             | N:1 `Pedido`, N:1 `EstadoPedido`, N:1 `Usuario`                                                                             |
-| `Promocion`             | Beneficio aplicable                 | 1:N `PromocionProducto`, 1:N `PedidoPromocion`                                                                              |
-| `PromocionProducto`     | Vínculo promoción ↔ producto    | N:1 `Promocion`, N:1 `Producto`                                                                                             |
+| `PedidoEstadoHistorial` | Trazabilidad de estados            | N:1 `Pedido`, N:1 `EstadoPedido`, N:1 `Usuario`                                                                             |
+| `Promocion`             | Beneficio aplicable                | 1:N `PromocionProducto`, 1:N `PedidoPromocion`                                                                              |
+| `PromocionProducto`     | Vínculo promoción ↔ producto       | N:1 `Promocion`, N:1 `Producto`                                                                                             |
 | `PedidoPromocion`       | Promoción aplicada                 | N:1 `Pedido`, N:1 `Promocion`                                                                                               |
-| `ParametroSistema`      | Configuración del sistema          | —                                                                                                                         |
+| `ParametroSistema`      | Configuración del sistema          | —                                                                                                                           |
 | `Resena`                | Opinión de un cliente              | N:1 `Usuario`, N:1 `Producto`, N:1 `Pedido`                                                                                 |
-| `Queja`                 | Reclamo sobre pedido entregado      | N:1 `Usuario` (autor), N:1 `Usuario` (respondedor), 1:1 `Pedido`, 1:N `QuejaMensaje`                                        |
-| `QuejaMensaje`          | Mensaje del hilo                    | N:1 `Queja`, N:1 `Usuario` (autor)                                                                                          |
-| Notificacion            | Aviso del centro del cliente        | N:1 Usuario (destinatario), N:1 Pedido (opcional), N:1 Queja (opcional)                                                     |
+| `Queja`                 | Reclamo sobre pedido entregado     | N:1 `Usuario` (autor), N:1 `Usuario` (respondedor), 1:1 `Pedido`, 1:N `QuejaMensaje`                                        |
+| `QuejaMensaje`          | Mensaje del hilo                   | N:1 `Queja`, N:1 `Usuario` (autor)                                                                                          |
+| Notificacion            | Aviso del centro del cliente       | N:1 Usuario (destinatario), N:1 Pedido (opcional), N:1 Queja (opcional)                                                     |
 
 ## 13. Observaciones pendientes
 
@@ -867,6 +865,3 @@ Sin modificar el modelo documentado, se dejan señaladas las siguientes observac
 - No se especifica el tipo/dominio de `Promocion.valor` (porcentaje, cantidad fija, etc.); conviene precisarlo al diseñar la implementación.
 - `Pedido.estadoId` (estado actual) convive con el historial; se sugiere confirmar la regla de actualización consistente de ambos al generar cambios de estado.
 - El tiempo estimado de entrega no requiere necesariamente almacenamiento persistente. Su cálculo deberá definirse como regla de negocio y podrá realizarse dinámicamente a partir del estado del pedido y/o parámetros del sistema. `PedidoEstadoHistorial` permite calcular tiempos reales e históricos, pero no representa por sí mismo una estimación futura.
-
-
-

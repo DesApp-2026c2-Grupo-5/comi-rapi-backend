@@ -1271,8 +1271,9 @@ components:
           type: array
           description: >-
             Franjas del día. Varias franjas y solapamientos permitidos: alcanza
-            con caer en una. Si `cierre` es menor o igual que `apertura`, la
-            franja cruza la medianoche (ej. 19:00-02:00).
+            con caer en una. Cada franja tiene que cerrar dentro del mismo día
+            (`cierre` posterior a `apertura`): 19:00-02:00 se rechaza porque
+            pasaría al día siguiente.
           items:
             type: object
             required: [apertura, cierre]
