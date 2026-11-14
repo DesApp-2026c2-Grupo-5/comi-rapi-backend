@@ -3442,6 +3442,18 @@ paths:
         - Productos
       summary: Lista productos activos (público)
       operationId: productosIndex
+      parameters:
+        - name: orden
+          in: query
+          required: false
+          description: >-
+            Criterio de ordenamiento. `mas-vendidos` ordena por unidades
+            vendidas hoy (mismo criterio que la portada; desempata por precio
+            descendente y luego por nombre). Cualquier otro valor u omitido usa
+            el orden por nombre ascendente.
+          schema:
+            type: string
+            enum: [mas-vendidos]
       responses:
         '200':
           description: Listado de productos
