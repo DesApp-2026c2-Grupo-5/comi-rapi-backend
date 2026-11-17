@@ -53,8 +53,9 @@ const sucursales = [
   {
     nombre: 'Sucursal Palermo',
     telefono: '011-5777-3000',
-    // Cruza la medianoche: abre 11:00 y cierra 00:00 del día siguiente.
-    horario: { apertura: '11:00:00', cierre: '00:00:00' },
+    // Cierra dentro del mismo día: la franja no puede pasar al día siguiente
+    // (antes cerraba a las 00:00 del día siguiente).
+    horario: { apertura: '11:00:00', cierre: '23:59:00' },
     direccion: {
       calle: 'Av. Santa Fe',
       altura: 3253,
@@ -124,7 +125,7 @@ module.exports = {
       }
     );
     // Franjas de atención: el mismo horario para los siete días, como el texto
-    // viejo ("Lun-Dom ..."). Palermo cruza la medianoche (11:00–00:00).
+    // viejo ("Lun-Dom ..."). Todas cierran dentro del mismo día.
     const franjas = [];
     creadas.forEach((sucursal) => {
       const { horario } = sucursales.find((x) => x.nombre === sucursal.nombre);

@@ -14,8 +14,10 @@
  *    `apertura` y `cierre` son TIME del horario REAL del local (23:00), no del
  *    corte de pedidos: el margen operativo (30 min por defecto) es un parámetro
  *    global y se resta al evaluar (`margenCierreMinutos`).
- *    `cierre <= apertura` significa que la franja cruza la medianoche
- *    (19:00–02:00): pertenece al día de apertura.
+ *    `cierre <= apertura` significaba que la franja cruzaba la medianoche
+ *    (19:00–02:00). Esa regla se revirtió después: hoy el cierre tiene que ser
+ *    del mismo día y las filas viejas se normalizan en la migración
+ *    `20261112000001-normalizar-horarios-mismo-dia.js`.
  *
  * Sin filas = sucursal cerrada.
  *

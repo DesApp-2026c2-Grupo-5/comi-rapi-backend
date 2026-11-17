@@ -50,8 +50,10 @@ export async function crearUsuario({
 
 /**
  * Carga el horario de atención de una sucursal de prueba. Por defecto usa una
- * franja "00:00–00:00" (cruza la medianoche = abierta las 24 h) para que los
- * tests no dependan de la hora real a la que corren. Combinado con
+ * franja "00:00–00:00" (cruce histórico = abierta las 24 h) para que los tests
+ * no dependan de la hora real a la que corren. El ABM rechaza esa franja (cada
+ * horario tiene que cerrar el mismo día), pero el helper escribe directo en la
+ * base: la evaluación tolera las filas históricas. Combinado con
  * `crearParametros({ margenCierreMinutos: 0 })` la sucursal está siempre
  * tomando pedidos.
  *
