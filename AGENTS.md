@@ -45,6 +45,7 @@ Flujo de una petición:
 - No inventar entidades, relaciones ni reglas que contradigan el modelo aprobado.
 - No implementar todavía las entidades de Propuesta 2 que siguen fuera de alcance (`Repartidor`, rol `REPARTIDOR`). `Resena` **sí** está implementada: reemplaza la "Calificación" de la Propuesta 2 y se limita a producto/combo + estrellas + comentario. `Queja` también está autorizada explícitamente: es el canal de reclamos sobre pedidos entregados. `Notificacion` **también** está autorizada explícitamente: es el centro de notificaciones persistido del CLIENTE y no habilita las entidades restantes de la Propuesta 2.
 - Los snapshots históricos del DER son obligatorios: `Pedido` conserva la dirección (calle, altura, ciudad, codigoPostal, referencia, latitud, longitud); `PedidoItem` conserva `nombreProducto` y `precioUnitario`; `PedidoItemOpcion` conserva `nombre` y `precioAdicional`; `PedidoPromocion` conserva `descuentoAplicado`. Nunca reconstruir histórico desde el catálogo actual.
+  - **Nota de implementación**: `PedidoItemOpcion` figura en el modelo aprobado pero **no está implementada** (la contradicción se resuelve, no se borra). La personalización elegida se guarda como **JSON en `PedidoItem.observacion`** y la nota libre de cocina en **`PedidoItem.nota`**. Ante una futura normalización, la fuente a migrar es el JSON de `PedidoItem.observacion`. Ver `docs/reglas-negocio.md` §10 y `docs/modelo-dominio.md` §5.11.
 
 ## Implementación reutilizable existente
 

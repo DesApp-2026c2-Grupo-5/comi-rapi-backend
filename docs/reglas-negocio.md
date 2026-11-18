@@ -102,6 +102,15 @@ Regla de negocio, no entidad:
 - `PedidoPromocion` conserva `descuentoAplicado`.
 - Un pedido histórico debe mostrar los valores correspondientes al momento de la compra aunque posteriormente cambien productos, precios u opciones.
 
+> **Nota de implementación (contradicción resuelta con JSON).** El punto sobre
+> `PedidoItemOpcion` no coincide con el código actual y **no se borra**: se deja
+> como referencia del modelo aprobado. La contradicción se resolvió **sin crear
+> la entidad `PedidoItemOpcion`**: la personalización elegida (extras, "sin"
+> ingredientes, acompañamientos y condimentos) se persiste como **JSON en
+> `PedidoItem.observacion`**, y la nota libre de cocina en **`PedidoItem.nota`**.
+> Si en el futuro se normaliza en `PedidoItemOpcion`, la fuente a migrar es el
+> JSON de `PedidoItem.observacion`.
+
 ## 11. Promociones
 
 - `Promocion` contempla inicialmente los tipos `DESCUENTO_PORCENTUAL` y `DOS_POR_UNO`.

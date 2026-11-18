@@ -446,6 +446,14 @@ Relaciones:
 
 `nombre` y `precioAdicional` son snapshots históricos, garantizando que cambios posteriores en una opción no modifiquen pedidos históricos.
 
+> **Nota de implementación (contradicción resuelta con JSON).** Esta entidad
+> figura en el modelo aprobado pero **no está implementada**; la tabla se
+> conserva como referencia y **no se borra**. Las selecciones de personalización
+> se guardan como **JSON en `PedidoItem.observacion`** y la nota libre de cocina
+> en **`PedidoItem.nota`**. Ante una futura normalización, el JSON de
+> `PedidoItem.observacion` es la fuente a migrar. Ver `docs/reglas-negocio.md`
+> §10.
+
 ### 5.12 EstadoPedido
 
 | Atributo    | Tipo / Notas |
