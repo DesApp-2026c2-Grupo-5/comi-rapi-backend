@@ -55,6 +55,7 @@ const DEPENDIENTES = [
   'PedidoEstadoHistorials',
   'PedidoItems',
   'PedidoPromociones',
+  'PedidoCupones',
 ];
 
 /**

@@ -10,22 +10,22 @@
 // Se conservan las columnas para no perder la trazabilidad historica de los
 // cupones que no pudieron vincularse a una unica ejecucion, pero pasan a ser
 // opcionales. Los cupones nuevos escriben solo `emisionId`.
+//
+// No se declaran `references`: `Campanas` y `CampanaEjecuciones` nunca se
+// crearon en este repositorio (son tablas legacy). Ademas, en Sequelize 5 con
+// Postgres `changeColumn` no emite `DROP NOT NULL` cuando el atributo tiene
+// `references`, por lo que las columnas quedarian NOT NULL y romperian los
+// cupones nuevos.
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.changeColumn('Cupones', 'campanaId', {
       type: Sequelize.INTEGER,
       allowNull: true,
-      references: { model: 'Campanas', key: 'id' },
-      onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT',
     });
     await queryInterface.changeColumn('Cupones', 'ejecucionId', {
       type: Sequelize.INTEGER,
       allowNull: true,
-      references: { model: 'CampanaEjecuciones', key: 'id' },
-      onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT',
     });
   },
 
@@ -34,16 +34,10 @@ module.exports = {
     await queryInterface.changeColumn('Cupones', 'ejecucionId', {
       type: Sequelize.INTEGER,
       allowNull: false,
-      references: { model: 'CampanaEjecuciones', key: 'id' },
-      onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT',
     });
     await queryInterface.changeColumn('Cupones', 'campanaId', {
       type: Sequelize.INTEGER,
       allowNull: false,
-      references: { model: 'Campanas', key: 'id' },
-      onUpdate: 'CASCADE',
-      onDelete: 'RESTRICT',
     });
   },
 };
