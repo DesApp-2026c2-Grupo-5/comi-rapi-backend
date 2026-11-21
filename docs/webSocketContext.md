@@ -69,8 +69,10 @@ El handshake viaja con la cookie `comirapi.sid` (HttpOnly, store PostgreSQL vía
 Flujo:
 
 1. `io.engine.use(sessionMiddleware)` (`lib/realtime/conexion.js`) corre `express-session` sobre el handshake de Engine.IO, dejando `socket.request.session` disponible.
-2. `io.use(...)` llama a `resolverUsuarioDeSesion(socket.request.session)`.
-3. Sin sesión válida, o con usuario inactivo → `next(new Error('No autorizado'))`. **La conexión se rechaza y no se entra a ninguna room.**
+2. `io.use(...)` llama a `resolverUsuarioDeSesion(socket.request.session)` y guarda el resultado en `socket.data.usuario`.
+3. Sin sesión válida (o con una cookie vencida) la conexión se acepta como **anónima** y sólo recibe los eventos públicos (catálogo, parámetros, sucursales). Las rooms privadas se autorizan **en cada suscripción**: sin usuario, `suscribir_pedido` responde `{ success: false, error: 'No autorizado' }` y el socket no entra a `pedido:{id}`.
+
+Como el handshake fija la sesión de ese momento, el frontend **renegocia la conexión** (`forzarReconexion`, que conserva los listeners) cuando cambia la identidad: al iniciar sesión, al registrarse y al cerrar sesión. Sin eso, un socket abierto como invitado seguía anónimo después del login y las rooms privadas quedaban inaccesibles hasta recargar la página.
 
 `resolverUsuarioDeSesion` se extrajo de `verificarSesion` justamente para que REST y socket compartan la única definición de "quién es esta sesión", en vez de duplicar la consulta a `Usuario`.
 
@@ -85,10 +87,11 @@ Flujo:
 | `pedido:{id}`   | Solo por suscripción explícita **y** autorización verificada en backend                                                               |
 | `usuario:{id}`  | Automática al conectar: cada socket autenticado entra a la room privada de su propio usuario (centro de notificaciones)               |
 
-El contexto del superadmin se lee de la **sesión** durante el handshake (`session.sucursalOperativaId`, elegido vía `POST /api/auth/sucursal-contexto`): con contexto, el superadmin entra también a la room de esa sucursal y recibe en vivo `stock_actualizado` y `pedido_actualizado` de su contexto, igual que el admin del local. Como las rooms se resuelven al conectar, **al cambiar el contexto el frontend reconecta el socket** (`desconectarSocket` + reconexión con `versionSocket` en `SucursalOperativaContext`): el handshake nuevo entra a la room de la sucursal nueva.
+El contexto del superadmin se lee de la **sesión** durante el handshake (`session.sucursalOperativaId`, elegido vía `POST /api/auth/sucursal-contexto`): con contexto, el superadmin entra también a la room de esa sucursal y recibe en vivo `stock_actualizado` y `pedido_actualizado` de su contexto, igual que el admin del local. Como las rooms se resuelven al conectar, **al cambiar el contexto el frontend reconecta el socket** (`forzarReconexion` en `SucursalOperativaContext`, con `versionSocket`): el handshake nuevo entra a la room de la sucursal nueva.
 
-Un cliente **no** puede suscribirse a un pedido ajeno. La autorización se aplica en servidor, en `autorizarPedido` (`lib/realtime/conexion.js`), y aplica la misma regla que ya usa `GET /api/pedidos/:id` (`lib/controllers/pedido_controller.js`):
+Un cliente **no** puede suscribirse a un pedido ajeno ni un socket anónimo a ninguno. La autorización se aplica en servidor, en `autorizarPedido` (`lib/realtime/conexion.js`), y aplica la misma regla que ya usa `GET /api/pedidos/:id` (`lib/controllers/pedido_controller.js`):
 
+- No hay usuario en el handshake (invitado) → `"No autorizado"`
 - El pedido no existe → `"Pedido no encontrado"`
 - No es el dueño, no es admin de la sucursal del pedido y no es SUPERADMINISTRADOR → `"Acceso denegado"`
 - En otro caso → entra a la room
@@ -111,7 +114,7 @@ Payloads mínimos, definidos en `lib/realtime/eventos.js`.
 | `catalogo_actualizado`    | server → cliente | `{ tipo, id, accion }`                   | broadcast a todos los conectados              |
 | `parametros_actualizados` | server → cliente | `{}`                                     | broadcast a todos los conectados              |
 | `stock_actualizado`       | server → cliente | `{ sucursalId, productoIds, insumoIds }` | **solo** `sucursal:{id}`                      |
-| `queja_actualizada`       | server → cliente | `{ quejaId, pedidoId, sucursalId }`      | `admins` y `sucursal:{id}` del pedido         |
+| `queja_actualizada`       | server → cliente | `{ quejaId, pedidoId, sucursalId }`      | `admins`, `sucursal:{id}` y `pedido:{id}`     |
 | `notificacion_creada`     | server → cliente | `{ notificacionId, tipo }`               | **solo** `usuario:{id}` del destinatario      |
 
 No existe `pedido_creado`, y es deliberado (sección 6.1).
@@ -178,20 +181,19 @@ filas (`GET /api/stock/:sucursalId/:productoId` y
 insumo puede mandar sólo `insumoIds`, sin `productoIds`. La lista completa queda
 sólo como resincronización ante una reconexión o un aviso sin detalle.
 
-### 6.6 Límite conocido: sin sesión no hay tiempo real
+### 6.6 Con invitados: eventos públicos sí, privados no
 
-El handshake rechaza anónimos (`conexion.js` → `next(new Error('No autorizado'))`). Las vistas públicas (Inicio, Catálogo, Detalle) solo abren el
-socket con sesión vigente: para un visitante anónimo el catálogo se actualiza
-con la recarga normal de la página.
+El handshake acepta conexiones anónimas para que las vistas públicas (Inicio, Catálogo, Detalle) se actualicen en vivo: `catalogo_actualizado`, `parametros_actualizados`, `sucursal_actualizado` y `sucursal_estado` son broadcast. En cambio, las rooms privadas (`pedido:{id}`, `usuario:{id}`, `sucursal:{id}`, `admins`) requieren sesión: sin ella la suscripción se rechaza y no se recibe nada. Al iniciar sesión el frontend renegocia el handshake (`forzarReconexion`) para que el canal pase de anónimo a autenticado sin recargar la página.
 
-### 6.7 `queja_actualizada`: aviso de reclamos a la sucursal y al superadmin
+### 6.7 `queja_actualizada`: aviso de reclamos a la sucursal, al superadmin y al cliente
 
 Se emite desde `lib/services/quejas.js`, al crear un reclamo, al responderlo (negocio o
 cliente), al cambiarle el estado y al cerrarlo.
 
-- **Destino:** `admins` (SUPERADMINISTRADOR) y `sucursal:{id}` del pedido
-  reclamado. El ADMINISTRADOR solo recibe los reclamos de su local; el cliente
-  no recibe nada (su propio POST ya le devolvió la queja).
+- **Destino:** `admins` (SUPERADMINISTRADOR), `sucursal:{id}` del pedido
+  reclamado y `pedido:{id}`. El ADMINISTRADOR solo recibe los reclamos de su
+  local; el cliente dueño recibe el aviso por la room de su pedido y refresca el
+  hilo del detalle sin recargar la página.
 - **Payload:** `{ quejaId, pedidoId, sucursalId }`, solo identificadores. El
   badge y la bandeja se leen por REST.
 - **Por qué también al actualizar:** el contador del ícono de Reclamos cuenta
@@ -244,19 +246,19 @@ Si PostgreSQL falla, no hay commit y **no se emite nada**. Un cliente nunca reci
 
 Mapa completo de emisiones:
 
-| Controller                | Función               | Emisor(es) post-commit                                                                                                                                             |
-| ------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `pedido_controller`       | `create`              | `stock_actualizado` si el pedido tocó stock (ej. combos); **nunca** `pedido_actualizado`                                                                           |
-| `pedido_controller`       | `cambiarEstado`       | `pedido_actualizado`; `stock_actualizado` por cada sucursal cuyo stock cambió (vencidas y cancelación)                                                             |
-| `pedido_controller`       | `reasignarSucursal`   | `pedido_actualizado`; `stock_actualizado` para la sucursal vieja y la nueva                                                                                        |
-| `producto_controller`     | create/update/destroy | `catalogo_actualizado` (+ `stock_actualizado` por sucursal si cambió un combo)                                                                                     |
-| `categoria_controller`    | create/update/destroy | `catalogo_actualizado`                                                                                                                                             |
-| `promocion_controller`    | create/update/destroy | `catalogo_actualizado`                                                                                                                                             |
-| `promocion_controller`    | asignar/quitar        | `catalogo_actualizado`                                                                                                                                             |
-| `stock_controller`        | create/update/destroy | `stock_actualizado` de esa sucursal                                                                                                                                |
-| `queja_controller`        | create/update         | `queja_actualizada` a `admins` y a la sucursal del pedido (emisión en `lib/services/quejas.js`); `notificacion_creada` al cliente por respuesta o cambio de estado |
-| `notificacion_controller` | leidas/leida          | Ninguno: marcar leída no genera avisos                                                                                                                             |
-| `parametros_controller`   | update                | `parametros_actualizados`                                                                                                                                          |
+| Controller                | Función               | Emisor(es) post-commit                                                                                                                                                              |
+| ------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pedido_controller`       | `create`              | `stock_actualizado` si el pedido tocó stock (ej. combos); **nunca** `pedido_actualizado`                                                                                            |
+| `pedido_controller`       | `cambiarEstado`       | `pedido_actualizado`; `stock_actualizado` por cada sucursal cuyo stock cambió (vencidas y cancelación)                                                                              |
+| `pedido_controller`       | `reasignarSucursal`   | `pedido_actualizado`; `stock_actualizado` para la sucursal vieja y la nueva                                                                                                         |
+| `producto_controller`     | create/update/destroy | `catalogo_actualizado` (+ `stock_actualizado` por sucursal si cambió un combo)                                                                                                      |
+| `categoria_controller`    | create/update/destroy | `catalogo_actualizado`                                                                                                                                                              |
+| `promocion_controller`    | create/update/destroy | `catalogo_actualizado`                                                                                                                                                              |
+| `promocion_controller`    | asignar/quitar        | `catalogo_actualizado`                                                                                                                                                              |
+| `stock_controller`        | create/update/destroy | `stock_actualizado` de esa sucursal                                                                                                                                                 |
+| `queja_controller`        | create/update         | `queja_actualizada` a `admins`, a la sucursal del pedido y a `pedido:{id}` (emisión en `lib/services/quejas.js`); `notificacion_creada` al cliente por respuesta o cambio de estado |
+| `notificacion_controller` | leidas/leida          | Ninguno: marcar leída no genera avisos                                                                                                                                              |
+| `parametros_controller`   | update                | `parametros_actualizados`                                                                                                                                                           |
 
 La transacción de pedido devuelve lo que cambió (`id`, `sucursalId`, `filasStock` / `avisos[]`), y la emisión arma los payloads de `stock_actualizado` a partir de eso, en vez de releer la base. Cambiar la sucursal, las promociones o el catálogo **no** notifican pedidos: son eventos distintos con propósitos distintos.
 
@@ -286,7 +288,7 @@ instancia.on('pedido_actualizado', alCambiarPedido) // llega al admin y al dueñ
 Dos detalles de implementación:
 
 - La dependencia del efecto es un **string de ids ordenados** (`idsPedidos`), no el array `pedidos`. Así el efecto corre solo cuando cambia el conjunto de pedidos —por ejemplo al crear uno nuevo, que hay que suscribir— y no en cada cambio de estado.
-- El cleanup usa `off()` para los tres listeners y **no** desconecta el socket. Desconectar corría en cada re-ejecución del efecto; la desconexión real se dispara en un efecto aparte, cuando `emailSesion` queda vacío (logout).
+- El cleanup usa `off()` para los tres listeners y **no** desconecta el socket. El cierre de sesión tampoco lo destruye: `AuthContext` renegocia el handshake con `forzarReconexion` cuando cambia la identidad, el canal queda como invitado y los listeners registrados sobreviven. Antes de ese cambio, logout/anónimo→login dejaban el socket con la sesión del handshake viejo y las rooms privadas no se podían abrir hasta recargar.
 
 **2. Vistas con listeners propios** — catálogo, listas del panel, `GestionStock`, `PanelSuperadmin`, `Editar*`:
 
@@ -304,9 +306,9 @@ useEffect(() => {
 
 Reglas del patrón:
 
-- **Gate:** solo registran con sesión resuelta (`hydrated` + `isAuthenticated` o `user`). Sin ella el socket está desconectado y los handlers no aportan nada.
+- **Gate:** solo registran con sesión resuelta (`hydrated` + `isAuthenticated` o `user`). Sin ella los handlers privados no aportan nada: el socket sigue conectado como invitado para los eventos públicos (`RealtimeBridge` lo abre siempre).
 - **Sin `alConectar()` inmediato:** el useEffect de montaje original ya hizo la carga inicial; hacerlo al registrar duplicaría el primer fetch. La resincronización en `connect` cubre los cambios perdidos durante una reconexión.
-- **Sin `desconectarSocket()`:** el ciclo del socket es de `PedidoContext` (o `ParametrosContext`). `desconectarSocket` es un cierre duro con `removeAllListeners()`, no un refcount: una vista que lo llame al desmontar mataría los listeners de todos los demás.
+- **Sin `desconectarSocket()`:** el ciclo del socket es de `RealtimeBridge` (conexión) y `AuthContext` (renegociación del handshake al cambiar la identidad). `desconectarSocket` es un cierre duro con `removeAllListeners()`, no un refcount: una vista que lo llame al desmontar mataría los listeners de todos los demás.
 - **`GestionStock` filtra por sucursal:** descarta `stock_actualizado` de otra sucursal.
 - **`ListaProductos` filtra por sucursal** y solo actúa en modo solo-lectura.
 - **`Editar*` filtra por tipo + id** de la entidad abierta, para no resetear el formulario por un cambio ajeno (el `useEffect([producto])` de `FormularioProducto` haría `reset()`).
@@ -314,16 +316,16 @@ Reglas del patrón:
 
 ## 9. Pruebas
 
-| Caso | Qué verifica                                                                                           | Dónde                                       |
-| ---- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------- |
-| 1    | Crear un pedido no emite `pedido_actualizado` (nace `pendiente`)                                       | `lib/realtime/conexion.test.js` — **verde** |
-| 2    | Cliente confirma → admin recibe `pedido_actualizado` con solo `pedidoId`                               | **verde**                                   |
-| 3    | Varios admins conectados reciben sin suscribirse                                                       | **verde**                                   |
-| 4    | Dos clientes con pedidos distintos → solo el dueño recibe                                              | **verde**                                   |
-| 5    | Sin sesión → handshake rechazado                                                                       | **verde**                                   |
-| 6    | Falla la BD → no se emite el evento                                                                    | **verde**                                   |
-| 7    | Reconexión: id nuevo, rooms perdidas, re-suscripción, sin duplicados                                   | **verde** (6 tests)                         |
-| 8    | Reclamos: `queja_actualizada` al crear y al actualizar; aislamiento por sucursal y silencio al cliente | **verde** (4 tests)                         |
+| Caso | Qué verifica                                                                                                        | Dónde                                       |
+| ---- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 1    | Crear un pedido no emite `pedido_actualizado` (nace `pendiente`)                                                    | `lib/realtime/conexion.test.js` — **verde** |
+| 2    | Cliente confirma → admin recibe `pedido_actualizado` con solo `pedidoId`                                            | **verde**                                   |
+| 3    | Varios admins conectados reciben sin suscribirse                                                                    | **verde**                                   |
+| 4    | Dos clientes con pedidos distintos → solo el dueño recibe                                                           | **verde**                                   |
+| 5    | Sin sesión → handshake anónimo aceptado, pero las rooms privadas y `suscribir_pedido` se rechazan                   | `lib/realtime/conexion.test.js` — **verde** |
+| 6    | Falla la BD → no se emite el evento                                                                                 | **verde**                                   |
+| 7    | Reconexión: id nuevo, rooms perdidas, re-suscripción, sin duplicados                                                | **verde** (6 tests)                         |
+| 8    | Reclamos: `queja_actualizada` al crear y al actualizar; aislamiento por sucursal y aviso al dueño por `pedido:{id}` | **verde** (7 tests)                         |
 
 Estado: 53 suites, **860/860 tests en verde** (`npm test`). Los tests de realtime (`lib/realtime/conexion.test.js`) siguen verdes con la ampliación: los emisores nuevos son no-op sin servidor, así que ningún controller test se vuelve flaky.
 
