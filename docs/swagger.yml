@@ -1078,8 +1078,6 @@ components:
             $ref: '#/components/schemas/QuejaMensaje'
         respuestasCliente:
           type: integer
-        maxRespuestasCliente:
-          type: integer
         pedido:
           $ref: '#/components/schemas/QuejaPedidoResumen'
 
@@ -4089,8 +4087,9 @@ paths:
         - Quejas
       summary: Respuesta del cliente en el hilo (CLIENTE dueño)
       description: >-
-        Máximo 5 respuestas del cliente. Solo se admite mientras la queja esté
-        PENDIENTE o EN_REVISION; en RESUELTA, RECHAZADA o CERRADA responde 409.
+        Sin tope de respuestas del cliente. Solo se admite mientras la queja
+        esté PENDIENTE o EN_REVISION; en RESUELTA, RECHAZADA o CERRADA responde
+        409.
       operationId: quejasResponder
       security:
         - cookieAuth: []
