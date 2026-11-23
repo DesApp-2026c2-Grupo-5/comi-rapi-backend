@@ -82,16 +82,23 @@ const CATALOGO = {
     condimento: ['Sobre de Ketchup', 'Sobre de Mayonesa'],
   },
   Bebidas: {
-    extra: [],
+    extra: [
+      { nombre: 'Crema batida', precio: 2000 },
+      { nombre: 'Shot de espresso', precio: 2500 },
+    ],
     personalizar: ['Hielo', 'Azúcar', 'Limón'],
     acompanar: [],
-    condimento: [],
+    condimento: ['Sobre de Azúcar', 'Sobre de Sal'],
   },
   Postres: {
-    extra: [],
+    extra: [
+      { nombre: 'Crema batida', precio: 2000 },
+      { nombre: 'Salsa de caramelo', precio: 1500 },
+      { nombre: 'Frutos rojos', precio: 2500 },
+    ],
     personalizar: [],
     acompanar: [],
-    condimento: [],
+    condimento: ['Sobre de Canela', 'Sobre de Azúcar'],
   },
 };
 
