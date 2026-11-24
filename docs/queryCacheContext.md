@@ -390,7 +390,7 @@ const logout = async () => {
 
 ### 12.1 Tests relevantes
 
-- `lib/realtime/conexion.test.js` — 29 tests: handshake anónimo, broadcast, rooms, reconexión
+- `lib/realtime/conexion.test.js` — 38 tests: handshake anónimo, broadcast, rooms, reconexión
 - `lib/controllers/*_controller.test.js` — emiten `catalogo_actualizado` tras create/update/destroy
 - Frontend: build + ESLint + tests de hooks (si existen)
 
