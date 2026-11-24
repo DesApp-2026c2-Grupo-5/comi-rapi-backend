@@ -1,0 +1,948 @@
+﻿grupo,clienteId,clienteNombre,clienteEmail,pedidoId,pedidoFechaHora,pedidoEstado,sucursal,origen,pedidoTotal,itemProductoId,itemNombreProducto,itemCategoria,itemPrecioUnitario,itemCantidad,itemSubtotal
+cupones-prueba,1,Cliente,cliente@test.com,1,2026-11-22T01:32:48.253Z,entregado,Sucursal Oeste,SEED-EJEMPLO,26500,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+cupones-prueba,1,Cliente,cliente@test.com,1,2026-11-22T01:32:48.253Z,entregado,Sucursal Oeste,SEED-EJEMPLO,26500,10,Papas Fritas Grandes,Papas,6900,1,6900
+cupones-prueba,1,Cliente,cliente@test.com,2,2026-11-23T20:32:48.253Z,entregado,Sucursal Palermo.,SEED-EJEMPLO,17400,4,Pizza Muzzarella,Pizzas,16900,1,16900
+cupones-prueba,1,Cliente,cliente@test.com,4,2026-11-24T00:32:48.253Z,entregado,Sucursal Palermo.,SEED-EJEMPLO,30700,4,Pizza Muzzarella,Pizzas,16900,1,16900
+cupones-prueba,1,Cliente,cliente@test.com,4,2026-11-24T00:32:48.253Z,entregado,Sucursal Palermo.,SEED-EJEMPLO,30700,10,Papas Fritas Grandes,Papas,6900,2,13800
+cupones-prueba,1,Cliente,cliente@test.com,3,2026-11-24T01:02:48.253Z,cancelado,Sucursal Oeste,SEED-EJEMPLO,21700,9,Combo Doble,Combos,21200,1,21200
+cupones-prueba,1,Cliente,cliente@test.com,224,2026-11-24T20:06:33.351Z,entregado,Sucursal Oeste,,23800,4,Pizza Muzzarella,Pizzas,16900,1,16900
+cupones-prueba,1,Cliente,cliente@test.com,224,2026-11-24T20:06:33.351Z,entregado,Sucursal Oeste,,23800,10,Papas Fritas Grandes,Papas,6900,2,13800
+cupones-prueba,1,Cliente,cliente@test.com,225,2026-11-24T20:07:24.252Z,cancelado,Sucursal Palermo.,,23800,4,Pizza Muzzarella,Pizzas,16900,1,16900
+cupones-prueba,1,Cliente,cliente@test.com,225,2026-11-24T20:07:24.252Z,cancelado,Sucursal Palermo.,,23800,10,Papas Fritas Grandes,Papas,6900,2,13800
+cupones-prueba,1,Cliente,cliente@test.com,226,2026-11-24T20:19:38.450Z,entregado,Sucursal Oeste,,36800,16,Combo Clásico,Combos,18400,2,36800
+cupones-prueba,1,Cliente,cliente@test.com,227,2026-11-24T20:27:40.604Z,entregado,Sucursal Oeste,,18400,20,Pizza Cuatro Quesos,Pizzas,20400,1,20400
+cupones-prueba,1,Cliente,cliente@test.com,228,2026-11-24T20:32:15.895Z,cancelado,Sucursal Oeste,,41502,24,Caramel Frappuccino.,Bebidas,34001,1,34001
+cupones-prueba,1,Cliente,cliente@test.com,228,2026-11-24T20:32:15.895Z,cancelado,Sucursal Oeste,,41502,24,Caramel Frappuccino.,Bebidas,7501,1,7501
+cupones-prueba,1,Cliente,cliente@test.com,229,2026-11-24T20:32:43.176Z,cancelado,Sucursal Oeste,,5390,14,Cheesecake,Postres,7200,1,7200
+cupones-prueba,1,Cliente,cliente@test.com,230,2026-11-24T20:33:27.233Z,cancelado,Sucursal Oeste,,5390,14,Cheesecake,Postres,7200,1,7200
+cupones-prueba,1,Cliente,cliente@test.com,231,2026-11-24T20:34:14.821Z,cancelado,Sucursal Oeste,,5390,14,Cheesecake,Postres,7200,1,7200
+demo,18,Alger,alger@demo.com,60,2026-11-17T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,99900,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,18,Alger,alger@demo.com,60,2026-11-17T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,99900,8,Limonada Natural,Bebidas,4200,2,8400
+demo,18,Alger,alger@demo.com,60,2026-11-17T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,99900,9,Combo Doble,Combos,21200,3,63600
+demo,18,Alger,alger@demo.com,60,2026-11-17T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,99900,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,18,Alger,alger@demo.com,60,2026-11-17T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,99900,11,Papas Cheddar,Papas,8700,2,17400
+demo,18,Alger,alger@demo.com,59,2026-11-18T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,120400,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,18,Alger,alger@demo.com,59,2026-11-18T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,120400,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,18,Alger,alger@demo.com,59,2026-11-18T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,120400,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,18,Alger,alger@demo.com,59,2026-11-18T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,120400,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,18,Alger,alger@demo.com,59,2026-11-18T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,120400,8,Limonada Natural,Bebidas,4200,1,4200
+demo,18,Alger,alger@demo.com,58,2026-11-19T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,159200,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,18,Alger,alger@demo.com,58,2026-11-19T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,159200,2,Hamburguesa Doble,Hamburguesas,12900,3,38700
+demo,18,Alger,alger@demo.com,58,2026-11-19T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,159200,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,18,Alger,alger@demo.com,58,2026-11-19T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,159200,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,18,Alger,alger@demo.com,58,2026-11-19T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,159200,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,18,Alger,alger@demo.com,57,2026-11-20T23:19:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,155200,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,18,Alger,alger@demo.com,57,2026-11-20T23:19:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,155200,16,Combo Clásico,Combos,18400,2,36800
+demo,18,Alger,alger@demo.com,57,2026-11-20T23:19:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,155200,17,Combo Pizza,Combos,24800,3,74400
+demo,18,Alger,alger@demo.com,57,2026-11-20T23:19:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,155200,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,18,Alger,alger@demo.com,57,2026-11-20T23:19:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,155200,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,18,Alger,alger@demo.com,214,2026-11-21T23:25:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,7200,25,Pumpkin Spice Latte,Bebidas,7200,1,7200
+demo,47,Altelicia,altelicia@demo.com,212,2026-11-14T23:27:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,7200,25,Pumpkin Spice Latte,Bebidas,7200,1,7200
+demo,47,Altelicia,altelicia@demo.com,176,2026-11-18T22:29:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,134600,16,Combo Clásico,Combos,18400,1,18400
+demo,47,Altelicia,altelicia@demo.com,176,2026-11-18T22:29:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,134600,17,Combo Pizza,Combos,24800,2,49600
+demo,47,Altelicia,altelicia@demo.com,176,2026-11-18T22:29:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,134600,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,47,Altelicia,altelicia@demo.com,176,2026-11-18T22:29:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,134600,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,47,Altelicia,altelicia@demo.com,176,2026-11-18T22:29:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,134600,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,47,Altelicia,altelicia@demo.com,175,2026-11-19T22:36:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,123700,13,Lava Cake,Postres,6900,3,20700
+demo,47,Altelicia,altelicia@demo.com,175,2026-11-19T22:36:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,123700,14,Cheesecake,Postres,7200,1,7200
+demo,47,Altelicia,altelicia@demo.com,175,2026-11-19T22:36:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,123700,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,47,Altelicia,altelicia@demo.com,175,2026-11-19T22:36:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,123700,16,Combo Clásico,Combos,18400,3,55200
+demo,47,Altelicia,altelicia@demo.com,175,2026-11-19T22:36:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,123700,17,Combo Pizza,Combos,24800,1,24800
+demo,47,Altelicia,altelicia@demo.com,174,2026-11-20T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,84200,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,47,Altelicia,altelicia@demo.com,174,2026-11-20T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,84200,11,Papas Cheddar,Papas,8700,3,26100
+demo,47,Altelicia,altelicia@demo.com,174,2026-11-20T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,84200,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,47,Altelicia,altelicia@demo.com,174,2026-11-20T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,84200,13,Lava Cake,Postres,6900,2,13800
+demo,47,Altelicia,altelicia@demo.com,174,2026-11-20T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,84200,14,Cheesecake,Postres,7200,3,21600
+demo,47,Altelicia,altelicia@demo.com,173,2026-11-21T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,99900,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,47,Altelicia,altelicia@demo.com,173,2026-11-21T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,99900,8,Limonada Natural,Bebidas,4200,2,8400
+demo,47,Altelicia,altelicia@demo.com,173,2026-11-21T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,99900,9,Combo Doble,Combos,21200,3,63600
+demo,47,Altelicia,altelicia@demo.com,173,2026-11-21T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,99900,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,47,Altelicia,altelicia@demo.com,173,2026-11-21T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,99900,11,Papas Cheddar,Papas,8700,2,17400
+demo,9,Athenea,athenea@demo.com,24,2026-11-16T23:07:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,113500,13,Lava Cake,Postres,6900,1,6900
+demo,9,Athenea,athenea@demo.com,24,2026-11-16T23:07:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,113500,14,Cheesecake,Postres,7200,2,14400
+demo,9,Athenea,athenea@demo.com,24,2026-11-16T23:07:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,113500,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,9,Athenea,athenea@demo.com,24,2026-11-16T23:07:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,113500,16,Combo Clásico,Combos,18400,1,18400
+demo,9,Athenea,athenea@demo.com,24,2026-11-16T23:07:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,113500,17,Combo Pizza,Combos,24800,2,49600
+demo,9,Athenea,athenea@demo.com,23,2026-11-17T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,74100,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,9,Athenea,athenea@demo.com,23,2026-11-17T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,74100,11,Papas Cheddar,Papas,8700,1,8700
+demo,9,Athenea,athenea@demo.com,23,2026-11-17T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,74100,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,9,Athenea,athenea@demo.com,23,2026-11-17T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,74100,13,Lava Cake,Postres,6900,3,20700
+demo,9,Athenea,athenea@demo.com,23,2026-11-17T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,74100,14,Cheesecake,Postres,7200,1,7200
+demo,9,Athenea,athenea@demo.com,22,2026-11-18T23:21:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,81400,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,9,Athenea,athenea@demo.com,22,2026-11-18T23:21:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,81400,8,Limonada Natural,Bebidas,4200,3,12600
+demo,9,Athenea,athenea@demo.com,22,2026-11-18T23:21:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,81400,9,Combo Doble,Combos,21200,1,21200
+demo,9,Athenea,athenea@demo.com,22,2026-11-18T23:21:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,81400,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,9,Athenea,athenea@demo.com,22,2026-11-18T23:21:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,81400,11,Papas Cheddar,Papas,8700,3,26100
+demo,9,Athenea,athenea@demo.com,21,2026-11-19T23:28:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,119400,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,9,Athenea,athenea@demo.com,21,2026-11-19T23:28:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,119400,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,9,Athenea,athenea@demo.com,21,2026-11-19T23:28:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,119400,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,9,Athenea,athenea@demo.com,21,2026-11-19T23:28:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,119400,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,9,Athenea,athenea@demo.com,21,2026-11-19T23:28:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,119400,8,Limonada Natural,Bebidas,4200,2,8400
+demo,9,Athenea,athenea@demo.com,215,2026-11-20T23:24:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,6900,26,The Pink Drink,Bebidas,6900,1,6900
+demo,15,Audrey,audrey@demo.com,48,2026-11-20T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,83800,9,Combo Doble,Combos,21200,1,21200
+demo,15,Audrey,audrey@demo.com,48,2026-11-20T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,83800,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,15,Audrey,audrey@demo.com,48,2026-11-20T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,83800,11,Papas Cheddar,Papas,8700,3,26100
+demo,15,Audrey,audrey@demo.com,48,2026-11-20T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,83800,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,15,Audrey,audrey@demo.com,48,2026-11-20T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,83800,13,Lava Cake,Postres,6900,2,13800
+demo,15,Audrey,audrey@demo.com,188,2026-11-20T23:51:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,27600,20,Pizza Cuatro Quesos,Pizzas,20400,1,20400
+demo,15,Audrey,audrey@demo.com,188,2026-11-20T23:51:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,27600,23,Tarta Rogel,Postres,7200,1,7200
+demo,15,Audrey,audrey@demo.com,47,2026-11-21T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,136200,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,15,Audrey,audrey@demo.com,47,2026-11-21T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,136200,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,15,Audrey,audrey@demo.com,47,2026-11-21T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,136200,8,Limonada Natural,Bebidas,4200,2,8400
+demo,15,Audrey,audrey@demo.com,47,2026-11-21T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,136200,9,Combo Doble,Combos,21200,3,63600
+demo,15,Audrey,audrey@demo.com,47,2026-11-21T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,136200,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,15,Audrey,audrey@demo.com,46,2026-11-22T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,140000,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,15,Audrey,audrey@demo.com,46,2026-11-22T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,140000,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,15,Audrey,audrey@demo.com,46,2026-11-22T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,140000,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,15,Audrey,audrey@demo.com,46,2026-11-22T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,140000,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,15,Audrey,audrey@demo.com,46,2026-11-22T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,140000,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,15,Audrey,audrey@demo.com,45,2026-11-23T23:22:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,128800,17,Combo Pizza,Combos,24800,1,24800
+demo,15,Audrey,audrey@demo.com,45,2026-11-23T23:22:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,128800,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,15,Audrey,audrey@demo.com,45,2026-11-23T23:22:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,128800,2,Hamburguesa Doble,Hamburguesas,12900,3,38700
+demo,15,Audrey,audrey@demo.com,45,2026-11-23T23:22:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,128800,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,15,Audrey,audrey@demo.com,45,2026-11-23T23:22:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,128800,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,44,Azier,azier@demo.com,161,2026-11-14T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,83800,9,Combo Doble,Combos,21200,1,21200
+demo,44,Azier,azier@demo.com,161,2026-11-14T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,83800,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,44,Azier,azier@demo.com,161,2026-11-14T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,83800,11,Papas Cheddar,Papas,8700,3,26100
+demo,44,Azier,azier@demo.com,161,2026-11-14T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,83800,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,44,Azier,azier@demo.com,161,2026-11-14T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,83800,13,Lava Cake,Postres,6900,2,13800
+demo,44,Azier,azier@demo.com,164,2026-11-21T22:32:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,125000,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,44,Azier,azier@demo.com,164,2026-11-21T22:32:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,125000,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,44,Azier,azier@demo.com,164,2026-11-21T22:32:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,125000,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,44,Azier,azier@demo.com,164,2026-11-21T22:32:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,125000,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,44,Azier,azier@demo.com,164,2026-11-21T22:32:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,125000,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,44,Azier,azier@demo.com,205,2026-11-21T23:34:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,14100,23,Tarta Rogel,Postres,7200,1,7200
+demo,44,Azier,azier@demo.com,205,2026-11-21T23:34:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,14100,26,The Pink Drink,Bebidas,6900,1,6900
+demo,44,Azier,azier@demo.com,163,2026-11-22T22:39:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134500,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,44,Azier,azier@demo.com,163,2026-11-22T22:39:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134500,16,Combo Clásico,Combos,18400,1,18400
+demo,44,Azier,azier@demo.com,163,2026-11-22T22:39:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134500,17,Combo Pizza,Combos,24800,2,49600
+demo,44,Azier,azier@demo.com,163,2026-11-22T22:39:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134500,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,44,Azier,azier@demo.com,163,2026-11-22T22:39:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134500,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,44,Azier,azier@demo.com,162,2026-11-23T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,115700,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,44,Azier,azier@demo.com,162,2026-11-23T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,115700,13,Lava Cake,Postres,6900,3,20700
+demo,44,Azier,azier@demo.com,162,2026-11-23T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,115700,14,Cheesecake,Postres,7200,1,7200
+demo,44,Azier,azier@demo.com,162,2026-11-23T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,115700,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,44,Azier,azier@demo.com,162,2026-11-23T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,115700,16,Combo Clásico,Combos,18400,3,55200
+demo,7,Cassie,cassie@demo.com,193,2026-11-15T23:46:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,93300,20,Pizza Cuatro Quesos,Pizzas,20400,1,20400
+demo,7,Cassie,cassie@demo.com,193,2026-11-15T23:46:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,93300,27,Combo Party,Combos,72900,1,72900
+demo,7,Cassie,cassie@demo.com,16,2026-11-18T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,126500,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,7,Cassie,cassie@demo.com,16,2026-11-18T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,126500,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,7,Cassie,cassie@demo.com,16,2026-11-18T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,126500,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,7,Cassie,cassie@demo.com,16,2026-11-18T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,126500,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,7,Cassie,cassie@demo.com,16,2026-11-18T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,126500,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,7,Cassie,cassie@demo.com,15,2026-11-19T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,162600,17,Combo Pizza,Combos,24800,3,74400
+demo,7,Cassie,cassie@demo.com,15,2026-11-19T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,162600,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,7,Cassie,cassie@demo.com,15,2026-11-19T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,162600,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,7,Cassie,cassie@demo.com,15,2026-11-19T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,162600,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,7,Cassie,cassie@demo.com,15,2026-11-19T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,162600,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,7,Cassie,cassie@demo.com,14,2026-11-20T23:23:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,136000,14,Cheesecake,Postres,7200,2,14400
+demo,7,Cassie,cassie@demo.com,14,2026-11-20T23:23:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,136000,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,7,Cassie,cassie@demo.com,14,2026-11-20T23:23:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,136000,16,Combo Clásico,Combos,18400,1,18400
+demo,7,Cassie,cassie@demo.com,14,2026-11-20T23:23:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,136000,17,Combo Pizza,Combos,24800,2,49600
+demo,7,Cassie,cassie@demo.com,14,2026-11-20T23:23:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,136000,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,7,Cassie,cassie@demo.com,13,2026-11-21T23:30:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,69200,11,Papas Cheddar,Papas,8700,1,8700
+demo,7,Cassie,cassie@demo.com,13,2026-11-21T23:30:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,69200,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,7,Cassie,cassie@demo.com,13,2026-11-21T23:30:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,69200,13,Lava Cake,Postres,6900,3,20700
+demo,7,Cassie,cassie@demo.com,13,2026-11-21T23:30:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,69200,14,Cheesecake,Postres,7200,1,7200
+demo,7,Cassie,cassie@demo.com,13,2026-11-21T23:30:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,69200,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,38,Cynthia,cynthia@demo.com,140,2026-11-17T22:38:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,111600,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,38,Cynthia,cynthia@demo.com,140,2026-11-17T22:38:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,111600,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,38,Cynthia,cynthia@demo.com,140,2026-11-17T22:38:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,111600,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,38,Cynthia,cynthia@demo.com,140,2026-11-17T22:38:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,111600,8,Limonada Natural,Bebidas,4200,1,4200
+demo,38,Cynthia,cynthia@demo.com,140,2026-11-17T22:38:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,111600,9,Combo Doble,Combos,21200,2,42400
+demo,38,Cynthia,cynthia@demo.com,139,2026-11-18T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,158000,2,Hamburguesa Doble,Hamburguesas,12900,3,38700
+demo,38,Cynthia,cynthia@demo.com,139,2026-11-18T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,158000,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,38,Cynthia,cynthia@demo.com,139,2026-11-18T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,158000,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,38,Cynthia,cynthia@demo.com,139,2026-11-18T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,158000,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,38,Cynthia,cynthia@demo.com,139,2026-11-18T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,158000,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,38,Cynthia,cynthia@demo.com,138,2026-11-19T22:52:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,182500,16,Combo Clásico,Combos,18400,2,36800
+demo,38,Cynthia,cynthia@demo.com,138,2026-11-19T22:52:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,182500,17,Combo Pizza,Combos,24800,3,74400
+demo,38,Cynthia,cynthia@demo.com,138,2026-11-19T22:52:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,182500,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,38,Cynthia,cynthia@demo.com,138,2026-11-19T22:52:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,182500,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,38,Cynthia,cynthia@demo.com,138,2026-11-19T22:52:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,182500,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,38,Cynthia,cynthia@demo.com,137,2026-11-20T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,113500,13,Lava Cake,Postres,6900,1,6900
+demo,38,Cynthia,cynthia@demo.com,137,2026-11-20T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,113500,14,Cheesecake,Postres,7200,2,14400
+demo,38,Cynthia,cynthia@demo.com,137,2026-11-20T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,113500,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,38,Cynthia,cynthia@demo.com,137,2026-11-20T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,113500,16,Combo Clásico,Combos,18400,1,18400
+demo,38,Cynthia,cynthia@demo.com,137,2026-11-20T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,113500,17,Combo Pizza,Combos,24800,2,49600
+demo,38,Cynthia,cynthia@demo.com,186,2026-11-22T23:53:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,27300,19,Pizza Pepperoni & Miel Picante,Pizzas,19400,1,19400
+demo,38,Cynthia,cynthia@demo.com,186,2026-11-22T23:53:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,27300,22,New York Cheesecake con Frutos Rojos,Postres,7900,1,7900
+demo,27,Elaina,elaina@demo.com,96,2026-11-18T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,125500,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,27,Elaina,elaina@demo.com,96,2026-11-18T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,125500,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,27,Elaina,elaina@demo.com,96,2026-11-18T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,125500,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,27,Elaina,elaina@demo.com,96,2026-11-18T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,125500,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,27,Elaina,elaina@demo.com,96,2026-11-18T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,125500,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,27,Elaina,elaina@demo.com,95,2026-11-19T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,134000,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,27,Elaina,elaina@demo.com,95,2026-11-19T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,134000,16,Combo Clásico,Combos,18400,1,18400
+demo,27,Elaina,elaina@demo.com,95,2026-11-19T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,134000,17,Combo Pizza,Combos,24800,2,49600
+demo,27,Elaina,elaina@demo.com,95,2026-11-19T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,134000,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,27,Elaina,elaina@demo.com,95,2026-11-19T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,134000,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,27,Elaina,elaina@demo.com,94,2026-11-20T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,116200,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,27,Elaina,elaina@demo.com,94,2026-11-20T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,116200,13,Lava Cake,Postres,6900,3,20700
+demo,27,Elaina,elaina@demo.com,94,2026-11-20T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,116200,14,Cheesecake,Postres,7200,1,7200
+demo,27,Elaina,elaina@demo.com,94,2026-11-20T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,116200,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,27,Elaina,elaina@demo.com,94,2026-11-20T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,116200,16,Combo Clásico,Combos,18400,3,55200
+demo,27,Elaina,elaina@demo.com,93,2026-11-21T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,83300,9,Combo Doble,Combos,21200,1,21200
+demo,27,Elaina,elaina@demo.com,93,2026-11-21T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,83300,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,27,Elaina,elaina@demo.com,93,2026-11-21T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,83300,11,Papas Cheddar,Papas,8700,3,26100
+demo,27,Elaina,elaina@demo.com,93,2026-11-21T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,83300,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,27,Elaina,elaina@demo.com,93,2026-11-21T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,83300,13,Lava Cake,Postres,6900,2,13800
+demo,27,Elaina,elaina@demo.com,196,2026-11-21T23:43:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,15900,21,Volcan de Chocolate,Postres,8400,1,8400
+demo,27,Elaina,elaina@demo.com,196,2026-11-21T23:43:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,15900,24,Caramel Frappuccino.,Bebidas,7500,1,7500
+demo,26,Elencia,elencia@demo.com,92,2026-11-19T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,113000,13,Lava Cake,Postres,6900,1,6900
+demo,26,Elencia,elencia@demo.com,92,2026-11-19T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,113000,14,Cheesecake,Postres,7200,2,14400
+demo,26,Elencia,elencia@demo.com,92,2026-11-19T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,113000,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,26,Elencia,elencia@demo.com,92,2026-11-19T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,113000,16,Combo Clásico,Combos,18400,1,18400
+demo,26,Elencia,elencia@demo.com,92,2026-11-19T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,113000,17,Combo Pizza,Combos,24800,2,49600
+demo,26,Elencia,elencia@demo.com,180,2026-11-19T23:59:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,19600,18,Hamburguesa Royale con Queso & Pepinillos,Hamburguesas,11200,1,11200
+demo,26,Elencia,elencia@demo.com,180,2026-11-19T23:59:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,19600,21,Volcan de Chocolate,Postres,8400,1,8400
+demo,26,Elencia,elencia@demo.com,91,2026-11-20T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,74600,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,26,Elencia,elencia@demo.com,91,2026-11-20T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,74600,11,Papas Cheddar,Papas,8700,1,8700
+demo,26,Elencia,elencia@demo.com,91,2026-11-20T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,74600,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,26,Elencia,elencia@demo.com,91,2026-11-20T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,74600,13,Lava Cake,Postres,6900,3,20700
+demo,26,Elencia,elencia@demo.com,91,2026-11-20T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,74600,14,Cheesecake,Postres,7200,1,7200
+demo,26,Elencia,elencia@demo.com,90,2026-11-21T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,80900,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,26,Elencia,elencia@demo.com,90,2026-11-21T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,80900,8,Limonada Natural,Bebidas,4200,3,12600
+demo,26,Elencia,elencia@demo.com,90,2026-11-21T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,80900,9,Combo Doble,Combos,21200,1,21200
+demo,26,Elencia,elencia@demo.com,90,2026-11-21T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,80900,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,26,Elencia,elencia@demo.com,90,2026-11-21T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,80900,11,Papas Cheddar,Papas,8700,3,26100
+demo,26,Elencia,elencia@demo.com,89,2026-11-22T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,119900,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,26,Elencia,elencia@demo.com,89,2026-11-22T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,119900,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,26,Elencia,elencia@demo.com,89,2026-11-22T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,119900,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,26,Elencia,elencia@demo.com,89,2026-11-22T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,119900,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,26,Elencia,elencia@demo.com,89,2026-11-22T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,119900,8,Limonada Natural,Bebidas,4200,2,8400
+demo,35,Elis,elis@demo.com,207,2026-11-19T23:32:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,80400,24,Caramel Frappuccino.,Bebidas,7500,1,7500
+demo,35,Elis,elis@demo.com,207,2026-11-19T23:32:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,80400,27,Combo Party,Combos,72900,1,72900
+demo,35,Elis,elis@demo.com,128,2026-11-20T22:41:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,100400,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,35,Elis,elis@demo.com,128,2026-11-20T22:41:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,100400,8,Limonada Natural,Bebidas,4200,2,8400
+demo,35,Elis,elis@demo.com,128,2026-11-20T22:41:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,100400,9,Combo Doble,Combos,21200,3,63600
+demo,35,Elis,elis@demo.com,128,2026-11-20T22:41:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,100400,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,35,Elis,elis@demo.com,128,2026-11-20T22:41:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,100400,11,Papas Cheddar,Papas,8700,2,17400
+demo,35,Elis,elis@demo.com,127,2026-11-21T22:48:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,119900,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,35,Elis,elis@demo.com,127,2026-11-21T22:48:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,119900,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,35,Elis,elis@demo.com,127,2026-11-21T22:48:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,119900,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,35,Elis,elis@demo.com,127,2026-11-21T22:48:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,119900,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,35,Elis,elis@demo.com,127,2026-11-21T22:48:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,119900,8,Limonada Natural,Bebidas,4200,1,4200
+demo,35,Elis,elis@demo.com,126,2026-11-22T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,159700,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,35,Elis,elis@demo.com,126,2026-11-22T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,159700,2,Hamburguesa Doble,Hamburguesas,12900,3,38700
+demo,35,Elis,elis@demo.com,126,2026-11-22T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,159700,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,35,Elis,elis@demo.com,126,2026-11-22T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,159700,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,35,Elis,elis@demo.com,126,2026-11-22T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,159700,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,35,Elis,elis@demo.com,125,2026-11-23T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154700,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,35,Elis,elis@demo.com,125,2026-11-23T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154700,16,Combo Clásico,Combos,18400,2,36800
+demo,35,Elis,elis@demo.com,125,2026-11-23T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154700,17,Combo Pizza,Combos,24800,3,74400
+demo,35,Elis,elis@demo.com,125,2026-11-23T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154700,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,35,Elis,elis@demo.com,125,2026-11-23T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154700,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,34,Elizabeth,elizabeth@demo.com,121,2026-11-14T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,71300,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,34,Elizabeth,elizabeth@demo.com,121,2026-11-14T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,71300,11,Papas Cheddar,Papas,8700,2,17400
+demo,34,Elizabeth,elizabeth@demo.com,121,2026-11-14T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,71300,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,34,Elizabeth,elizabeth@demo.com,121,2026-11-14T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,71300,13,Lava Cake,Postres,6900,1,6900
+demo,34,Elizabeth,elizabeth@demo.com,121,2026-11-14T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,71300,14,Cheesecake,Postres,7200,2,14400
+demo,34,Elizabeth,elizabeth@demo.com,197,2026-11-20T23:42:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,8400,21,Volcan de Chocolate,Postres,8400,1,8400
+demo,34,Elizabeth,elizabeth@demo.com,124,2026-11-21T22:42:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,141600,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,34,Elizabeth,elizabeth@demo.com,124,2026-11-21T22:42:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,141600,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,34,Elizabeth,elizabeth@demo.com,124,2026-11-21T22:42:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,141600,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,34,Elizabeth,elizabeth@demo.com,124,2026-11-21T22:42:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,141600,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,34,Elizabeth,elizabeth@demo.com,124,2026-11-21T22:42:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,141600,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,34,Elizabeth,elizabeth@demo.com,123,2026-11-22T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,150700,16,Combo Clásico,Combos,18400,3,55200
+demo,34,Elizabeth,elizabeth@demo.com,123,2026-11-22T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,150700,17,Combo Pizza,Combos,24800,1,24800
+demo,34,Elizabeth,elizabeth@demo.com,123,2026-11-22T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,150700,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,34,Elizabeth,elizabeth@demo.com,123,2026-11-22T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,150700,2,Hamburguesa Doble,Hamburguesas,12900,3,38700
+demo,34,Elizabeth,elizabeth@demo.com,123,2026-11-22T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,150700,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,34,Elizabeth,elizabeth@demo.com,122,2026-11-23T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154500,13,Lava Cake,Postres,6900,2,13800
+demo,34,Elizabeth,elizabeth@demo.com,122,2026-11-23T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154500,14,Cheesecake,Postres,7200,3,21600
+demo,34,Elizabeth,elizabeth@demo.com,122,2026-11-23T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154500,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,34,Elizabeth,elizabeth@demo.com,122,2026-11-23T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154500,16,Combo Clásico,Combos,18400,2,36800
+demo,34,Elizabeth,elizabeth@demo.com,122,2026-11-23T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154500,17,Combo Pizza,Combos,24800,3,74400
+demo,45,Ellen,ellen@demo.com,168,2026-11-20T22:31:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,73200,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,45,Ellen,ellen@demo.com,168,2026-11-20T22:31:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,73200,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,45,Ellen,ellen@demo.com,168,2026-11-20T22:31:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,73200,8,Limonada Natural,Bebidas,4200,3,12600
+demo,45,Ellen,ellen@demo.com,168,2026-11-20T22:31:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,73200,9,Combo Doble,Combos,21200,1,21200
+demo,45,Ellen,ellen@demo.com,168,2026-11-20T22:31:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,73200,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,45,Ellen,ellen@demo.com,167,2026-11-21T22:38:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,146700,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,45,Ellen,ellen@demo.com,167,2026-11-21T22:38:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,146700,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,45,Ellen,ellen@demo.com,167,2026-11-21T22:38:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,146700,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,45,Ellen,ellen@demo.com,167,2026-11-21T22:38:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,146700,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,45,Ellen,ellen@demo.com,167,2026-11-21T22:38:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,146700,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,45,Ellen,ellen@demo.com,187,2026-11-21T23:52:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,26300,19,Pizza Pepperoni & Miel Picante,Pizzas,19400,1,19400
+demo,45,Ellen,ellen@demo.com,187,2026-11-21T23:52:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,26300,26,The Pink Drink,Bebidas,6900,1,6900
+demo,45,Ellen,ellen@demo.com,166,2026-11-22T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,166900,17,Combo Pizza,Combos,24800,2,49600
+demo,45,Ellen,ellen@demo.com,166,2026-11-22T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,166900,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,45,Ellen,ellen@demo.com,166,2026-11-22T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,166900,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,45,Ellen,ellen@demo.com,166,2026-11-22T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,166900,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,45,Ellen,ellen@demo.com,166,2026-11-22T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,166900,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,45,Ellen,ellen@demo.com,165,2026-11-23T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,122600,14,Cheesecake,Postres,7200,1,7200
+demo,45,Ellen,ellen@demo.com,165,2026-11-23T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,122600,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,45,Ellen,ellen@demo.com,165,2026-11-23T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,122600,16,Combo Clásico,Combos,18400,3,55200
+demo,45,Ellen,ellen@demo.com,165,2026-11-23T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,122600,17,Combo Pizza,Combos,24800,1,24800
+demo,45,Ellen,ellen@demo.com,165,2026-11-23T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,122600,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,41,Elodie,elodie@demo.com,152,2026-11-14T22:35:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,126500,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,41,Elodie,elodie@demo.com,152,2026-11-14T22:35:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,126500,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,41,Elodie,elodie@demo.com,152,2026-11-14T22:35:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,126500,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,41,Elodie,elodie@demo.com,152,2026-11-14T22:35:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,126500,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,41,Elodie,elodie@demo.com,152,2026-11-14T22:35:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,126500,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,41,Elodie,elodie@demo.com,151,2026-11-15T22:42:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,162600,17,Combo Pizza,Combos,24800,3,74400
+demo,41,Elodie,elodie@demo.com,151,2026-11-15T22:42:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,162600,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,41,Elodie,elodie@demo.com,151,2026-11-15T22:42:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,162600,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,41,Elodie,elodie@demo.com,151,2026-11-15T22:42:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,162600,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,41,Elodie,elodie@demo.com,151,2026-11-15T22:42:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,162600,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,41,Elodie,elodie@demo.com,150,2026-11-16T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,136000,14,Cheesecake,Postres,7200,2,14400
+demo,41,Elodie,elodie@demo.com,150,2026-11-16T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,136000,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,41,Elodie,elodie@demo.com,150,2026-11-16T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,136000,16,Combo Clásico,Combos,18400,1,18400
+demo,41,Elodie,elodie@demo.com,150,2026-11-16T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,136000,17,Combo Pizza,Combos,24800,2,49600
+demo,41,Elodie,elodie@demo.com,150,2026-11-16T22:49:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,136000,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,41,Elodie,elodie@demo.com,149,2026-11-17T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,69200,11,Papas Cheddar,Papas,8700,1,8700
+demo,41,Elodie,elodie@demo.com,149,2026-11-17T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,69200,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,41,Elodie,elodie@demo.com,149,2026-11-17T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,69200,13,Lava Cake,Postres,6900,3,20700
+demo,41,Elodie,elodie@demo.com,149,2026-11-17T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,69200,14,Cheesecake,Postres,7200,1,7200
+demo,41,Elodie,elodie@demo.com,149,2026-11-17T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,69200,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,41,Elodie,elodie@demo.com,198,2026-11-19T23:41:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,8400,21,Volcan de Chocolate,Postres,8400,1,8400
+demo,16,Fors,fors@demo.com,52,2026-11-19T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,122600,14,Cheesecake,Postres,7200,1,7200
+demo,16,Fors,fors@demo.com,52,2026-11-19T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,122600,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,16,Fors,fors@demo.com,52,2026-11-19T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,122600,16,Combo Clásico,Combos,18400,3,55200
+demo,16,Fors,fors@demo.com,52,2026-11-19T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,122600,17,Combo Pizza,Combos,24800,1,24800
+demo,16,Fors,fors@demo.com,52,2026-11-19T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,122600,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,16,Fors,fors@demo.com,216,2026-11-19T23:23:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,6900,26,The Pink Drink,Bebidas,6900,1,6900
+demo,16,Fors,fors@demo.com,51,2026-11-20T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,78300,11,Papas Cheddar,Papas,8700,3,26100
+demo,16,Fors,fors@demo.com,51,2026-11-20T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,78300,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,16,Fors,fors@demo.com,51,2026-11-20T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,78300,13,Lava Cake,Postres,6900,2,13800
+demo,16,Fors,fors@demo.com,51,2026-11-20T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,78300,14,Cheesecake,Postres,7200,3,21600
+demo,16,Fors,fors@demo.com,51,2026-11-20T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,78300,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,16,Fors,fors@demo.com,50,2026-11-21T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,121500,8,Limonada Natural,Bebidas,4200,2,8400
+demo,16,Fors,fors@demo.com,50,2026-11-21T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,121500,9,Combo Doble,Combos,21200,3,63600
+demo,16,Fors,fors@demo.com,50,2026-11-21T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,121500,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,16,Fors,fors@demo.com,50,2026-11-21T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,121500,11,Papas Cheddar,Papas,8700,2,17400
+demo,16,Fors,fors@demo.com,50,2026-11-21T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,121500,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,16,Fors,fors@demo.com,49,2026-11-22T23:21:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,112100,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,16,Fors,fors@demo.com,49,2026-11-22T23:21:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,112100,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,16,Fors,fors@demo.com,49,2026-11-22T23:21:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,112100,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,16,Fors,fors@demo.com,49,2026-11-22T23:21:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,112100,8,Limonada Natural,Bebidas,4200,1,4200
+demo,16,Fors,fors@demo.com,49,2026-11-22T23:21:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,112100,9,Combo Doble,Combos,21200,2,42400
+demo,43,Frondier,frondier@demo.com,158,2026-11-14T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,81400,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,43,Frondier,frondier@demo.com,158,2026-11-14T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,81400,8,Limonada Natural,Bebidas,4200,3,12600
+demo,43,Frondier,frondier@demo.com,158,2026-11-14T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,81400,9,Combo Doble,Combos,21200,1,21200
+demo,43,Frondier,frondier@demo.com,158,2026-11-14T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,81400,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,43,Frondier,frondier@demo.com,158,2026-11-14T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,81400,11,Papas Cheddar,Papas,8700,3,26100
+demo,43,Frondier,frondier@demo.com,157,2026-11-15T22:54:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,119400,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,43,Frondier,frondier@demo.com,157,2026-11-15T22:54:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,119400,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,43,Frondier,frondier@demo.com,157,2026-11-15T22:54:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,119400,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,43,Frondier,frondier@demo.com,157,2026-11-15T22:54:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,119400,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,43,Frondier,frondier@demo.com,157,2026-11-15T22:54:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,119400,8,Limonada Natural,Bebidas,4200,2,8400
+demo,43,Frondier,frondier@demo.com,192,2026-11-16T23:47:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,20400,20,Pizza Cuatro Quesos,Pizzas,20400,1,20400
+demo,43,Frondier,frondier@demo.com,160,2026-11-22T22:33:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,113500,13,Lava Cake,Postres,6900,1,6900
+demo,43,Frondier,frondier@demo.com,160,2026-11-22T22:33:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,113500,14,Cheesecake,Postres,7200,2,14400
+demo,43,Frondier,frondier@demo.com,160,2026-11-22T22:33:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,113500,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,43,Frondier,frondier@demo.com,160,2026-11-22T22:33:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,113500,16,Combo Clásico,Combos,18400,1,18400
+demo,43,Frondier,frondier@demo.com,160,2026-11-22T22:33:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,113500,17,Combo Pizza,Combos,24800,2,49600
+demo,43,Frondier,frondier@demo.com,159,2026-11-23T22:40:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,74100,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,43,Frondier,frondier@demo.com,159,2026-11-23T22:40:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,74100,11,Papas Cheddar,Papas,8700,1,8700
+demo,43,Frondier,frondier@demo.com,159,2026-11-23T22:40:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,74100,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,43,Frondier,frondier@demo.com,159,2026-11-23T22:40:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,74100,13,Lava Cake,Postres,6900,3,20700
+demo,43,Frondier,frondier@demo.com,159,2026-11-23T22:40:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,74100,14,Cheesecake,Postres,7200,1,7200
+demo,30,Hajin,hajin@demo.com,203,2026-11-14T23:36:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,14100,23,Tarta Rogel,Postres,7200,1,7200
+demo,30,Hajin,hajin@demo.com,203,2026-11-14T23:36:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,14100,26,The Pink Drink,Bebidas,6900,1,6900
+demo,30,Hajin,hajin@demo.com,108,2026-11-15T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134100,16,Combo Clásico,Combos,18400,1,18400
+demo,30,Hajin,hajin@demo.com,108,2026-11-15T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134100,17,Combo Pizza,Combos,24800,2,49600
+demo,30,Hajin,hajin@demo.com,108,2026-11-15T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134100,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,30,Hajin,hajin@demo.com,108,2026-11-15T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134100,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,30,Hajin,hajin@demo.com,108,2026-11-15T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134100,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,30,Hajin,hajin@demo.com,107,2026-11-16T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,124200,13,Lava Cake,Postres,6900,3,20700
+demo,30,Hajin,hajin@demo.com,107,2026-11-16T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,124200,14,Cheesecake,Postres,7200,1,7200
+demo,30,Hajin,hajin@demo.com,107,2026-11-16T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,124200,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,30,Hajin,hajin@demo.com,107,2026-11-16T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,124200,16,Combo Clásico,Combos,18400,3,55200
+demo,30,Hajin,hajin@demo.com,107,2026-11-16T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,124200,17,Combo Pizza,Combos,24800,1,24800
+demo,30,Hajin,hajin@demo.com,106,2026-11-17T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,83700,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,30,Hajin,hajin@demo.com,106,2026-11-17T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,83700,11,Papas Cheddar,Papas,8700,3,26100
+demo,30,Hajin,hajin@demo.com,106,2026-11-17T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,83700,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,30,Hajin,hajin@demo.com,106,2026-11-17T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,83700,13,Lava Cake,Postres,6900,2,13800
+demo,30,Hajin,hajin@demo.com,106,2026-11-17T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,83700,14,Cheesecake,Postres,7200,3,21600
+demo,30,Hajin,hajin@demo.com,105,2026-11-18T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,100400,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,30,Hajin,hajin@demo.com,105,2026-11-18T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,100400,8,Limonada Natural,Bebidas,4200,2,8400
+demo,30,Hajin,hajin@demo.com,105,2026-11-18T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,100400,9,Combo Doble,Combos,21200,3,63600
+demo,30,Hajin,hajin@demo.com,105,2026-11-18T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,100400,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,30,Hajin,hajin@demo.com,105,2026-11-18T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,100400,11,Papas Cheddar,Papas,8700,2,17400
+demo,42,Helena,helena@demo.com,155,2026-11-14T22:41:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,114600,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,42,Helena,helena@demo.com,155,2026-11-14T22:41:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,114600,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,42,Helena,helena@demo.com,155,2026-11-14T22:41:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,114600,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,42,Helena,helena@demo.com,155,2026-11-14T22:41:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,114600,8,Limonada Natural,Bebidas,4200,3,12600
+demo,42,Helena,helena@demo.com,155,2026-11-14T22:41:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,114600,9,Combo Doble,Combos,21200,1,21200
+demo,42,Helena,helena@demo.com,154,2026-11-15T22:48:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,168900,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,42,Helena,helena@demo.com,154,2026-11-15T22:48:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,168900,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,42,Helena,helena@demo.com,154,2026-11-15T22:48:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,168900,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,42,Helena,helena@demo.com,154,2026-11-15T22:48:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,168900,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,42,Helena,helena@demo.com,154,2026-11-15T22:48:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,168900,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,42,Helena,helena@demo.com,153,2026-11-16T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134600,16,Combo Clásico,Combos,18400,1,18400
+demo,42,Helena,helena@demo.com,153,2026-11-16T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134600,17,Combo Pizza,Combos,24800,2,49600
+demo,42,Helena,helena@demo.com,153,2026-11-16T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134600,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,42,Helena,helena@demo.com,153,2026-11-16T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134600,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,42,Helena,helena@demo.com,153,2026-11-16T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134600,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,42,Helena,helena@demo.com,208,2026-11-18T23:31:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,80400,24,Caramel Frappuccino.,Bebidas,7500,1,7500
+demo,42,Helena,helena@demo.com,208,2026-11-18T23:31:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,80400,27,Combo Party,Combos,72900,1,72900
+demo,42,Helena,helena@demo.com,156,2026-11-23T22:34:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,92800,8,Limonada Natural,Bebidas,4200,1,4200
+demo,42,Helena,helena@demo.com,156,2026-11-23T22:34:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,92800,9,Combo Doble,Combos,21200,2,42400
+demo,42,Helena,helena@demo.com,156,2026-11-23T22:34:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,92800,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,42,Helena,helena@demo.com,156,2026-11-23T22:34:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,92800,11,Papas Cheddar,Papas,8700,1,8700
+demo,42,Helena,helena@demo.com,156,2026-11-23T22:34:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,92800,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,33,Jean,jean@demo.com,118,2026-11-14T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,122000,8,Limonada Natural,Bebidas,4200,2,8400
+demo,33,Jean,jean@demo.com,118,2026-11-14T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,122000,9,Combo Doble,Combos,21200,3,63600
+demo,33,Jean,jean@demo.com,118,2026-11-14T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,122000,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,33,Jean,jean@demo.com,118,2026-11-14T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,122000,11,Papas Cheddar,Papas,8700,2,17400
+demo,33,Jean,jean@demo.com,118,2026-11-14T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,122000,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,33,Jean,jean@demo.com,117,2026-11-15T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,111600,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,33,Jean,jean@demo.com,117,2026-11-15T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,111600,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,33,Jean,jean@demo.com,117,2026-11-15T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,111600,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,33,Jean,jean@demo.com,117,2026-11-15T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,111600,8,Limonada Natural,Bebidas,4200,1,4200
+demo,33,Jean,jean@demo.com,117,2026-11-15T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,111600,9,Combo Doble,Combos,21200,2,42400
+demo,33,Jean,jean@demo.com,181,2026-11-18T23:58:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,11200,18,Hamburguesa Royale con Queso & Pepinillos,Hamburguesas,11200,1,11200
+demo,33,Jean,jean@demo.com,120,2026-11-22T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,123100,14,Cheesecake,Postres,7200,1,7200
+demo,33,Jean,jean@demo.com,120,2026-11-22T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,123100,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,33,Jean,jean@demo.com,120,2026-11-22T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,123100,16,Combo Clásico,Combos,18400,3,55200
+demo,33,Jean,jean@demo.com,120,2026-11-22T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,123100,17,Combo Pizza,Combos,24800,1,24800
+demo,33,Jean,jean@demo.com,120,2026-11-22T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,123100,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,33,Jean,jean@demo.com,119,2026-11-23T22:50:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,77800,11,Papas Cheddar,Papas,8700,3,26100
+demo,33,Jean,jean@demo.com,119,2026-11-23T22:50:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,77800,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,33,Jean,jean@demo.com,119,2026-11-23T22:50:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,77800,13,Lava Cake,Postres,6900,2,13800
+demo,33,Jean,jean@demo.com,119,2026-11-23T22:50:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,77800,14,Cheesecake,Postres,7200,3,21600
+demo,33,Jean,jean@demo.com,119,2026-11-23T22:50:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,77800,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,20,Julien,julien@demo.com,68,2026-11-15T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,128800,17,Combo Pizza,Combos,24800,1,24800
+demo,20,Julien,julien@demo.com,68,2026-11-15T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,128800,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,20,Julien,julien@demo.com,68,2026-11-15T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,128800,2,Hamburguesa Doble,Hamburguesas,12900,3,38700
+demo,20,Julien,julien@demo.com,68,2026-11-15T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,128800,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,20,Julien,julien@demo.com,68,2026-11-15T22:56:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,128800,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,20,Julien,julien@demo.com,67,2026-11-16T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,151000,14,Cheesecake,Postres,7200,3,21600
+demo,20,Julien,julien@demo.com,67,2026-11-16T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,151000,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,20,Julien,julien@demo.com,67,2026-11-16T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,151000,16,Combo Clásico,Combos,18400,2,36800
+demo,20,Julien,julien@demo.com,67,2026-11-16T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,151000,17,Combo Pizza,Combos,24800,3,74400
+demo,20,Julien,julien@demo.com,67,2026-11-16T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,151000,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,20,Julien,julien@demo.com,66,2026-11-17T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,87600,11,Papas Cheddar,Papas,8700,2,17400
+demo,20,Julien,julien@demo.com,66,2026-11-17T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,87600,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,20,Julien,julien@demo.com,66,2026-11-17T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,87600,13,Lava Cake,Postres,6900,1,6900
+demo,20,Julien,julien@demo.com,66,2026-11-17T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,87600,14,Cheesecake,Postres,7200,2,14400
+demo,20,Julien,julien@demo.com,66,2026-11-17T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,87600,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,20,Julien,julien@demo.com,65,2026-11-18T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,93300,8,Limonada Natural,Bebidas,4200,1,4200
+demo,20,Julien,julien@demo.com,65,2026-11-18T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,93300,9,Combo Doble,Combos,21200,2,42400
+demo,20,Julien,julien@demo.com,65,2026-11-18T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,93300,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,20,Julien,julien@demo.com,65,2026-11-18T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,93300,11,Papas Cheddar,Papas,8700,1,8700
+demo,20,Julien,julien@demo.com,65,2026-11-18T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,93300,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,20,Julien,julien@demo.com,195,2026-11-22T23:44:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,88800,21,Volcan de Chocolate,Postres,8400,1,8400
+demo,20,Julien,julien@demo.com,195,2026-11-22T23:44:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,88800,24,Caramel Frappuccino.,Bebidas,7500,1,7500
+demo,20,Julien,julien@demo.com,195,2026-11-22T23:44:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,88800,27,Combo Party,Combos,72900,1,72900
+demo,10,Kai,kai@demo.com,28,2026-11-15T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,125000,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,10,Kai,kai@demo.com,28,2026-11-15T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,125000,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,10,Kai,kai@demo.com,28,2026-11-15T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,125000,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,10,Kai,kai@demo.com,28,2026-11-15T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,125000,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,10,Kai,kai@demo.com,28,2026-11-15T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,125000,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,10,Kai,kai@demo.com,27,2026-11-16T23:13:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134500,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,10,Kai,kai@demo.com,27,2026-11-16T23:13:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134500,16,Combo Clásico,Combos,18400,1,18400
+demo,10,Kai,kai@demo.com,27,2026-11-16T23:13:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134500,17,Combo Pizza,Combos,24800,2,49600
+demo,10,Kai,kai@demo.com,27,2026-11-16T23:13:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134500,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,10,Kai,kai@demo.com,27,2026-11-16T23:13:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,134500,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,10,Kai,kai@demo.com,26,2026-11-17T23:20:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,115700,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,10,Kai,kai@demo.com,26,2026-11-17T23:20:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,115700,13,Lava Cake,Postres,6900,3,20700
+demo,10,Kai,kai@demo.com,26,2026-11-17T23:20:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,115700,14,Cheesecake,Postres,7200,1,7200
+demo,10,Kai,kai@demo.com,26,2026-11-17T23:20:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,115700,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,10,Kai,kai@demo.com,26,2026-11-17T23:20:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,115700,16,Combo Clásico,Combos,18400,3,55200
+demo,10,Kai,kai@demo.com,182,2026-11-17T23:57:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,27300,19,Pizza Pepperoni & Miel Picante,Pizzas,19400,1,19400
+demo,10,Kai,kai@demo.com,182,2026-11-17T23:57:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,27300,22,New York Cheesecake con Frutos Rojos,Postres,7900,1,7900
+demo,10,Kai,kai@demo.com,25,2026-11-18T23:27:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,83800,9,Combo Doble,Combos,21200,1,21200
+demo,10,Kai,kai@demo.com,25,2026-11-18T23:27:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,83800,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,10,Kai,kai@demo.com,25,2026-11-18T23:27:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,83800,11,Papas Cheddar,Papas,8700,3,26100
+demo,10,Kai,kai@demo.com,25,2026-11-18T23:27:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,83800,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,10,Kai,kai@demo.com,25,2026-11-18T23:27:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,83800,13,Lava Cake,Postres,6900,2,13800
+demo,14,Klein,klein@demo.com,41,2026-11-14T23:23:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,89000,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,14,Klein,klein@demo.com,41,2026-11-14T23:23:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,89000,13,Lava Cake,Postres,6900,2,13800
+demo,14,Klein,klein@demo.com,41,2026-11-14T23:23:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,89000,14,Cheesecake,Postres,7200,3,21600
+demo,14,Klein,klein@demo.com,41,2026-11-14T23:23:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,89000,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,14,Klein,klein@demo.com,41,2026-11-14T23:23:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,89000,16,Combo Clásico,Combos,18400,2,36800
+demo,14,Klein,klein@demo.com,194,2026-11-14T23:45:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,93300,20,Pizza Cuatro Quesos,Pizzas,20400,1,20400
+demo,14,Klein,klein@demo.com,194,2026-11-14T23:45:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,93300,27,Combo Party,Combos,72900,1,72900
+demo,14,Klein,klein@demo.com,44,2026-11-21T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,119400,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,14,Klein,klein@demo.com,44,2026-11-21T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,119400,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,14,Klein,klein@demo.com,44,2026-11-21T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,119400,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,14,Klein,klein@demo.com,44,2026-11-21T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,119400,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,14,Klein,klein@demo.com,44,2026-11-21T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,119400,8,Limonada Natural,Bebidas,4200,2,8400
+demo,14,Klein,klein@demo.com,43,2026-11-22T23:09:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,135700,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,14,Klein,klein@demo.com,43,2026-11-22T23:09:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,135700,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,14,Klein,klein@demo.com,43,2026-11-22T23:09:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,135700,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,14,Klein,klein@demo.com,43,2026-11-22T23:09:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,135700,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,14,Klein,klein@demo.com,43,2026-11-22T23:09:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,135700,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,14,Klein,klein@demo.com,42,2026-11-23T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,154100,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,14,Klein,klein@demo.com,42,2026-11-23T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,154100,16,Combo Clásico,Combos,18400,3,55200
+demo,14,Klein,klein@demo.com,42,2026-11-23T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,154100,17,Combo Pizza,Combos,24800,1,24800
+demo,14,Klein,klein@demo.com,42,2026-11-23T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,154100,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,14,Klein,klein@demo.com,42,2026-11-23T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,154100,2,Hamburguesa Doble,Hamburguesas,12900,3,38700
+demo,19,Leonard,leonard@demo.com,64,2026-11-16T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,89000,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,19,Leonard,leonard@demo.com,64,2026-11-16T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,89000,13,Lava Cake,Postres,6900,2,13800
+demo,19,Leonard,leonard@demo.com,64,2026-11-16T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,89000,14,Cheesecake,Postres,7200,3,21600
+demo,19,Leonard,leonard@demo.com,64,2026-11-16T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,89000,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,19,Leonard,leonard@demo.com,64,2026-11-16T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,89000,16,Combo Clásico,Combos,18400,2,36800
+demo,19,Leonard,leonard@demo.com,63,2026-11-17T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,120000,9,Combo Doble,Combos,21200,3,63600
+demo,19,Leonard,leonard@demo.com,63,2026-11-17T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,120000,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,19,Leonard,leonard@demo.com,63,2026-11-17T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,120000,11,Papas Cheddar,Papas,8700,2,17400
+demo,19,Leonard,leonard@demo.com,63,2026-11-17T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,120000,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,19,Leonard,leonard@demo.com,63,2026-11-17T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,120000,13,Lava Cake,Postres,6900,1,6900
+demo,19,Leonard,leonard@demo.com,62,2026-11-18T23:11:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,114400,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,19,Leonard,leonard@demo.com,62,2026-11-18T23:11:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,114400,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,19,Leonard,leonard@demo.com,62,2026-11-18T23:11:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,114400,8,Limonada Natural,Bebidas,4200,1,4200
+demo,19,Leonard,leonard@demo.com,62,2026-11-18T23:11:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,114400,9,Combo Doble,Combos,21200,2,42400
+demo,19,Leonard,leonard@demo.com,62,2026-11-18T23:11:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,114400,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,19,Leonard,leonard@demo.com,61,2026-11-19T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,126000,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,19,Leonard,leonard@demo.com,61,2026-11-19T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,126000,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,19,Leonard,leonard@demo.com,61,2026-11-19T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,126000,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,19,Leonard,leonard@demo.com,61,2026-11-19T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,126000,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,19,Leonard,leonard@demo.com,61,2026-11-19T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,126000,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,19,Leonard,leonard@demo.com,179,2026-11-21T00:00:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,19600,18,Hamburguesa Royale con Queso & Pepinillos,Hamburguesas,11200,1,11200
+demo,19,Leonard,leonard@demo.com,179,2026-11-21T00:00:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,19600,21,Volcan de Chocolate,Postres,8400,1,8400
+demo,46,Lia,lia@demo.com,202,2026-11-15T23:37:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,7900,22,New York Cheesecake con Frutos Rojos,Postres,7900,1,7900
+demo,46,Lia,lia@demo.com,172,2026-11-19T22:30:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,69200,11,Papas Cheddar,Papas,8700,1,8700
+demo,46,Lia,lia@demo.com,172,2026-11-19T22:30:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,69200,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,46,Lia,lia@demo.com,172,2026-11-19T22:30:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,69200,13,Lava Cake,Postres,6900,3,20700
+demo,46,Lia,lia@demo.com,172,2026-11-19T22:30:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,69200,14,Cheesecake,Postres,7200,1,7200
+demo,46,Lia,lia@demo.com,172,2026-11-19T22:30:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,69200,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,46,Lia,lia@demo.com,171,2026-11-20T22:37:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,82600,8,Limonada Natural,Bebidas,4200,3,12600
+demo,46,Lia,lia@demo.com,171,2026-11-20T22:37:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,82600,9,Combo Doble,Combos,21200,1,21200
+demo,46,Lia,lia@demo.com,171,2026-11-20T22:37:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,82600,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,46,Lia,lia@demo.com,171,2026-11-20T22:37:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,82600,11,Papas Cheddar,Papas,8700,3,26100
+demo,46,Lia,lia@demo.com,171,2026-11-20T22:37:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,82600,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,46,Lia,lia@demo.com,170,2026-11-21T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,166100,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,46,Lia,lia@demo.com,170,2026-11-21T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,166100,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,46,Lia,lia@demo.com,170,2026-11-21T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,166100,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,46,Lia,lia@demo.com,170,2026-11-21T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,166100,8,Limonada Natural,Bebidas,4200,2,8400
+demo,46,Lia,lia@demo.com,170,2026-11-21T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,166100,9,Combo Doble,Combos,21200,3,63600
+demo,46,Lia,lia@demo.com,169,2026-11-22T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,142100,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,46,Lia,lia@demo.com,169,2026-11-22T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,142100,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,46,Lia,lia@demo.com,169,2026-11-22T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,142100,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,46,Lia,lia@demo.com,169,2026-11-22T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,142100,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,46,Lia,lia@demo.com,169,2026-11-22T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,142100,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,39,Lynokis,lynokis@demo.com,144,2026-11-16T22:37:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,71300,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,39,Lynokis,lynokis@demo.com,144,2026-11-16T22:37:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,71300,11,Papas Cheddar,Papas,8700,2,17400
+demo,39,Lynokis,lynokis@demo.com,144,2026-11-16T22:37:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,71300,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,39,Lynokis,lynokis@demo.com,144,2026-11-16T22:37:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,71300,13,Lava Cake,Postres,6900,1,6900
+demo,39,Lynokis,lynokis@demo.com,144,2026-11-16T22:37:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,71300,14,Cheesecake,Postres,7200,2,14400
+demo,39,Lynokis,lynokis@demo.com,201,2026-11-16T23:38:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,15100,22,New York Cheesecake con Frutos Rojos,Postres,7900,1,7900
+demo,39,Lynokis,lynokis@demo.com,201,2026-11-16T23:38:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,15100,25,Pumpkin Spice Latte,Bebidas,7200,1,7200
+demo,39,Lynokis,lynokis@demo.com,143,2026-11-17T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,86800,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,39,Lynokis,lynokis@demo.com,143,2026-11-17T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,86800,8,Limonada Natural,Bebidas,4200,1,4200
+demo,39,Lynokis,lynokis@demo.com,143,2026-11-17T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,86800,9,Combo Doble,Combos,21200,2,42400
+demo,39,Lynokis,lynokis@demo.com,143,2026-11-17T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,86800,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,39,Lynokis,lynokis@demo.com,143,2026-11-17T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,86800,11,Papas Cheddar,Papas,8700,1,8700
+demo,39,Lynokis,lynokis@demo.com,142,2026-11-18T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,127200,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,39,Lynokis,lynokis@demo.com,142,2026-11-18T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,127200,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,39,Lynokis,lynokis@demo.com,142,2026-11-18T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,127200,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,39,Lynokis,lynokis@demo.com,142,2026-11-18T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,127200,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,39,Lynokis,lynokis@demo.com,142,2026-11-18T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,127200,8,Limonada Natural,Bebidas,4200,3,12600
+demo,39,Lynokis,lynokis@demo.com,141,2026-11-19T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,125000,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,39,Lynokis,lynokis@demo.com,141,2026-11-19T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,125000,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,39,Lynokis,lynokis@demo.com,141,2026-11-19T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,125000,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,39,Lynokis,lynokis@demo.com,141,2026-11-19T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,125000,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,39,Lynokis,lynokis@demo.com,141,2026-11-19T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,125000,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,8,Mordret,mordret@demo.com,20,2026-11-17T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,92800,8,Limonada Natural,Bebidas,4200,1,4200
+demo,8,Mordret,mordret@demo.com,20,2026-11-17T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,92800,9,Combo Doble,Combos,21200,2,42400
+demo,8,Mordret,mordret@demo.com,20,2026-11-17T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,92800,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,8,Mordret,mordret@demo.com,20,2026-11-17T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,92800,11,Papas Cheddar,Papas,8700,1,8700
+demo,8,Mordret,mordret@demo.com,20,2026-11-17T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,92800,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,8,Mordret,mordret@demo.com,19,2026-11-18T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,114600,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,8,Mordret,mordret@demo.com,19,2026-11-18T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,114600,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,8,Mordret,mordret@demo.com,19,2026-11-18T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,114600,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,8,Mordret,mordret@demo.com,19,2026-11-18T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,114600,8,Limonada Natural,Bebidas,4200,3,12600
+demo,8,Mordret,mordret@demo.com,19,2026-11-18T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,114600,9,Combo Doble,Combos,21200,1,21200
+demo,8,Mordret,mordret@demo.com,18,2026-11-19T23:22:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,168900,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,8,Mordret,mordret@demo.com,18,2026-11-19T23:22:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,168900,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,8,Mordret,mordret@demo.com,18,2026-11-19T23:22:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,168900,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,8,Mordret,mordret@demo.com,18,2026-11-19T23:22:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,168900,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,8,Mordret,mordret@demo.com,18,2026-11-19T23:22:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,168900,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,8,Mordret,mordret@demo.com,17,2026-11-20T23:29:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,134600,16,Combo Clásico,Combos,18400,1,18400
+demo,8,Mordret,mordret@demo.com,17,2026-11-20T23:29:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,134600,17,Combo Pizza,Combos,24800,2,49600
+demo,8,Mordret,mordret@demo.com,17,2026-11-20T23:29:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,134600,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,8,Mordret,mordret@demo.com,17,2026-11-20T23:29:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,134600,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,8,Mordret,mordret@demo.com,17,2026-11-20T23:29:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,134600,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,8,Mordret,mordret@demo.com,206,2026-11-20T23:33:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,14100,23,Tarta Rogel,Postres,7200,1,7200
+demo,8,Mordret,mordret@demo.com,206,2026-11-20T23:33:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,14100,26,The Pink Drink,Bebidas,6900,1,6900
+demo,12,Morgan,morgan@demo.com,35,2026-11-14T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,82600,8,Limonada Natural,Bebidas,4200,3,12600
+demo,12,Morgan,morgan@demo.com,35,2026-11-14T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,82600,9,Combo Doble,Combos,21200,1,21200
+demo,12,Morgan,morgan@demo.com,35,2026-11-14T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,82600,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,12,Morgan,morgan@demo.com,35,2026-11-14T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,82600,11,Papas Cheddar,Papas,8700,3,26100
+demo,12,Morgan,morgan@demo.com,35,2026-11-14T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,82600,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,12,Morgan,morgan@demo.com,34,2026-11-15T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,166100,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,12,Morgan,morgan@demo.com,34,2026-11-15T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,166100,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,12,Morgan,morgan@demo.com,34,2026-11-15T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,166100,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,12,Morgan,morgan@demo.com,34,2026-11-15T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,166100,8,Limonada Natural,Bebidas,4200,2,8400
+demo,12,Morgan,morgan@demo.com,34,2026-11-15T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,166100,9,Combo Doble,Combos,21200,3,63600
+demo,12,Morgan,morgan@demo.com,33,2026-11-16T23:25:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,142100,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,12,Morgan,morgan@demo.com,33,2026-11-16T23:25:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,142100,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,12,Morgan,morgan@demo.com,33,2026-11-16T23:25:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,142100,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,12,Morgan,morgan@demo.com,33,2026-11-16T23:25:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,142100,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,12,Morgan,morgan@demo.com,33,2026-11-16T23:25:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,142100,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,12,Morgan,morgan@demo.com,178,2026-11-22T00:01:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,19600,18,Hamburguesa Royale con Queso & Pepinillos,Hamburguesas,11200,1,11200
+demo,12,Morgan,morgan@demo.com,178,2026-11-22T00:01:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,19600,21,Volcan de Chocolate,Postres,8400,1,8400
+demo,12,Morgan,morgan@demo.com,36,2026-11-23T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,69200,11,Papas Cheddar,Papas,8700,1,8700
+demo,12,Morgan,morgan@demo.com,36,2026-11-23T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,69200,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,12,Morgan,morgan@demo.com,36,2026-11-23T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,69200,13,Lava Cake,Postres,6900,3,20700
+demo,12,Morgan,morgan@demo.com,36,2026-11-23T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,69200,14,Cheesecake,Postres,7200,1,7200
+demo,12,Morgan,morgan@demo.com,36,2026-11-23T23:04:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,69200,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,31,Nayun,nayun@demo.com,112,2026-11-14T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,119900,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,31,Nayun,nayun@demo.com,112,2026-11-14T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,119900,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,31,Nayun,nayun@demo.com,112,2026-11-14T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,119900,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,31,Nayun,nayun@demo.com,112,2026-11-14T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,119900,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,31,Nayun,nayun@demo.com,112,2026-11-14T22:45:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,119900,8,Limonada Natural,Bebidas,4200,2,8400
+demo,31,Nayun,nayun@demo.com,185,2026-11-14T23:54:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,27300,19,Pizza Pepperoni & Miel Picante,Pizzas,19400,1,19400
+demo,31,Nayun,nayun@demo.com,185,2026-11-14T23:54:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,27300,22,New York Cheesecake con Frutos Rojos,Postres,7900,1,7900
+demo,31,Nayun,nayun@demo.com,111,2026-11-15T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,135200,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,31,Nayun,nayun@demo.com,111,2026-11-15T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,135200,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,31,Nayun,nayun@demo.com,111,2026-11-15T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,135200,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,31,Nayun,nayun@demo.com,111,2026-11-15T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,135200,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,31,Nayun,nayun@demo.com,111,2026-11-15T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,135200,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,31,Nayun,nayun@demo.com,110,2026-11-16T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154600,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,31,Nayun,nayun@demo.com,110,2026-11-16T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154600,16,Combo Clásico,Combos,18400,3,55200
+demo,31,Nayun,nayun@demo.com,110,2026-11-16T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154600,17,Combo Pizza,Combos,24800,1,24800
+demo,31,Nayun,nayun@demo.com,110,2026-11-16T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154600,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,31,Nayun,nayun@demo.com,110,2026-11-16T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,154600,2,Hamburguesa Doble,Hamburguesas,12900,3,38700
+demo,31,Nayun,nayun@demo.com,109,2026-11-17T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,88500,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,31,Nayun,nayun@demo.com,109,2026-11-17T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,88500,13,Lava Cake,Postres,6900,2,13800
+demo,31,Nayun,nayun@demo.com,109,2026-11-17T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,88500,14,Cheesecake,Postres,7200,3,21600
+demo,31,Nayun,nayun@demo.com,109,2026-11-17T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,88500,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,31,Nayun,nayun@demo.com,109,2026-11-17T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,88500,16,Combo Clásico,Combos,18400,2,36800
+demo,6,Nephis,nephis@demo.com,209,2026-11-17T23:30:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,80400,24,Caramel Frappuccino.,Bebidas,7500,1,7500
+demo,6,Nephis,nephis@demo.com,209,2026-11-17T23:30:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,80400,27,Combo Party,Combos,72900,1,72900
+demo,6,Nephis,nephis@demo.com,12,2026-11-19T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,154700,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,6,Nephis,nephis@demo.com,12,2026-11-19T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,154700,16,Combo Clásico,Combos,18400,2,36800
+demo,6,Nephis,nephis@demo.com,12,2026-11-19T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,154700,17,Combo Pizza,Combos,24800,3,74400
+demo,6,Nephis,nephis@demo.com,12,2026-11-19T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,154700,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,6,Nephis,nephis@demo.com,12,2026-11-19T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,154700,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,6,Nephis,nephis@demo.com,11,2026-11-20T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,89100,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,6,Nephis,nephis@demo.com,11,2026-11-20T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,89100,13,Lava Cake,Postres,6900,1,6900
+demo,6,Nephis,nephis@demo.com,11,2026-11-20T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,89100,14,Cheesecake,Postres,7200,2,14400
+demo,6,Nephis,nephis@demo.com,11,2026-11-20T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,89100,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,6,Nephis,nephis@demo.com,11,2026-11-20T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,89100,16,Combo Clásico,Combos,18400,1,18400
+demo,6,Nephis,nephis@demo.com,10,2026-11-21T23:24:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,109300,9,Combo Doble,Combos,21200,2,42400
+demo,6,Nephis,nephis@demo.com,10,2026-11-21T23:24:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,109300,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,6,Nephis,nephis@demo.com,10,2026-11-21T23:24:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,109300,11,Papas Cheddar,Papas,8700,1,8700
+demo,6,Nephis,nephis@demo.com,10,2026-11-21T23:24:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,109300,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,6,Nephis,nephis@demo.com,10,2026-11-21T23:24:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,109300,13,Lava Cake,Postres,6900,3,20700
+demo,6,Nephis,nephis@demo.com,9,2026-11-22T23:31:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,73200,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,6,Nephis,nephis@demo.com,9,2026-11-22T23:31:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,73200,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,6,Nephis,nephis@demo.com,9,2026-11-22T23:31:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,73200,8,Limonada Natural,Bebidas,4200,3,12600
+demo,6,Nephis,nephis@demo.com,9,2026-11-22T23:31:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,73200,9,Combo Doble,Combos,21200,1,21200
+demo,6,Nephis,nephis@demo.com,9,2026-11-22T23:31:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,73200,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,23,Nia,nia@demo.com,78,2026-11-14T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,109800,9,Combo Doble,Combos,21200,2,42400
+demo,23,Nia,nia@demo.com,78,2026-11-14T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,109800,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,23,Nia,nia@demo.com,78,2026-11-14T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,109800,11,Papas Cheddar,Papas,8700,1,8700
+demo,23,Nia,nia@demo.com,78,2026-11-14T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,109800,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,23,Nia,nia@demo.com,78,2026-11-14T23:07:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,109800,13,Lava Cake,Postres,6900,3,20700
+demo,23,Nia,nia@demo.com,77,2026-11-15T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,72700,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,23,Nia,nia@demo.com,77,2026-11-15T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,72700,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,23,Nia,nia@demo.com,77,2026-11-15T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,72700,8,Limonada Natural,Bebidas,4200,3,12600
+demo,23,Nia,nia@demo.com,77,2026-11-15T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,72700,9,Combo Doble,Combos,21200,1,21200
+demo,23,Nia,nia@demo.com,77,2026-11-15T23:14:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,72700,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,23,Nia,nia@demo.com,217,2026-11-18T23:22:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,6900,26,The Pink Drink,Bebidas,6900,1,6900
+demo,23,Nia,nia@demo.com,80,2026-11-22T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,155200,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,23,Nia,nia@demo.com,80,2026-11-22T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,155200,16,Combo Clásico,Combos,18400,2,36800
+demo,23,Nia,nia@demo.com,80,2026-11-22T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,155200,17,Combo Pizza,Combos,24800,3,74400
+demo,23,Nia,nia@demo.com,80,2026-11-22T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,155200,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,23,Nia,nia@demo.com,80,2026-11-22T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,155200,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,23,Nia,nia@demo.com,79,2026-11-23T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,88600,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,23,Nia,nia@demo.com,79,2026-11-23T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,88600,13,Lava Cake,Postres,6900,1,6900
+demo,23,Nia,nia@demo.com,79,2026-11-23T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,88600,14,Cheesecake,Postres,7200,2,14400
+demo,23,Nia,nia@demo.com,79,2026-11-23T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,88600,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,23,Nia,nia@demo.com,79,2026-11-23T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,88600,16,Combo Clásico,Combos,18400,1,18400
+demo,29,Rachel,rachel@demo.com,104,2026-11-16T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,69700,11,Papas Cheddar,Papas,8700,1,8700
+demo,29,Rachel,rachel@demo.com,104,2026-11-16T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,69700,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,29,Rachel,rachel@demo.com,104,2026-11-16T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,69700,13,Lava Cake,Postres,6900,3,20700
+demo,29,Rachel,rachel@demo.com,104,2026-11-16T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,69700,14,Cheesecake,Postres,7200,1,7200
+demo,29,Rachel,rachel@demo.com,104,2026-11-16T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,69700,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,29,Rachel,rachel@demo.com,103,2026-11-17T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,82100,8,Limonada Natural,Bebidas,4200,3,12600
+demo,29,Rachel,rachel@demo.com,103,2026-11-17T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,82100,9,Combo Doble,Combos,21200,1,21200
+demo,29,Rachel,rachel@demo.com,103,2026-11-17T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,82100,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,29,Rachel,rachel@demo.com,103,2026-11-17T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,82100,11,Papas Cheddar,Papas,8700,3,26100
+demo,29,Rachel,rachel@demo.com,103,2026-11-17T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,82100,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,29,Rachel,rachel@demo.com,102,2026-11-18T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,166600,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,29,Rachel,rachel@demo.com,102,2026-11-18T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,166600,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,29,Rachel,rachel@demo.com,102,2026-11-18T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,166600,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,29,Rachel,rachel@demo.com,102,2026-11-18T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,166600,8,Limonada Natural,Bebidas,4200,2,8400
+demo,29,Rachel,rachel@demo.com,102,2026-11-18T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,166600,9,Combo Doble,Combos,21200,3,63600
+demo,29,Rachel,rachel@demo.com,190,2026-11-18T23:49:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,20400,20,Pizza Cuatro Quesos,Pizzas,20400,1,20400
+demo,29,Rachel,rachel@demo.com,101,2026-11-19T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,141600,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,29,Rachel,rachel@demo.com,101,2026-11-19T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,141600,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,29,Rachel,rachel@demo.com,101,2026-11-19T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,141600,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,29,Rachel,rachel@demo.com,101,2026-11-19T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,141600,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,29,Rachel,rachel@demo.com,101,2026-11-19T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,141600,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,11,Rain,rain@demo.com,32,2026-11-14T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,73200,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,11,Rain,rain@demo.com,32,2026-11-14T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,73200,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,11,Rain,rain@demo.com,32,2026-11-14T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,73200,8,Limonada Natural,Bebidas,4200,3,12600
+demo,11,Rain,rain@demo.com,32,2026-11-14T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,73200,9,Combo Doble,Combos,21200,1,21200
+demo,11,Rain,rain@demo.com,32,2026-11-14T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,73200,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,11,Rain,rain@demo.com,31,2026-11-15T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,146700,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,11,Rain,rain@demo.com,31,2026-11-15T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,146700,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,11,Rain,rain@demo.com,31,2026-11-15T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,146700,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,11,Rain,rain@demo.com,31,2026-11-15T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,146700,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,11,Rain,rain@demo.com,31,2026-11-15T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,146700,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,11,Rain,rain@demo.com,30,2026-11-16T23:19:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,166900,17,Combo Pizza,Combos,24800,2,49600
+demo,11,Rain,rain@demo.com,30,2026-11-16T23:19:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,166900,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,11,Rain,rain@demo.com,30,2026-11-16T23:19:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,166900,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,11,Rain,rain@demo.com,30,2026-11-16T23:19:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,166900,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,11,Rain,rain@demo.com,30,2026-11-16T23:19:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,166900,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,11,Rain,rain@demo.com,29,2026-11-17T23:26:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,122600,14,Cheesecake,Postres,7200,1,7200
+demo,11,Rain,rain@demo.com,29,2026-11-17T23:26:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,122600,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,11,Rain,rain@demo.com,29,2026-11-17T23:26:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,122600,16,Combo Clásico,Combos,18400,3,55200
+demo,11,Rain,rain@demo.com,29,2026-11-17T23:26:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,122600,17,Combo Pizza,Combos,24800,1,24800
+demo,11,Rain,rain@demo.com,29,2026-11-17T23:26:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,122600,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,11,Rain,rain@demo.com,213,2026-11-22T23:26:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,7200,25,Pumpkin Spice Latte,Bebidas,7200,1,7200
+demo,25,Ravie,ravie@demo.com,199,2026-11-18T23:40:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,15100,22,New York Cheesecake con Frutos Rojos,Postres,7900,1,7900
+demo,25,Ravie,ravie@demo.com,199,2026-11-18T23:40:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,15100,25,Pumpkin Spice Latte,Bebidas,7200,1,7200
+demo,25,Ravie,ravie@demo.com,88,2026-11-20T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,93300,8,Limonada Natural,Bebidas,4200,1,4200
+demo,25,Ravie,ravie@demo.com,88,2026-11-20T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,93300,9,Combo Doble,Combos,21200,2,42400
+demo,25,Ravie,ravie@demo.com,88,2026-11-20T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,93300,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,25,Ravie,ravie@demo.com,88,2026-11-20T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,93300,11,Papas Cheddar,Papas,8700,1,8700
+demo,25,Ravie,ravie@demo.com,88,2026-11-20T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,93300,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,25,Ravie,ravie@demo.com,87,2026-11-21T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,114100,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,25,Ravie,ravie@demo.com,87,2026-11-21T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,114100,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,25,Ravie,ravie@demo.com,87,2026-11-21T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,114100,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,25,Ravie,ravie@demo.com,87,2026-11-21T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,114100,8,Limonada Natural,Bebidas,4200,3,12600
+demo,25,Ravie,ravie@demo.com,87,2026-11-21T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,114100,9,Combo Doble,Combos,21200,1,21200
+demo,25,Ravie,ravie@demo.com,86,2026-11-22T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,169400,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,25,Ravie,ravie@demo.com,86,2026-11-22T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,169400,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,25,Ravie,ravie@demo.com,86,2026-11-22T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,169400,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,25,Ravie,ravie@demo.com,86,2026-11-22T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,169400,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,25,Ravie,ravie@demo.com,86,2026-11-22T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,169400,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,25,Ravie,ravie@demo.com,85,2026-11-23T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134100,16,Combo Clásico,Combos,18400,1,18400
+demo,25,Ravie,ravie@demo.com,85,2026-11-23T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134100,17,Combo Pizza,Combos,24800,2,49600
+demo,25,Ravie,ravie@demo.com,85,2026-11-23T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134100,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,25,Ravie,ravie@demo.com,85,2026-11-23T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134100,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,25,Ravie,ravie@demo.com,85,2026-11-23T23:12:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134100,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,40,Renzo,renzo@demo.com,148,2026-11-15T22:36:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,154700,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,40,Renzo,renzo@demo.com,148,2026-11-15T22:36:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,154700,16,Combo Clásico,Combos,18400,2,36800
+demo,40,Renzo,renzo@demo.com,148,2026-11-15T22:36:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,154700,17,Combo Pizza,Combos,24800,3,74400
+demo,40,Renzo,renzo@demo.com,148,2026-11-15T22:36:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,154700,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,40,Renzo,renzo@demo.com,148,2026-11-15T22:36:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,154700,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,40,Renzo,renzo@demo.com,211,2026-11-15T23:28:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,7200,25,Pumpkin Spice Latte,Bebidas,7200,1,7200
+demo,40,Renzo,renzo@demo.com,147,2026-11-16T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,89100,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,40,Renzo,renzo@demo.com,147,2026-11-16T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,89100,13,Lava Cake,Postres,6900,1,6900
+demo,40,Renzo,renzo@demo.com,147,2026-11-16T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,89100,14,Cheesecake,Postres,7200,2,14400
+demo,40,Renzo,renzo@demo.com,147,2026-11-16T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,89100,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,40,Renzo,renzo@demo.com,147,2026-11-16T22:43:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,89100,16,Combo Clásico,Combos,18400,1,18400
+demo,40,Renzo,renzo@demo.com,146,2026-11-17T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,109300,9,Combo Doble,Combos,21200,2,42400
+demo,40,Renzo,renzo@demo.com,146,2026-11-17T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,109300,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,40,Renzo,renzo@demo.com,146,2026-11-17T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,109300,11,Papas Cheddar,Papas,8700,1,8700
+demo,40,Renzo,renzo@demo.com,146,2026-11-17T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,109300,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,40,Renzo,renzo@demo.com,146,2026-11-17T22:50:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,109300,13,Lava Cake,Postres,6900,3,20700
+demo,40,Renzo,renzo@demo.com,145,2026-11-18T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,73200,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,40,Renzo,renzo@demo.com,145,2026-11-18T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,73200,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,40,Renzo,renzo@demo.com,145,2026-11-18T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,73200,8,Limonada Natural,Bebidas,4200,3,12600
+demo,40,Renzo,renzo@demo.com,145,2026-11-18T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,73200,9,Combo Doble,Combos,21200,1,21200
+demo,40,Renzo,renzo@demo.com,145,2026-11-18T22:57:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,73200,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,36,Runoa,runoa@demo.com,191,2026-11-17T23:48:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,20400,20,Pizza Cuatro Quesos,Pizzas,20400,1,20400
+demo,36,Runoa,runoa@demo.com,132,2026-11-19T22:40:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,88500,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,36,Runoa,runoa@demo.com,132,2026-11-19T22:40:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,88500,13,Lava Cake,Postres,6900,2,13800
+demo,36,Runoa,runoa@demo.com,132,2026-11-19T22:40:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,88500,14,Cheesecake,Postres,7200,3,21600
+demo,36,Runoa,runoa@demo.com,132,2026-11-19T22:40:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,88500,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,36,Runoa,runoa@demo.com,132,2026-11-19T22:40:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,88500,16,Combo Clásico,Combos,18400,2,36800
+demo,36,Runoa,runoa@demo.com,131,2026-11-20T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,120500,9,Combo Doble,Combos,21200,3,63600
+demo,36,Runoa,runoa@demo.com,131,2026-11-20T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,120500,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,36,Runoa,runoa@demo.com,131,2026-11-20T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,120500,11,Papas Cheddar,Papas,8700,2,17400
+demo,36,Runoa,runoa@demo.com,131,2026-11-20T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,120500,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,36,Runoa,runoa@demo.com,131,2026-11-20T22:47:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,120500,13,Lava Cake,Postres,6900,1,6900
+demo,36,Runoa,runoa@demo.com,130,2026-11-21T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,113900,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,36,Runoa,runoa@demo.com,130,2026-11-21T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,113900,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,36,Runoa,runoa@demo.com,130,2026-11-21T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,113900,8,Limonada Natural,Bebidas,4200,1,4200
+demo,36,Runoa,runoa@demo.com,130,2026-11-21T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,113900,9,Combo Doble,Combos,21200,2,42400
+demo,36,Runoa,runoa@demo.com,130,2026-11-21T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,113900,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,36,Runoa,runoa@demo.com,129,2026-11-22T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,126500,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,36,Runoa,runoa@demo.com,129,2026-11-22T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,126500,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,36,Runoa,runoa@demo.com,129,2026-11-22T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,126500,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,36,Runoa,runoa@demo.com,129,2026-11-22T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,126500,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,36,Runoa,runoa@demo.com,129,2026-11-22T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,126500,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,21,Ruri,ruri@demo.com,72,2026-11-14T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,112100,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,21,Ruri,ruri@demo.com,72,2026-11-14T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,112100,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,21,Ruri,ruri@demo.com,72,2026-11-14T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,112100,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,21,Ruri,ruri@demo.com,72,2026-11-14T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,112100,8,Limonada Natural,Bebidas,4200,1,4200
+demo,21,Ruri,ruri@demo.com,72,2026-11-14T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,112100,9,Combo Doble,Combos,21200,2,42400
+demo,21,Ruri,ruri@demo.com,71,2026-11-15T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,157500,2,Hamburguesa Doble,Hamburguesas,12900,3,38700
+demo,21,Ruri,ruri@demo.com,71,2026-11-15T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,157500,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,21,Ruri,ruri@demo.com,71,2026-11-15T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,157500,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,21,Ruri,ruri@demo.com,71,2026-11-15T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,157500,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,21,Ruri,ruri@demo.com,71,2026-11-15T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,157500,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,21,Ruri,ruri@demo.com,70,2026-11-16T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,183000,16,Combo Clásico,Combos,18400,2,36800
+demo,21,Ruri,ruri@demo.com,70,2026-11-16T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,183000,17,Combo Pizza,Combos,24800,3,74400
+demo,21,Ruri,ruri@demo.com,70,2026-11-16T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,183000,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,21,Ruri,ruri@demo.com,70,2026-11-16T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,183000,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,21,Ruri,ruri@demo.com,70,2026-11-16T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,183000,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,21,Ruri,ruri@demo.com,69,2026-11-17T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,113000,13,Lava Cake,Postres,6900,1,6900
+demo,21,Ruri,ruri@demo.com,69,2026-11-17T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,113000,14,Cheesecake,Postres,7200,2,14400
+demo,21,Ruri,ruri@demo.com,69,2026-11-17T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,113000,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,21,Ruri,ruri@demo.com,69,2026-11-17T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,113000,16,Combo Clásico,Combos,18400,1,18400
+demo,21,Ruri,ruri@demo.com,69,2026-11-17T23:16:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,113000,17,Combo Pizza,Combos,24800,2,49600
+demo,21,Ruri,ruri@demo.com,218,2026-11-17T23:21:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,72900,27,Combo Party,Combos,72900,1,72900
+demo,24,Sitri,sitri@demo.com,81,2026-11-14T23:13:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,69700,11,Papas Cheddar,Papas,8700,1,8700
+demo,24,Sitri,sitri@demo.com,81,2026-11-14T23:13:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,69700,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,24,Sitri,sitri@demo.com,81,2026-11-14T23:13:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,69700,13,Lava Cake,Postres,6900,3,20700
+demo,24,Sitri,sitri@demo.com,81,2026-11-14T23:13:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,69700,14,Cheesecake,Postres,7200,1,7200
+demo,24,Sitri,sitri@demo.com,81,2026-11-14T23:13:49.612Z,cancelado,Sucursal Palermo.,SEED-RESENA,69700,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,24,Sitri,sitri@demo.com,184,2026-11-15T23:55:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,27300,19,Pizza Pepperoni & Miel Picante,Pizzas,19400,1,19400
+demo,24,Sitri,sitri@demo.com,184,2026-11-15T23:55:53.142Z,entregado,Sucursal Palermo.,SEED-CATALOGO,27300,22,New York Cheesecake con Frutos Rojos,Postres,7900,1,7900
+demo,24,Sitri,sitri@demo.com,84,2026-11-21T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,126000,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,24,Sitri,sitri@demo.com,84,2026-11-21T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,126000,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,24,Sitri,sitri@demo.com,84,2026-11-21T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,126000,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,24,Sitri,sitri@demo.com,84,2026-11-21T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,126000,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,24,Sitri,sitri@demo.com,84,2026-11-21T22:52:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,126000,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,24,Sitri,sitri@demo.com,83,2026-11-22T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,163100,17,Combo Pizza,Combos,24800,3,74400
+demo,24,Sitri,sitri@demo.com,83,2026-11-22T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,163100,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,24,Sitri,sitri@demo.com,83,2026-11-22T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,163100,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,24,Sitri,sitri@demo.com,83,2026-11-22T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,163100,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,24,Sitri,sitri@demo.com,83,2026-11-22T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,163100,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,24,Sitri,sitri@demo.com,82,2026-11-23T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,135500,14,Cheesecake,Postres,7200,2,14400
+demo,24,Sitri,sitri@demo.com,82,2026-11-23T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,135500,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,24,Sitri,sitri@demo.com,82,2026-11-23T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,135500,16,Combo Clásico,Combos,18400,1,18400
+demo,24,Sitri,sitri@demo.com,82,2026-11-23T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,135500,17,Combo Pizza,Combos,24800,2,49600
+demo,24,Sitri,sitri@demo.com,82,2026-11-23T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,135500,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,32,Suho,suho@demo.com,115,2026-11-14T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,136700,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,32,Suho,suho@demo.com,115,2026-11-14T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,136700,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,32,Suho,suho@demo.com,115,2026-11-14T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,136700,8,Limonada Natural,Bebidas,4200,2,8400
+demo,32,Suho,suho@demo.com,115,2026-11-14T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,136700,9,Combo Doble,Combos,21200,3,63600
+demo,32,Suho,suho@demo.com,115,2026-11-14T22:51:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,136700,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,32,Suho,suho@demo.com,114,2026-11-15T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,139500,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,32,Suho,suho@demo.com,114,2026-11-15T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,139500,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,32,Suho,suho@demo.com,114,2026-11-15T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,139500,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,32,Suho,suho@demo.com,114,2026-11-15T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,139500,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,32,Suho,suho@demo.com,114,2026-11-15T22:58:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,139500,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,32,Suho,suho@demo.com,113,2026-11-16T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,129300,17,Combo Pizza,Combos,24800,1,24800
+demo,32,Suho,suho@demo.com,113,2026-11-16T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,129300,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,32,Suho,suho@demo.com,113,2026-11-16T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,129300,2,Hamburguesa Doble,Hamburguesas,12900,3,38700
+demo,32,Suho,suho@demo.com,113,2026-11-16T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,129300,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,32,Suho,suho@demo.com,113,2026-11-16T23:05:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,129300,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,32,Suho,suho@demo.com,200,2026-11-17T23:39:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,15100,22,New York Cheesecake con Frutos Rojos,Postres,7900,1,7900
+demo,32,Suho,suho@demo.com,200,2026-11-17T23:39:53.142Z,entregado,Sucursal Vergara,SEED-CATALOGO,15100,25,Pumpkin Spice Latte,Bebidas,7200,1,7200
+demo,32,Suho,suho@demo.com,116,2026-11-23T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,83300,9,Combo Doble,Combos,21200,1,21200
+demo,32,Suho,suho@demo.com,116,2026-11-23T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,83300,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,32,Suho,suho@demo.com,116,2026-11-23T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,83300,11,Papas Cheddar,Papas,8700,3,26100
+demo,32,Suho,suho@demo.com,116,2026-11-23T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,83300,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,32,Suho,suho@demo.com,116,2026-11-23T22:44:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,83300,13,Lava Cake,Postres,6900,2,13800
+demo,5,Sunny,sunny@demo.com,8,2026-11-20T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,71300,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,5,Sunny,sunny@demo.com,8,2026-11-20T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,71300,11,Papas Cheddar,Papas,8700,2,17400
+demo,5,Sunny,sunny@demo.com,8,2026-11-20T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,71300,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,5,Sunny,sunny@demo.com,8,2026-11-20T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,71300,13,Lava Cake,Postres,6900,1,6900
+demo,5,Sunny,sunny@demo.com,8,2026-11-20T23:11:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,71300,14,Cheesecake,Postres,7200,2,14400
+demo,5,Sunny,sunny@demo.com,7,2026-11-21T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,86800,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,5,Sunny,sunny@demo.com,7,2026-11-21T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,86800,8,Limonada Natural,Bebidas,4200,1,4200
+demo,5,Sunny,sunny@demo.com,7,2026-11-21T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,86800,9,Combo Doble,Combos,21200,2,42400
+demo,5,Sunny,sunny@demo.com,7,2026-11-21T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,86800,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,5,Sunny,sunny@demo.com,7,2026-11-21T23:18:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,86800,11,Papas Cheddar,Papas,8700,1,8700
+demo,5,Sunny,sunny@demo.com,6,2026-11-22T23:25:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,127200,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,5,Sunny,sunny@demo.com,6,2026-11-22T23:25:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,127200,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,5,Sunny,sunny@demo.com,6,2026-11-22T23:25:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,127200,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,5,Sunny,sunny@demo.com,6,2026-11-22T23:25:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,127200,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,5,Sunny,sunny@demo.com,6,2026-11-22T23:25:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,127200,8,Limonada Natural,Bebidas,4200,3,12600
+demo,5,Sunny,sunny@demo.com,177,2026-11-23T00:02:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,19600,18,Hamburguesa Royale con Queso & Pepinillos,Hamburguesas,11200,1,11200
+demo,5,Sunny,sunny@demo.com,177,2026-11-23T00:02:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,19600,21,Volcan de Chocolate,Postres,8400,1,8400
+demo,5,Sunny,sunny@demo.com,5,2026-11-23T23:32:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,125000,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,5,Sunny,sunny@demo.com,5,2026-11-23T23:32:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,125000,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,5,Sunny,sunny@demo.com,5,2026-11-23T23:32:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,125000,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,5,Sunny,sunny@demo.com,5,2026-11-23T23:32:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,125000,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,5,Sunny,sunny@demo.com,5,2026-11-23T23:32:49.612Z,cancelado,Sucursal Oeste,SEED-RESENA,125000,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,13,Tyris,tyris@demo.com,38,2026-11-14T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,84200,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,13,Tyris,tyris@demo.com,38,2026-11-14T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,84200,11,Papas Cheddar,Papas,8700,3,26100
+demo,13,Tyris,tyris@demo.com,38,2026-11-14T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,84200,12,Papas 'Kimchi' Coreanas,Papas,8400,1,8400
+demo,13,Tyris,tyris@demo.com,38,2026-11-14T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,84200,13,Lava Cake,Postres,6900,2,13800
+demo,13,Tyris,tyris@demo.com,38,2026-11-14T23:17:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,84200,14,Cheesecake,Postres,7200,3,21600
+demo,13,Tyris,tyris@demo.com,37,2026-11-15T23:24:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,99900,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,13,Tyris,tyris@demo.com,37,2026-11-15T23:24:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,99900,8,Limonada Natural,Bebidas,4200,2,8400
+demo,13,Tyris,tyris@demo.com,37,2026-11-15T23:24:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,99900,9,Combo Doble,Combos,21200,3,63600
+demo,13,Tyris,tyris@demo.com,37,2026-11-15T23:24:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,99900,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,13,Tyris,tyris@demo.com,37,2026-11-15T23:24:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,99900,11,Papas Cheddar,Papas,8700,2,17400
+demo,13,Tyris,tyris@demo.com,210,2026-11-16T23:29:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,80400,24,Caramel Frappuccino.,Bebidas,7500,1,7500
+demo,13,Tyris,tyris@demo.com,210,2026-11-16T23:29:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,80400,27,Combo Party,Combos,72900,1,72900
+demo,13,Tyris,tyris@demo.com,40,2026-11-22T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134600,16,Combo Clásico,Combos,18400,1,18400
+demo,13,Tyris,tyris@demo.com,40,2026-11-22T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134600,17,Combo Pizza,Combos,24800,2,49600
+demo,13,Tyris,tyris@demo.com,40,2026-11-22T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134600,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,13,Tyris,tyris@demo.com,40,2026-11-22T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134600,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,13,Tyris,tyris@demo.com,40,2026-11-22T23:03:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,134600,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,13,Tyris,tyris@demo.com,39,2026-11-23T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,123700,13,Lava Cake,Postres,6900,3,20700
+demo,13,Tyris,tyris@demo.com,39,2026-11-23T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,123700,14,Cheesecake,Postres,7200,1,7200
+demo,13,Tyris,tyris@demo.com,39,2026-11-23T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,123700,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,13,Tyris,tyris@demo.com,39,2026-11-23T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,123700,16,Combo Clásico,Combos,18400,3,55200
+demo,13,Tyris,tyris@demo.com,39,2026-11-23T23:10:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,123700,17,Combo Pizza,Combos,24800,1,24800
+demo,22,Valdrova,valdrova@demo.com,75,2026-11-14T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,87300,7,Coca-Cola 500ml,Bebidas,3600,3,10800
+demo,22,Valdrova,valdrova@demo.com,75,2026-11-14T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,87300,8,Limonada Natural,Bebidas,4200,1,4200
+demo,22,Valdrova,valdrova@demo.com,75,2026-11-14T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,87300,9,Combo Doble,Combos,21200,2,42400
+demo,22,Valdrova,valdrova@demo.com,75,2026-11-14T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,87300,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,22,Valdrova,valdrova@demo.com,75,2026-11-14T23:01:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,87300,11,Papas Cheddar,Papas,8700,1,8700
+demo,22,Valdrova,valdrova@demo.com,74,2026-11-15T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,126700,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,22,Valdrova,valdrova@demo.com,74,2026-11-15T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,126700,5,Pizza Napolitana,Pizzas,18400,3,55200
+demo,22,Valdrova,valdrova@demo.com,74,2026-11-15T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,126700,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,22,Valdrova,valdrova@demo.com,74,2026-11-15T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,126700,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,22,Valdrova,valdrova@demo.com,74,2026-11-15T23:08:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,126700,8,Limonada Natural,Bebidas,4200,3,12600
+demo,22,Valdrova,valdrova@demo.com,73,2026-11-16T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,125500,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,22,Valdrova,valdrova@demo.com,73,2026-11-16T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,125500,2,Hamburguesa Doble,Hamburguesas,12900,2,25800
+demo,22,Valdrova,valdrova@demo.com,73,2026-11-16T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,125500,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,22,Valdrova,valdrova@demo.com,73,2026-11-16T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,125500,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,22,Valdrova,valdrova@demo.com,73,2026-11-16T23:15:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,125500,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,22,Valdrova,valdrova@demo.com,189,2026-11-19T23:50:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,20400,20,Pizza Cuatro Quesos,Pizzas,20400,1,20400
+demo,22,Valdrova,valdrova@demo.com,76,2026-11-23T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,70800,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,22,Valdrova,valdrova@demo.com,76,2026-11-23T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,70800,11,Papas Cheddar,Papas,8700,2,17400
+demo,22,Valdrova,valdrova@demo.com,76,2026-11-23T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,70800,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,22,Valdrova,valdrova@demo.com,76,2026-11-23T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,70800,13,Lava Cake,Postres,6900,1,6900
+demo,22,Valdrova,valdrova@demo.com,76,2026-11-23T22:54:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,70800,14,Cheesecake,Postres,7200,2,14400
+demo,37,Weiss,weiss@demo.com,136,2026-11-18T22:39:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,129300,17,Combo Pizza,Combos,24800,1,24800
+demo,37,Weiss,weiss@demo.com,136,2026-11-18T22:39:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,129300,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,37,Weiss,weiss@demo.com,136,2026-11-18T22:39:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,129300,2,Hamburguesa Doble,Hamburguesas,12900,3,38700
+demo,37,Weiss,weiss@demo.com,136,2026-11-18T22:39:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,129300,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,37,Weiss,weiss@demo.com,136,2026-11-18T22:39:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,129300,4,Pizza Muzzarella,Pizzas,16900,2,33800
+demo,37,Weiss,weiss@demo.com,135,2026-11-19T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,150500,14,Cheesecake,Postres,7200,3,21600
+demo,37,Weiss,weiss@demo.com,135,2026-11-19T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,150500,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,37,Weiss,weiss@demo.com,135,2026-11-19T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,150500,16,Combo Clásico,Combos,18400,2,36800
+demo,37,Weiss,weiss@demo.com,135,2026-11-19T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,150500,17,Combo Pizza,Combos,24800,3,74400
+demo,37,Weiss,weiss@demo.com,135,2026-11-19T22:46:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,150500,1,Hamburguesa Clásica,Hamburguesas,9800,1,9800
+demo,37,Weiss,weiss@demo.com,134,2026-11-20T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,88100,11,Papas Cheddar,Papas,8700,2,17400
+demo,37,Weiss,weiss@demo.com,134,2026-11-20T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,88100,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,37,Weiss,weiss@demo.com,134,2026-11-20T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,88100,13,Lava Cake,Postres,6900,1,6900
+demo,37,Weiss,weiss@demo.com,134,2026-11-20T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,88100,14,Cheesecake,Postres,7200,2,14400
+demo,37,Weiss,weiss@demo.com,134,2026-11-20T22:53:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,88100,15,Hamburguesa Dulce,Postres,7900,3,23700
+demo,37,Weiss,weiss@demo.com,133,2026-11-21T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,92800,8,Limonada Natural,Bebidas,4200,1,4200
+demo,37,Weiss,weiss@demo.com,133,2026-11-21T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,92800,9,Combo Doble,Combos,21200,2,42400
+demo,37,Weiss,weiss@demo.com,133,2026-11-21T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,92800,10,Papas Fritas Grandes,Papas,6900,3,20700
+demo,37,Weiss,weiss@demo.com,133,2026-11-21T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,92800,11,Papas Cheddar,Papas,8700,1,8700
+demo,37,Weiss,weiss@demo.com,133,2026-11-21T23:00:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,92800,12,Papas 'Kimchi' Coreanas,Papas,8400,2,16800
+demo,37,Weiss,weiss@demo.com,204,2026-11-22T23:35:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,14100,23,Tarta Rogel,Postres,7200,1,7200
+demo,37,Weiss,weiss@demo.com,204,2026-11-22T23:35:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,14100,26,The Pink Drink,Bebidas,6900,1,6900
+demo,28,Xinci,xinci@demo.com,219,2026-11-16T23:20:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,72900,27,Combo Party,Combos,72900,1,72900
+demo,28,Xinci,xinci@demo.com,100,2026-11-17T22:48:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,72700,6,Pizza Fugazzeta,Pizzas,17900,1,17900
+demo,28,Xinci,xinci@demo.com,100,2026-11-17T22:48:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,72700,7,Coca-Cola 500ml,Bebidas,3600,2,7200
+demo,28,Xinci,xinci@demo.com,100,2026-11-17T22:48:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,72700,8,Limonada Natural,Bebidas,4200,3,12600
+demo,28,Xinci,xinci@demo.com,100,2026-11-17T22:48:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,72700,9,Combo Doble,Combos,21200,1,21200
+demo,28,Xinci,xinci@demo.com,100,2026-11-17T22:48:49.612Z,cancelado,Sucursal Vergara,SEED-RESENA,72700,10,Papas Fritas Grandes,Papas,6900,2,13800
+demo,28,Xinci,xinci@demo.com,99,2026-11-18T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,147200,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,3,35700
+demo,28,Xinci,xinci@demo.com,99,2026-11-18T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,147200,4,Pizza Muzzarella,Pizzas,16900,1,16900
+demo,28,Xinci,xinci@demo.com,99,2026-11-18T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,147200,5,Pizza Napolitana,Pizzas,18400,2,36800
+demo,28,Xinci,xinci@demo.com,99,2026-11-18T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,147200,6,Pizza Fugazzeta,Pizzas,17900,3,53700
+demo,28,Xinci,xinci@demo.com,99,2026-11-18T22:55:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,147200,7,Coca-Cola 500ml,Bebidas,3600,1,3600
+demo,28,Xinci,xinci@demo.com,98,2026-11-19T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,166400,17,Combo Pizza,Combos,24800,2,49600
+demo,28,Xinci,xinci@demo.com,98,2026-11-19T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,166400,1,Hamburguesa Clásica,Hamburguesas,9800,3,29400
+demo,28,Xinci,xinci@demo.com,98,2026-11-19T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,166400,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,28,Xinci,xinci@demo.com,98,2026-11-19T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,166400,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,28,Xinci,xinci@demo.com,98,2026-11-19T23:02:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,166400,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,28,Xinci,xinci@demo.com,97,2026-11-20T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,123100,14,Cheesecake,Postres,7200,1,7200
+demo,28,Xinci,xinci@demo.com,97,2026-11-20T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,123100,15,Hamburguesa Dulce,Postres,7900,2,15800
+demo,28,Xinci,xinci@demo.com,97,2026-11-20T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,123100,16,Combo Clásico,Combos,18400,3,55200
+demo,28,Xinci,xinci@demo.com,97,2026-11-20T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,123100,17,Combo Pizza,Combos,24800,1,24800
+demo,28,Xinci,xinci@demo.com,97,2026-11-20T23:09:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,123100,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,17,Xio,xio@demo.com,183,2026-11-16T23:56:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,27300,19,Pizza Pepperoni & Miel Picante,Pizzas,19400,1,19400
+demo,17,Xio,xio@demo.com,183,2026-11-16T23:56:53.142Z,entregado,Sucursal Oeste,SEED-CATALOGO,27300,22,New York Cheesecake con Frutos Rojos,Postres,7900,1,7900
+demo,17,Xio,xio@demo.com,56,2026-11-18T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,142100,2,Hamburguesa Doble,Hamburguesas,12900,1,12900
+demo,17,Xio,xio@demo.com,56,2026-11-18T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,142100,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,2,23800
+demo,17,Xio,xio@demo.com,56,2026-11-18T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,142100,4,Pizza Muzzarella,Pizzas,16900,3,50700
+demo,17,Xio,xio@demo.com,56,2026-11-18T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,142100,5,Pizza Napolitana,Pizzas,18400,1,18400
+demo,17,Xio,xio@demo.com,56,2026-11-18T22:59:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,142100,6,Pizza Fugazzeta,Pizzas,17900,2,35800
+demo,17,Xio,xio@demo.com,55,2026-11-19T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,150200,16,Combo Clásico,Combos,18400,3,55200
+demo,17,Xio,xio@demo.com,55,2026-11-19T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,150200,17,Combo Pizza,Combos,24800,1,24800
+demo,17,Xio,xio@demo.com,55,2026-11-19T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,150200,1,Hamburguesa Clásica,Hamburguesas,9800,2,19600
+demo,17,Xio,xio@demo.com,55,2026-11-19T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,150200,2,Hamburguesa Doble,Hamburguesas,12900,3,38700
+demo,17,Xio,xio@demo.com,55,2026-11-19T23:06:49.612Z,entregado,Sucursal Vergara,SEED-RESENA,150200,3,Hamburguesa Cheddar Bacon,Hamburguesas,11900,1,11900
+demo,17,Xio,xio@demo.com,54,2026-11-20T23:13:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,155000,13,Lava Cake,Postres,6900,2,13800
+demo,17,Xio,xio@demo.com,54,2026-11-20T23:13:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,155000,14,Cheesecake,Postres,7200,3,21600
+demo,17,Xio,xio@demo.com,54,2026-11-20T23:13:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,155000,15,Hamburguesa Dulce,Postres,7900,1,7900
+demo,17,Xio,xio@demo.com,54,2026-11-20T23:13:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,155000,16,Combo Clásico,Combos,18400,2,36800
+demo,17,Xio,xio@demo.com,54,2026-11-20T23:13:49.612Z,entregado,Sucursal Palermo.,SEED-RESENA,155000,17,Combo Pizza,Combos,24800,3,74400
+demo,17,Xio,xio@demo.com,53,2026-11-21T23:20:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,70800,10,Papas Fritas Grandes,Papas,6900,1,6900
+demo,17,Xio,xio@demo.com,53,2026-11-21T23:20:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,70800,11,Papas Cheddar,Papas,8700,2,17400
+demo,17,Xio,xio@demo.com,53,2026-11-21T23:20:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,70800,12,Papas 'Kimchi' Coreanas,Papas,8400,3,25200
+demo,17,Xio,xio@demo.com,53,2026-11-21T23:20:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,70800,13,Lava Cake,Postres,6900,1,6900
+demo,17,Xio,xio@demo.com,53,2026-11-21T23:20:49.612Z,entregado,Sucursal Oeste,SEED-RESENA,70800,14,Cheesecake,Postres,7200,2,14400
