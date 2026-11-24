@@ -11,6 +11,7 @@ import db from '../lib/models';
 import { configurarSocketIO } from '../lib/realtime';
 import { iniciarVigiaHorarios } from '../lib/services/horarios_vigia';
 import { iniciarVigiaReservas } from '../lib/services/reserva_vigia';
+import { iniciarVigiaCuponesProgramados } from '../lib/services/cupon_programado_vigia';
 
 const debug = debugPkg('js/www:server');
 
@@ -45,6 +46,9 @@ function startServer() {
   // dentro de `minutosReservaStock` y libera su stock. También reintenta solo si
   // la base todavía no está disponible.
   iniciarVigiaReservas();
+  // Envía los cupones programados cuando pasan a ACTIVO. Reutiliza el estado
+  // `estadoEnvio` como fuente de idempotencia, así un reinicio no duplica correos.
+  iniciarVigiaCuponesProgramados();
 }
 
 db.sequelize

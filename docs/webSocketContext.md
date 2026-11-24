@@ -28,6 +28,7 @@ Consecuencias directas:
 | 6     | Insumos: `stock_actualizado` también avisa `insumoIds` de la sucursal                               | **Hecho** |
 | 7     | Reclamos: `queja_actualizada` a la sucursal del pedido y a `admins` (badge de pendientes)           | **Hecho** |
 | 8     | Centro de notificaciones: `notificacion_creada` a la room privada `usuario:{id}`                    | **Hecho** |
+| 9     | Cupones: `emision_actualizada` a `admins` y `cupon_actualizado` a `usuario:{id}`                    | **Hecho** |
 
 **Estado actual: implementación completa y verificada.** El backend emite, el frontend escucha, y el polling de 3 s ya no existe. Verificado en navegador real (sección 9.2). La ampliación (parte 5) agregó tres eventos con el mismo principio: REST manda, el socket solo avisa.
 
@@ -45,14 +46,14 @@ Browser ──REST──► Express ──► Controllers ──► PostgreSQL
 
 ### 3.1 Mapa de archivos
 
-| Archivo                      | Responsabilidad                                                                                                                                                                                                                                                        |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lib/realtime/index.js`      | Singleton `io`. `configurarSocketIO(server)`, `obtenerIO()`, `cerrarSocketIO()` y los emisores: `emitirPedidoActualizado`, `emitirCatalogoActualizado`, `emitirParametrosActualizados`, `emitirStockActualizado`, `emitirQuejaActualizada`, `emitirNotificacionCreada` |
-| `lib/realtime/conexion.js`   | `configurarConexion(io)`: autenticación del handshake, ingreso a rooms, handlers de suscripción                                                                                                                                                                        |
-| `lib/realtime/eventos.js`    | `EVENTOS`, `ROOM_ADMINS`, `roomPedido(id)`, `roomSucursal(id)`, `roomUsuario(id)`. Sin lógica                                                                                                                                                                          |
-| `bin/www.js:22-23`           | Crea el servidor HTTP y le adjunta Socket.IO                                                                                                                                                                                                                           |
-| `bin/www.js:36`              | `server.listen(port)` (antes era `app.listen`)                                                                                                                                                                                                                         |
-| `lib/middlewares/auth.js:24` | `resolverUsuarioDeSesion(sesion)` — reusado por REST y por el socket                                                                                                                                                                                                   |
+| Archivo                      | Responsabilidad                                                                                                                                                                                                                                                                                                              |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/realtime/index.js`      | Singleton `io`. `configurarSocketIO(server)`, `obtenerIO()`, `cerrarSocketIO()` y los emisores: `emitirPedidoActualizado`, `emitirCatalogoActualizado`, `emitirParametrosActualizados`, `emitirStockActualizado`, `emitirQuejaActualizada`, `emitirNotificacionCreada`, `emitirEmisionActualizada`, `emitirCuponActualizado` |
+| `lib/realtime/conexion.js`   | `configurarConexion(io)`: autenticación del handshake, ingreso a rooms, handlers de suscripción                                                                                                                                                                                                                              |
+| `lib/realtime/eventos.js`    | `EVENTOS`, `ROOM_ADMINS`, `roomPedido(id)`, `roomSucursal(id)`, `roomUsuario(id)`. Sin lógica                                                                                                                                                                                                                                |
+| `bin/www.js:22-23`           | Crea el servidor HTTP y le adjunta Socket.IO                                                                                                                                                                                                                                                                                 |
+| `bin/www.js:36`              | `server.listen(port)` (antes era `app.listen`)                                                                                                                                                                                                                                                                               |
+| `lib/middlewares/auth.js:24` | `resolverUsuarioDeSesion(sesion)` — reusado por REST y por el socket                                                                                                                                                                                                                                                         |
 
 > `lib/realtime/` **no** va dentro de `lib/models/`: `lib/models/index.js:29-42` auto-descubre todo `.js` de esa carpeta y le invoca `init()`.
 
@@ -113,6 +114,8 @@ Payloads mínimos, definidos en `lib/realtime/eventos.js`.
 | `stock_actualizado`       | server → cliente | `{ sucursalId, productoIds, insumoIds }` | **solo** `sucursal:{id}`                      |
 | `queja_actualizada`       | server → cliente | `{ quejaId, pedidoId, sucursalId }`      | `admins` y `sucursal:{id}` del pedido         |
 | `notificacion_creada`     | server → cliente | `{ notificacionId, tipo }`               | **solo** `usuario:{id}` del destinatario      |
+| `emision_actualizada`     | server → cliente | `{ emisionId, cuponId? }`                | **solo** `admins` (SUPERADMINISTRADOR)        |
+| `cupon_actualizado`       | server → cliente | `{ cuponId, emisionId? }`                | **solo** `usuario:{id}` del dueño del cupón   |
 
 No existe `pedido_creado`, y es deliberado (sección 6.1).
 
@@ -227,6 +230,47 @@ cambios de estado de un reclamo (`lib/services/quejas.js`).
 En el frontend, `NotificacionesCentroContext` conecta el socket para el CLIENTE,
 escucha el evento y refresca el contador y el listado del drawer. El pulso del
 badge se apaga solo (`MS_PULSO`).
+
+### 6.9 Emisiones y cupones: dos eventos, dos destinatarios
+
+Los cupones son datos privados: nadie más que su dueño y el
+SUPERADMINISTRADOR debe enterarse de que cambiaron. Por eso hay **dos eventos
+distintos** y ninguno es broadcast (los invitados no reciben ninguno):
+
+| Evento                | Destino                            | Quién lo escucha en el frontend                  |
+| --------------------- | ---------------------------------- | ------------------------------------------------ |
+| `emision_actualizada` | `admins`                           | `RealtimeBridge` sólo con rol SUPERADMINISTRADOR |
+| `cupon_actualizado`   | `usuario:{id}` del dueño del cupón | `RealtimeBridge` sólo con rol CLIENTE            |
+
+El payload lleva únicamente IDs. Las listas y los detalles se leen por REST.
+
+Fuentes de emisión (siempre después del commit y sólo si hubo cambios):
+
+| Origen                                                 | Aviso                                                             |
+| ------------------------------------------------------ | ----------------------------------------------------------------- |
+| `cupon_emisiones.emitir`                               | una emisión para `admins` y un cupón por destinatario **enviado** |
+| `cupon_emisiones.reenviarEmision`                      | emisión + cupones que quedaron `ENVIADO`                          |
+| `cupon_programados.enviarCuponesProgramados`           | emisión + cupones que el vigía marcó `ENVIADO`                    |
+| `cupones.cambiarActivoCupon`                           | emisión + cupón, sólo cuando `activo` cambió realmente            |
+| `pedido_controller.create`                             | cupón reservado, al dueño                                         |
+| `pedido_controller.cambiarEstado` (pago / cancelación) | cupón confirmado o liberado, al dueño                             |
+| `reserva_pedidos` + `reserva_vigia` (reserva vencida)  | cupón liberado, al dueño                                          |
+
+No existe room `cupon:{id}` ni `emision:{id}`: no hace falta, porque la
+autorización ya está resuelta por `admins` y por la room privada del usuario.
+Crear una sala por recurso sin validar propiedad permitiría filtrar cupones
+ajenos.
+
+En `RealtimeBridge.jsx` los listeners se registran con `on` y se retiran con
+`off` en el cleanup; al reconectar se invalidan los mismos árboles por prefijo
+(porque durante la caída del canal pudieron perderse avisos). Las claves que se
+invalidan son `emisionesListaPrefix`, `emision(id)`, `emisionCupones(id)`,
+`cuponesListaPrefix`, `cupon(id)` y `cuponesCliente`. En la reconexión, además,
+se invalidan los prefijos de detalle (`emisionesDetallePrefix`,
+`emisionesCuponesPrefix` y `cuponesDetallePrefix`) para refrescar sólo las
+pantallas de detalle que estuvieran abiertas. `MisCupones` y el carrito
+comparten `cuponesCliente`, así que un solo evento actualiza ambas pantallas sin
+recargar.
 
 ## 7. Orden de emisión
 
